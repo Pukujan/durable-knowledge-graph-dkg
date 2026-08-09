@@ -205,7 +205,7 @@ async def main() -> None:
         )
         embedding_dim = int(os.environ.get("GRAPHITI_EMBEDDING_DIM", "768"))
         structured_output_mode = os.environ.get(
-            "GRAPHITI_STRUCTURED_OUTPUT_MODE", "json_object"
+            "GRAPHITI_STRUCTURED_OUTPUT_MODE", "json_schema"
         )
         if structured_output_mode not in {"json_schema", "json_object"}:
             raise ValueError(
