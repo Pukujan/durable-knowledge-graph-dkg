@@ -134,6 +134,12 @@ Broad architecture research is frozen enough to implement. New technologies shou
 
 Reopen architecture research when implementation contradicts an assumption, a dependency materially changes/decays, a new requirement appears, or a competing architecture wins measured benchmarks.
 
+## Continuity checkpoint status
+
+The repository now contains enough durable orientation material that a fresh agent should not need the missing chat to resume. `AGENTS.md` gives the read order and non-negotiable rules; `docs/HANDOFF_CURRENT.md` gives the exact continuation point; `docs/DECISION_LOG.md` preserves major choices and alternatives; the research-trace contract preserves how research itself becomes corpus data.
+
+If a new session cannot continue from these files, treat that as a documentation defect and improve the handoff rather than asking the user to reconstruct the architecture manually.
+
 ## End-of-session rule
 
 At the end of substantial work:
