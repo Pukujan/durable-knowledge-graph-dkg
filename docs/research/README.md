@@ -16,6 +16,18 @@ Use this first. It explains what the research changed and which architecture was
 
 Companion source ledger containing the broad review of 127 primary/official sources and original papers used for the research freeze.
 
+### Research trace contract
+
+`RESEARCH_TRACE_CONTRACT.md`
+
+Defines how the **research process itself** becomes durable corpus data: questions, searches, source snapshots, claims, critiques, alternative theories, decisions, uncertainty, implementation actions, benchmarks, and later supersession.
+
+Supporting seed artifacts:
+
+- `../schemas/research-trace/v1.schema.json` when resolved from repository root as `schemas/research-trace/v1.schema.json`;
+- `2026-08-09-dkg-project-research-trace-seed.md`;
+- repository example `examples/research-trace/dkg-project-research-run-v1.json`.
+
 ## Covered research areas
 
 The frozen review includes:
@@ -72,13 +84,15 @@ Interesting new papers alone are not enough to restart the architecture. They sh
 For a meaningful new research pass:
 
 1. create a dated research note in this directory;
-2. state the question before searching;
-3. include competing theories, not only confirming evidence;
-4. cite primary/official sources where possible;
-5. distinguish fact, inference, recommendation, and unresolved uncertainty;
-6. state exactly which architecture decision is challenged or refined;
-7. update `docs/DECISION_LOG.md` if the conclusion changes;
-8. update `ARCHITECTURE.md` only if a durable invariant changes.
+2. create/update a research-trace record for the run;
+3. state the question before searching;
+4. include competing theories, not only confirming evidence;
+5. cite primary/official sources where possible;
+6. distinguish fact, inference, recommendation, and unresolved uncertainty;
+7. state exactly which architecture decision is challenged or refined;
+8. update `docs/DECISION_LOG.md` if the conclusion changes;
+9. update `ARCHITECTURE.md` only if a durable invariant changes;
+10. link resulting issues/commits/benchmarks so the graph can later connect research to implementation.
 
 ## Current research conclusion
 
