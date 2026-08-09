@@ -1,0 +1,11 @@
+{
+  "schema_version": "fossil.agent-skill.v1",
+  "skill_id": "skill_contradiction-review",
+  "version": "1.0.0",
+  "name": "Contradiction review",
+  "summary": "Review competing claims and evidence without collapsing disagreement or treating model consensus as truth.",
+  "methodology_ref": "SKILL.md",
+  "capabilities": ["search", "read", "lineage", "propose", "validate"],
+  "triggers": ["contradiction", "disagreement", "challenge", "conflict", "opposing claim"],
+  "risk_notes": "Review may propose state/relation events but cannot mutate graph truth directly."
+}
