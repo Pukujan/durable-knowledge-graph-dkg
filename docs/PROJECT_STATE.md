@@ -1,192 +1,117 @@
 # Project State
 
 **Project:** **FOSSIL — Fault-tolerant Open Semantic Store for Intellectual Lineage**  
-**Durable substrate:** **DICS — Durable Intellectual Corpus System**
-**Current phase:** Gate 1 executable durability proof — live projection + destructive rebuild/blue-green complete; conversation lineage active  
+**Durable substrate:** **DICS — Durable Intellectual Corpus System**  
+**Current phase:** Gate 1 executable durability proof — 13/15 core checklist items complete; safe Agent Skill/API boundary active  
 **Control plane:** GitHub issues + durable repository docs  
 **Last updated:** 2026-08-09
 
 ## Repository family
 
-GitHub repository family:
+- `Pukujan/fossil-core` — architecture, contracts, durable core, projections, control plane;
+- `Pukujan/fossil-common` — stable pack `pack_269099f7b2ba43b7a99b9427d64092de`;
+- `Pukujan/fossil-ai-systems` — stable pack `pack_f024177f89a5442db84171c3dd7f58e5`, depending on common.
 
-- `fossil-core` — architecture, contracts, durable core, projections, and control plane;
-- `fossil-common` — stable pack `pack_269099f7b2ba43b7a99b9427d64092de`;
-- `fossil-ai-systems` — stable pack `pack_f024177f89a5442db84171c3dd7f58e5`, with a required dependency on the common pack.
+Repository location and graph/database placement are physical details, not knowledge identity.
 
-The repository family physically exists as `Pukujan/fossil-core`, `Pukujan/fossil-common`, and `Pukujan/fossil-ai-systems`. This physical split does not change pack identity: stable `pack_id` values remain authoritative across repository moves, projections, and future storage changes.
+## Fresh-session continuation
 
-## Continuation entry point
-
-A new agent/session should read:
+Read:
 
 1. `AGENTS.md`
 2. `ARCHITECTURE.md`
 3. `docs/HANDOFF_CURRENT.md`
 4. this file
-5. `docs/implementation/2026-08-09-gate1-live-graphiti-proof.md`
-6. `docs/implementation/2026-08-09-gate1-rebuild-blue-green-proof.md`
-7. `docs/research/2026-08-09-final-research-synthesis.md`
-8. `docs/research/RESEARCH_TRACE_CONTRACT.md`
-9. `docs/DECISION_LOG.md`
-10. Issue #1 and active Issue #9
+5. `docs/DECISION_LOG.md`
+6. `docs/implementation/2026-08-09-gate1-live-graphiti-proof.md`
+7. `docs/implementation/2026-08-09-gate1-rebuild-blue-green-proof.md`
+8. `docs/implementation/2026-08-09-gate1-conversation-lineage-proof.md`
+9. Issue #1 and active Issue #8
 
-The chat UI is **not** the project record.
+The chat UI is not the project record.
 
-## Tracking rule
+## Gate 1 checklist
 
-GitHub issues track **work state**. Durable docs track **decisions/evidence/contracts**.
+1. [x] immutable validated events;
+2. [x] deterministic invalid/duplicate rejection;
+3. [x] content-addressed immutable artifacts;
+4. [x] pack boundaries/dependencies;
+5. [x] provenance-preserving promotion;
+6. [x] claim/relation lifecycle, disagreement, supersession, staleness;
+7. [x] replaceable Graphiti adapter;
+8. [x] projection retry/failure ledger;
+9. [x] projection build metadata;
+10. [x] live Graphiti + Neo4j materialization;
+11. [x] destructive rebuild from durable data;
+12. [x] blue/green candidate comparison and guarded switch;
+13. [x] conversation ingestion + intellectual-lineage reconstruction benchmark;
+14. [ ] general citation/source-snapshot quality + redaction integrity (#10);
+15. [ ] safe Agent Skill/API/MCP boundary (#8).
 
-An issue may close because work was completed or rejected, but an architectural decision should not exist only inside an issue comment. It must point to a durable document/ADR/schema/benchmark result committed in the repository.
+## Completed proof checkpoints
 
-Likewise, durable docs should link to the issue that caused a decision when useful so implementation history remains reconstructable.
+### #4 — live Graphiti/Neo4j
 
-## Research-trace rule
+Trusted CI run #70 (`31338875226`, job `93309155019`) proved Graphiti `0.29.3` + Neo4j `5.26.29`, stable pack/group namespace, durable-first materialization, runtime build metadata, and idempotent replay. Evidence: `docs/implementation/2026-08-09-gate1-live-graphiti-proof.md`.
 
-The **research process itself is future corpus data**.
+### #5 — destructive rebuild + blue/green
 
-The graph must eventually be able to reconstruct how this project was researched: original questions, alternative architectures, searches/source snapshots, claims, critiques, unresolved uncertainty, accepted-for-now decisions, issues, commits, benchmarks, failures, and later supersession.
+Trusted live run #81 (`31339930551`, job `93311926075`) destroyed the green candidate graph to zero nodes, retained durable event `evt_aadf683e9aa41443f95be71c211cd2c4`, rebuilt green with fresh build ledger `green-rebuild-1`, kept blue live beside it, matched durable/blue/green semantic digest `c8d790b3a1d6741a86e280db44595b463347e6c47a4d933274e1c829696e4696`, and recorded `blue -> green` only after checks passed. Final migration guardrails passed CI run #84: 26 tests. Evidence: `docs/implementation/2026-08-09-gate1-rebuild-blue-green-proof.md`.
 
-Durable trace references include:
+### #9 — conversation lineage
 
-- `docs/research/RESEARCH_TRACE_CONTRACT.md`
-- `schemas/research-trace/v1.schema.json`
-- `docs/research/2026-08-09-dkg-project-research-trace-seed.md`
-- `examples/research-trace/dkg-project-research-run-v1.json`
-- `docs/implementation/2026-08-09-gate1-core-proof.md`
-- `docs/implementation/2026-08-09-gate1-live-graphiti-proof.md`
-- `docs/implementation/2026-08-09-gate1-rebuild-blue-green-proof.md`
+Trusted CI run #97 (`31340924480`, job `93314435997`) passed **31 tests in 0.37s**. FOSSIL now has immutable source artifacts + byte spans + conversation envelopes with durable `verbatim`/`reconstructed` evidence status, derived lineage with source-message/span provenance, opposing-position queries, current/historical queries, and the recovered benchmark path:
 
-High-volume operational telemetry remains external. The durable corpus stores compact intellectual lineage plus trace IDs when deeper debugging evidence is needed.
+`learning UX / parabola -> representation mismatch -> AI translation layer -> failure learning -> MAPE-K / KEDB -> truth maintenance -> temporal knowledge graph`
 
-## Gate 0 — complete
-
-Research freeze and durable contracts include the 127-source evidence ledger, final synthesis, architecture contract, event/pack/research-trace schemas, core ontology, source-quality policy, migration/rebuild direction, agent continuation docs, decision log, and research trace seed.
-
-## Gate 1 — executable durability proof
-
-Completed so far:
-
-1. [x] create and validate immutable events;
-2. [x] reject invalid/duplicate writes deterministically;
-3. [x] store immutable content-addressed artifacts with verification;
-4. [x] enforce pack read/write boundaries and required dependencies;
-5. [x] represent cross-pack promotion as a new provenance-preserving event;
-6. [x] preserve claim/relation disagreement, lifecycle history, supersession, and stale-dependency state through event replay;
-7. [x] isolate Graphiti calls behind a replaceable adapter;
-8. [x] make projection retries idempotent and preserve failure records;
-9. [x] record projection build metadata in the projection ledger;
-10. [x] pass a live Graphiti + Neo4j integration smoke test;
-11. [x] destroy/rebuild the graph from durable data;
-12. [x] build and compare a second candidate projection;
-13. [ ] answer conversation lineage/reconstruction benchmarks;
-14. [ ] resolve citations/provenance to intended evidence snapshots;
-15. [ ] expose the safe Agent Skill/API boundary.
-
-## Live projection proof
-
-Issue #4 crossed the real integration gate in GitHub Actions run #70 (`31338875226`). The proof used Graphiti `0.29.3`, Neo4j `5.26.29`, local Ollama `deepseek-r1:7b`, `nomic-embed-text`, and `structured_output_mode=json_schema`.
-
-Durable event `evt_27769393996d2827172f6abc0aa086dc` existed before projection. A real Graphiti `Episodic` node was observed exactly once under `group_id == pack_269099f7b2ba43b7a99b9427d64092de`, with two mentioned entities. Replaying the same event returned `skipped: already applied` and the episode count remained exactly one.
-
-The first real attempt with `json_object` failed because the local model emitted `Edges` instead of the required `edges`; the projection ledger recorded the failure and the durable event remained intact. The successful retry used schema-constrained output. See `docs/implementation/2026-08-09-gate1-live-graphiti-proof.md`.
-
-## Destructive rebuild + blue/green proof
-
-Issue #5 passed a real two-Neo4j proof in trusted CI run #81 (`31339930551`), job `93311926075`.
-
-Durable event `evt_aadf683e9aa41443f95be71c211cd2c4` survived a real candidate-graph destructive reset from one sentinel node to **0 nodes**. Green/candidate then replayed the same durable source using fresh build-scoped ledger `green-rebuild-1`, produced an `applied` receipt, and returned to **3 graph nodes** while blue/current remained live with **3 graph nodes**.
-
-Expected durable, blue, and green projection-independent semantic digests all matched:
-
-`c8d790b3a1d6741a86e280db44595b463347e6c47a4d933274e1c829696e4696`
-
-The append-only active switch `blue -> green` was written only after named migration checks passed. Final unit guardrails, including stale source-slot rejection, passed trusted CI run #84: **26 passed in 0.44s**.
-
-See `docs/implementation/2026-08-09-gate1-rebuild-blue-green-proof.md`.
+The recovery benchmark remains explicitly reconstructed and is not presented as a verbatim lost transcript. Evidence: `docs/implementation/2026-08-09-gate1-conversation-lineage-proof.md`.
 
 ## Current issue map
 
-- #1 Milestone-control issue — open
-- #2 Durable event + artifact store — **complete**
-- #3 Knowledge-pack boundaries, mounts, promotion — **complete**
-- #4 Graphiti + Neo4j projection adapter/queue — **complete**
-- #5 Destructive rebuild + blue/green migration harness — **complete**
-- #6 Claim/relation lifecycle, disagreement, supersession, staleness — **complete**
-- #7 Pluggable retrieval/model services + local-specialist benchmark contract — pending
-- #8 Agent Skills + thin corpus API/MCP contract — pending
-- #9 Conversation ingestion + intellectual-lineage reconstruction benchmark — **active**
-- #10 Source snapshots, citation provenance, quality dimensions, redaction path — cross-cutting/pending
+- #1 milestone/control — open
+- #2 durable event + artifact store — **complete**
+- #3 pack boundaries/mounts/promotion — **complete**
+- #4 Graphiti + Neo4j adapter/queue — **complete**
+- #5 destructive rebuild + blue/green — **complete**
+- #6 lifecycle/disagreement/supersession/staleness — **complete**
+- #7 pluggable retrieval/model services + specialist benchmarks — pending
+- #8 Agent Skills + thin corpus API/MCP — **active**
+- #9 conversation ingestion + intellectual lineage — **complete**
+- #10 source snapshots/citation quality/redaction — cross-cutting/pending
 
-## Recommended execution order from here
+## Active task — Issue #8
 
-`#9 conversation lineage benchmark -> #8 Skills/API/MCP -> #7 retrieval/model benchmarks`, while applying #10 requirements during source ingestion.
+Implement the agent-facing boundary without coupling durable knowledge to one agent/protocol:
 
-## Immediate next task
+1. protocol-independent corpus domain service;
+2. thin capabilities around search/read/lineage/propose/validate/commit/manage;
+3. no arbitrary graph mutation capability;
+4. mutation proposals preserve actor/model/harness/skill provenance;
+5. durable commit remains authoritative and precedes any projection work;
+6. Agent Skills describe lazily loaded methodology/workflows rather than storing truth;
+7. initial Skills: corpus search, research ingestion, citation audit, contradiction review, stale-assumption review, knowledge promotion;
+8. MCP representation is a thin adapter over the domain service, not a foundational storage contract.
 
-Execute **Issue #9** without flattening the source conversation into a polished summary:
+## Frozen invariants added during recent gates
 
-1. define a durable conversation/source envelope with stable conversation/message identities and explicit source status (`verbatim` vs `reconstructed`);
-2. preserve raw/verbatim text as an immutable artifact when available;
-3. represent reconstructed recovery material explicitly as reconstruction rather than verbatim evidence;
-4. preserve message order, reply/parent relationships, actor/model/tool/run metadata where available, and source spans;
-5. derive claims, challenges, rebuttals, assumptions, conclusions, and position changes with provenance back to source messages/spans;
-6. keep opposing positions separately retrievable;
-7. benchmark reconstruction of the required intellectual path and the current conclusion;
-8. prove current state and historical path can both be queried without relying on chat UI history.
+- new physical projection build => fresh build-scoped applied ledger;
+- rebuild replay order => `(recorded_at, event_id)`;
+- graph-native UUID equality is not a migration requirement;
+- active projection switch is append-only and requires passed semantic/benchmark checks;
+- reconstructed conversation evidence cannot silently become verbatim evidence;
+- verbatim conversation text must resolve exactly to immutable source bytes/spans.
 
-The recovered chat-loss checkpoint is provenance and must never be silently promoted to a verbatim transcript.
+## Execution order after #8
 
-## Migration invariants now frozen
-
-- destructive graph replacement uses a fresh projection build identity/applied ledger;
-- event replay order is `(recorded_at, event_id)`, not filesystem path and not `occurred_at`;
-- migration comparison excludes graph-native UUIDs;
-- semantic snapshots compare durable IDs, pack namespaces, provenance, claim/relation state, and event inventory;
-- active projection changes are append-only switch records written only after checks pass;
-- once an active slot exists, stale switch proposals from an old source slot are rejected.
-
-## Knowledge repository split
-
-The external repositories are **knowledge-pack repositories**, not database shards.
-
-The first two external knowledge-pack repositories are:
-
-1. `fossil-common` — shared/common research + engineering methods;
-2. `fossil-ai-systems` — AI-systems/plugin-harness knowledge.
-
-They preserve the existing `dkg.pack.v1` contract and stable pack IDs listed at the top of this file. Repository location, Graphiti namespace, and future physical database placement are operational details rather than identity.
+`#8 Skills/API/MCP -> #7 retrieval/model benchmarks`, while completing #10 source-snapshot/citation/redaction work cross-cutting.
 
 ## Current implementation evidence
 
-- `src/dkg/io.py` — atomic immutable publication.
-- `src/dkg/event_store.py` — validated, deterministic idempotent durable events.
-- `src/dkg/artifact_store.py` — SHA-256 content-addressed evidence and verification.
-- `src/dkg/pack.py` — pack validation and read/write boundaries.
-- `src/dkg/promotion.py` — explicit cross-pack promotion event.
-- `src/dkg/lifecycle.py` — event-replay claim/relation lifecycle and stale propagation.
-- `src/dkg/projection/ledger.py` — retry/failure/applied projection ledger with build scoping.
-- `src/dkg/projection/graphiti.py` — isolated Graphiti/Neo4j adapter with durable replay ordering.
-- `src/dkg/projection/migration.py` — semantic comparison, destructive rebuild orchestration, and guarded blue/green switch ledger.
-- `tests/test_projection_migration.py` — deterministic migration fixtures and guardrails.
-- `scripts/live_graphiti_smoke.py` — reusable real Graphiti/Neo4j proof runner.
-- `docs/implementation/2026-08-09-gate1-core-proof.md` — durable-core checkpoint.
-- `docs/implementation/2026-08-09-gate1-live-graphiti-proof.md` — real projection checkpoint.
-- `docs/implementation/2026-08-09-gate1-rebuild-blue-green-proof.md` — real destructive rebuild/blue-green checkpoint.
-
-## Research status
-
-Broad architecture research remains frozen enough to implement. New technologies should compete behind adapters and benchmarks rather than restarting the architecture.
-
-Reopen architecture research when implementation contradicts an assumption, a dependency materially changes/decays, a new requirement appears, or a competing architecture wins measured benchmarks.
+Core: `src/dkg/event_store.py`, `artifact_store.py`, `pack.py`, `promotion.py`, `lifecycle.py`.  
+Projection: `src/dkg/projection/graphiti.py`, `ledger.py`, `migration.py`.  
+Conversation: `src/dkg/conversation.py`, `schemas/conversation/`, `schemas/conversation-lineage/`, `tests/test_conversation_lineage.py`.  
+Proofs: `docs/implementation/2026-08-09-gate1-*.md`.
 
 ## End-of-session rule
 
-At the end of substantial work:
-
-- update `docs/HANDOFF_CURRENT.md`;
-- update this file if gate state changed;
-- update relevant GitHub issues;
-- commit material benchmark/test results;
-- update `docs/DECISION_LOG.md` for architectural changes;
-- append/supersede the relevant research trace when evidence changes a project decision.
+Update `docs/HANDOFF_CURRENT.md`, this file, Issue #1, active child issue(s), material benchmark evidence, and `docs/DECISION_LOG.md` after substantial changes.
