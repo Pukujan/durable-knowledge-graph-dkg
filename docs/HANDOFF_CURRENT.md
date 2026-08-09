@@ -1,8 +1,23 @@
 # Current Handoff
 
 **Date:** 2026-08-09  
-**Repository:** `Pukujan/durable-knowledge-graph-dkg`  
+**Project:** **FOSSIL — Fault-tolerant Open Semantic Store for Intellectual Lineage**  
+**Current GitHub repository:** `Pukujan/durable-knowledge-graph-dkg` (intended GitHub-level rename: `Pukujan/fossil-core`)  
 **Status:** research frozen; durable event/artifact, pack-boundary, promotion, and lifecycle layers implemented; Graphiti adapter implemented; live Neo4j/Graphiti proof is next.
+
+## Naming and repository family
+
+The durable corpus substrate may be referred to internally as **DICKS — Durable Intellectual Corpus & Knowledge System**.
+
+The intended repository family is:
+
+1. `fossil-core` — this architecture/contracts/core/projection/control-plane repository;
+2. `fossil-common` — shared research and engineering methods, preserving stable pack ID `pack_269099f7b2ba43b7a99b9427d64092de`;
+3. `fossil-ai-systems` — AI systems/plugin-harness knowledge, preserving stable pack ID `pack_f024177f89a5442db84171c3dd7f58e5` and depending on the common pack.
+
+Repository names and physical placement are not knowledge identity. Stable `pack_id` values remain authoritative across renames, repository moves, graph namespaces, and future physical shards.
+
+The README, Python project metadata, Decision D017, and Issue #1 have been updated for this naming decision. The current ChatGPT GitHub connector does not expose repository rename/create operations, so the GitHub-level rename and creation of the two external repositories are still pending account-level operations; do not mint replacement pack IDs when they are created.
 
 ## Fresh-session continuation order
 
@@ -95,12 +110,12 @@ Apply #10 citation/source-snapshot/redaction requirements throughout source inge
 
 ## External knowledge-pack repositories
 
-Issue #3 has passed. It is now safe to create the first two external logical knowledge packs:
+Issue #3 has passed. The first two external logical knowledge packs are authorized and named:
 
-1. shared/common research + engineering methods;
-2. AI systems / plugin-harness knowledge.
+1. `fossil-common` — shared/common research + engineering methods;
+2. `fossil-ai-systems` — AI systems / plugin-harness knowledge.
 
-They should use the same `dkg.pack.v1` contract and stable pack IDs. Do not call them physical shards; they may later be placed on separate graph/database shards without changing identity.
+They use the same `dkg.pack.v1` contract and the stable pack IDs recorded above. Do not call them physical shards; they may later be placed on separate graph/database shards without changing identity.
 
 ## Durable trace of this implementation pass
 
