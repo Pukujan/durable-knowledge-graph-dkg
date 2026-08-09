@@ -1,0 +1,65 @@
+{
+  "research_run_id": "rr_dkg_architecture_2026_08_09",
+  "schema_version": "1.0",
+  "started_at": "2026-08-09T12:00:00-04:00",
+  "ended_at": null,
+  "question": "How should a local-first durable knowledge graph preserve research lineage, provenance, disagreement, migrations, boundaries, retrieval and agent access without coupling durable knowledge to one database or model?",
+  "scope": "Architecture research and freeze for the durable-knowledge-graph-dkg project.",
+  "initiated_by_refs": [
+    "artifact:conversation:2026-08-09",
+    "github:issue:1"
+  ],
+  "actors": [
+    {
+      "actor_id": "actor:user:Pukujan",
+      "actor_type": "human"
+    },
+    {
+      "actor_id": "actor:assistant:chatgpt",
+      "actor_type": "agent",
+      "provider": "OpenAI",
+      "model": "GPT-5.6 Sol"
+    }
+  ],
+  "search_queries": [],
+  "source_refs": [
+    "doc:research:2026-08-09-evidence-ledger",
+    "doc:research:2026-08-09-final-research-synthesis"
+  ],
+  "claim_refs": [
+    "claim:durable-evidence-events-are-deepest-truth",
+    "claim:graphiti-neo4j-is-rebuildable-projection",
+    "claim:knowledge-packs-separate-logical-boundary-from-placement",
+    "claim:research-lineage-is-first-class-provenance"
+  ],
+  "alternative_refs": [
+    "alternative:sqlite-canonical",
+    "alternative:postgres-canonical",
+    "alternative:graph-canonical",
+    "alternative:vector-first",
+    "alternative:plain-files-only"
+  ],
+  "critique_refs": [
+    "critique:sqlite-first-built-too-early",
+    "critique:graphiti-must-not-own-durable-identity",
+    "critique:multi-model-agreement-is-not-evidence"
+  ],
+  "unresolved_question_refs": [
+    "question:best-first-graph-projection-benchmark",
+    "question:best-local-specialist-models-per-capability"
+  ],
+  "decision_refs": [
+    "decision:architecture-contract-2026-08-09"
+  ],
+  "implementation_refs": [
+    "github:repo:Pukujan/durable-knowledge-graph-dkg",
+    "github:issue:1",
+    "doc:ARCHITECTURE.md"
+  ],
+  "decision_state": "accepted_for_now",
+  "trace_refs": [],
+  "code_commit": "427252e4025afc7f34470a29733293f708b680b6",
+  "ontology_version": "core/v1",
+  "research_policy_version": "source-quality-v1",
+  "notes": "Seed trace. The full source/search/claim graph will be materialized later from durable project evidence; missing chat turns remain explicitly reconstructed rather than treated as verbatim evidence."
+}
