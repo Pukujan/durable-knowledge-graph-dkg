@@ -24,7 +24,7 @@ def event():
         "subject_refs": ["clm_example_0000000000000001"],
         "idempotency_key": "conversation-1-turn-1-claim-1",
         "evidence_refs": ["span_example_0000000000000001"],
-        "payload": {"claim_text": "Evidence should survive projection replacement."}
+        "payload": {"claim_text": "Evidence should survive projection replacement."},
     }
 
 
@@ -44,6 +44,14 @@ def test_same_idempotency_key_cannot_change_history(tmp_path):
     changed["payload"]["claim_text"] = "Changed after commit"
     with pytest.raises(IdempotencyConflict):
         store.commit(changed)
+
+
+def test_supplied_event_id_must_match_idempotency_identity(tmp_path):
+    store = DurableEventStore(tmp_path / "events", SCHEMA)
+    bad = event()
+    bad["event_id"] = "evt_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    with pytest.raises(IdempotencyConflict):
+        store.commit(bad)
 
 
 def test_invalid_event_rejected_before_write(tmp_path):
