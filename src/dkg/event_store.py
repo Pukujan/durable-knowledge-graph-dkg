@@ -39,7 +39,9 @@ class DurableEventStore:
             + "\n"
         ).encode("utf-8")
 
-    def commit(self, event: dict[str, Any]) -> dict[str, Any]:
+    def prepare(self, event: dict[str, Any]) -> dict[str, Any]:
+        """Assign durable identity and validate without publishing anything."""
+
         candidate = copy.deepcopy(event)
         pack_id = candidate.get("pack_id")
         idem = candidate.get("idempotency_key")
@@ -56,6 +58,15 @@ class DurableEventStore:
             candidate["event_id"] = new_id("evt")
 
         self.validator.validate(candidate)
+        return candidate
+
+    def validate(self, event: dict[str, Any]) -> dict[str, Any]:
+        """Public non-mutating validation path used by agent/API boundaries."""
+
+        return self.prepare(event)
+
+    def commit(self, event: dict[str, Any]) -> dict[str, Any]:
+        candidate = self.prepare(event)
         path = self._event_path(candidate["event_id"])
         data = self._canonical(candidate)
 
