@@ -1,0 +1,152 @@
+{
+  "benchmark_id": "conversation-lineage-recovered-dkg-v1",
+  "conversation_id": "conv_recovered_dkg_20260809",
+  "lineage_id": "lin_recovered_dkg_20260809",
+  "source_path": "docs/recovery/2026-08-09-conversation-lineage-benchmark-source.md",
+  "source_evidence_status": "reconstructed",
+  "reconstruction_basis_refs": [
+    "docs/recovery/2026-08-09-chat-recovery-checkpoint.md",
+    "docs/research/2026-08-09-dkg-project-research-trace-seed.md",
+    "github:issue:9"
+  ],
+  "nodes": [
+    {
+      "node_id": "ln_learning_ux",
+      "kind": "observation",
+      "label": "learning UX / parabola",
+      "position_state": "historical",
+      "source_marker": "[stage:learning-ux] Reconstructed concept: a learning-UX/parabola observation raised the problem of how people can understand an idea even when the representation used by a system does not match the learner's mental model."
+    },
+    {
+      "node_id": "ln_representation_mismatch",
+      "kind": "claim",
+      "label": "representation mismatch",
+      "position_state": "historical",
+      "source_marker": "[stage:representation-mismatch] Reconstructed concept: the problem was reframed as representation mismatch rather than merely missing information; two systems may contain related knowledge while encoding it in forms that are difficult to translate directly."
+    },
+    {
+      "node_id": "ln_ai_translation",
+      "kind": "claim",
+      "label": "AI translation layer",
+      "position_state": "historical",
+      "source_marker": "[stage:ai-translation-layer] Reconstructed concept: an AI translation layer was considered as a way to transform between representations while preserving enough provenance to explain what changed during translation."
+    },
+    {
+      "node_id": "ln_failure_learning",
+      "kind": "observation",
+      "label": "failure learning",
+      "position_state": "historical",
+      "source_marker": "[stage:failure-learning] Reconstructed concept: translation and agent workflows should learn from failures rather than only from successful outputs, so failed attempts become durable engineering/research knowledge instead of disposable logs."
+    },
+    {
+      "node_id": "ln_mapek_kedb",
+      "kind": "claim",
+      "label": "MAPE-K / KEDB",
+      "position_state": "historical",
+      "source_marker": "[stage:mapek-kedb] Reconstructed concept: failure learning led toward KEDB-style failure knowledge and MAPE-K-style monitor/analyze/plan/execute/knowledge loops for repeatable agent/research workflows."
+    },
+    {
+      "node_id": "ln_truth_maintenance",
+      "kind": "claim",
+      "label": "truth maintenance",
+      "position_state": "historical",
+      "source_marker": "[stage:truth-maintenance] Reconstructed concept: once claims can be challenged by new evidence, the corpus needs truth-maintenance behavior that preserves disagreement, supersession, retraction, and staleness instead of rewriting earlier conclusions in place."
+    },
+    {
+      "node_id": "ln_temporal_knowledge_graph",
+      "kind": "conclusion",
+      "label": "temporal knowledge graph",
+      "position_state": "current",
+      "source_marker": "[stage:temporal-knowledge-graph] Current reconstructed conclusion: immutable evidence and append-only knowledge events should remain durable truth while a temporal knowledge graph provides a living, rebuildable projection of current and historical intellectual state."
+    },
+    {
+      "node_id": "ln_workflow_assumption",
+      "kind": "assumption",
+      "label": "explicit harness workflow",
+      "position_state": "current",
+      "source_marker": "[assumption:workflow-control] Reconstructed assumption: mature coding/research agents are useful, but important work needs an explicit repeatable harness rather than relying only on each agent's default workflow."
+    },
+    {
+      "node_id": "ln_model_consensus_challenge",
+      "kind": "challenge",
+      "label": "model consensus is not evidence",
+      "position_state": "current",
+      "source_marker": "[challenge:model-consensus] Reconstructed challenge: agreement among several models is not external evidence and must not by itself promote a claim to truth."
+    },
+    {
+      "node_id": "ln_external_truth_rebuttal",
+      "kind": "rebuttal",
+      "label": "external truth signals",
+      "position_state": "current",
+      "source_marker": "[rebuttal:external-truth] Reconstructed rebuttal: model review can be useful metadata, but important claims still need source evidence, experiments, tests, or other external truth signals before state changes are justified."
+    },
+    {
+      "node_id": "ln_database_canonical",
+      "kind": "claim",
+      "label": "database as canonical corpus",
+      "position_state": "opposing",
+      "source_marker": "[position:database-canonical] Historical reconstructed position: an early design treated a database implementation such as SQLite, PostgreSQL, or a graph database as a candidate canonical home for the corpus."
+    },
+    {
+      "node_id": "ln_durable_events_position_change",
+      "kind": "position_change",
+      "label": "durable events become canonical",
+      "position_state": "current",
+      "source_marker": "[position-change:durable-events] Reconstructed change of position: broader research and migration concerns demoted database products to replaceable storage/projection roles and promoted immutable evidence plus append-only corpus-owned events to canonical durable truth."
+    },
+    {
+      "node_id": "ln_graph_canonical_opposition",
+      "kind": "claim",
+      "label": "graph as canonical corpus",
+      "position_state": "opposing",
+      "source_marker": "[opposing:graph-canonical] Reconstructed opposing position retained for retrieval: making the operational graph itself canonical would simplify some queries and updates, but graph loss or vendor migration could strand intellectual history."
+    },
+    {
+      "node_id": "ln_rebuildable_graph_answer",
+      "kind": "decision",
+      "label": "rebuildable graph projection",
+      "position_state": "current",
+      "source_marker": "[current:rebuildable-graph] Current reconstructed answer to that opposition: keep Graphiti/Neo4j useful and replaceable, require graph deletion/rebuild to preserve the same durable identities and semantic history, and record migration evidence rather than trusting physical graph IDs."
+    },
+    {
+      "node_id": "ln_not_verbatim_constraint",
+      "kind": "assumption",
+      "label": "missing chat is not verbatim recoverable",
+      "position_state": "current",
+      "source_marker": "[constraint:not-verbatim] The missing UI messages cannot be reconstructed verbatim from the surviving evidence. Any lineage derived from this file must retain `reconstructed` evidence status and resolve citations back to immutable source artifacts/spans."
+    }
+  ],
+  "edges": [
+    {"edge_id": "le_path_01", "source_node_id": "ln_learning_ux", "target_node_id": "ln_representation_mismatch", "relation_type": "leads_to"},
+    {"edge_id": "le_path_02", "source_node_id": "ln_representation_mismatch", "target_node_id": "ln_ai_translation", "relation_type": "leads_to"},
+    {"edge_id": "le_path_03", "source_node_id": "ln_ai_translation", "target_node_id": "ln_failure_learning", "relation_type": "leads_to"},
+    {"edge_id": "le_path_04", "source_node_id": "ln_failure_learning", "target_node_id": "ln_mapek_kedb", "relation_type": "leads_to"},
+    {"edge_id": "le_path_05", "source_node_id": "ln_mapek_kedb", "target_node_id": "ln_truth_maintenance", "relation_type": "leads_to"},
+    {"edge_id": "le_path_06", "source_node_id": "ln_truth_maintenance", "target_node_id": "ln_temporal_knowledge_graph", "relation_type": "leads_to"},
+    {"edge_id": "le_truth_01", "source_node_id": "ln_model_consensus_challenge", "target_node_id": "ln_external_truth_rebuttal", "relation_type": "leads_to"},
+    {"edge_id": "le_truth_02", "source_node_id": "ln_external_truth_rebuttal", "target_node_id": "ln_truth_maintenance", "relation_type": "supports"},
+    {"edge_id": "le_position_01", "source_node_id": "ln_durable_events_position_change", "target_node_id": "ln_database_canonical", "relation_type": "challenges"},
+    {"edge_id": "le_position_02", "source_node_id": "ln_rebuildable_graph_answer", "target_node_id": "ln_graph_canonical_opposition", "relation_type": "challenges"},
+    {"edge_id": "le_position_03", "source_node_id": "ln_database_canonical", "target_node_id": "ln_durable_events_position_change", "relation_type": "supersedes"},
+    {"edge_id": "le_harness_01", "source_node_id": "ln_workflow_assumption", "target_node_id": "ln_mapek_kedb", "relation_type": "supports"},
+    {"edge_id": "le_recovery_01", "source_node_id": "ln_not_verbatim_constraint", "target_node_id": "ln_temporal_knowledge_graph", "relation_type": "supports"}
+  ],
+  "required_path": [
+    "ln_learning_ux",
+    "ln_representation_mismatch",
+    "ln_ai_translation",
+    "ln_failure_learning",
+    "ln_mapek_kedb",
+    "ln_truth_maintenance",
+    "ln_temporal_knowledge_graph"
+  ],
+  "opposing_pairs": [
+    ["ln_durable_events_position_change", "ln_database_canonical"],
+    ["ln_rebuildable_graph_answer", "ln_graph_canonical_opposition"]
+  ],
+  "current_conclusion_refs": [
+    "ln_temporal_knowledge_graph",
+    "ln_rebuildable_graph_answer"
+  ],
+  "benchmark_current_conclusion_ref": "ln_temporal_knowledge_graph"
+}
