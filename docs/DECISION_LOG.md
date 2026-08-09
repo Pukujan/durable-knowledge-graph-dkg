@@ -142,6 +142,28 @@ This file records accepted architectural decisions, serious alternatives, and th
 
 **Why:** FOSSIL reflects the core rebuild-from-preserved-history property while giving the repository family a durable, memorable public name. DICS names the durable corpus substrate without changing the architectural semantics.
 
+## D018 — Physical projection builds have separate operational identity
+
+**State:** accepted / frozen migration invariant  
+**Decision:** every destructive rebuild or blue/green candidate receives a fresh projection build identity and build-scoped applied ledger. Migration comparison uses projection-independent semantic snapshots, and active projection changes are append-only switch records written only after checks pass.
+
+**Why:** deleting a graph while reusing an old applied ledger can cause every event to look already materialized and silently rebuild an empty projection. Graph-native node/edge UUID equality is also the wrong migration contract because those identifiers may legitimately change on rebuild.
+
+**Evidence:** `docs/implementation/2026-08-09-gate1-rebuild-blue-green-proof.md`, Issue #5.
+
+**Reconsider only if:** a future projection system provides a stronger atomic build/version identity while preserving equivalent replay, comparison, rollback, and audit semantics.
+
+## D019 — Conversation evidence status is durable provenance
+
+**State:** accepted / frozen evidence invariant  
+**Decision:** conversation source artifacts, byte spans, messages, and derived lineage explicitly distinguish `verbatim` from `reconstructed` evidence. A reconstructed recovery artifact cannot be silently upgraded to verbatim evidence. Verbatim messages must resolve exactly to immutable source bytes/spans.
+
+**Why:** a polished recovery summary and a primary transcript have fundamentally different evidentiary weight. Losing that distinction would corrupt intellectual lineage and make citations misleading.
+
+**Evidence:** `docs/implementation/2026-08-09-gate1-conversation-lineage-proof.md`, Issue #9.
+
+**Reconsider only if:** a stronger provenance representation preserves at least the same primary-vs-reconstructed distinction and exact source resolution.
+
 ## How to add a decision
 
 When implementation or research changes an architectural conclusion:
