@@ -1,8 +1,20 @@
 # Project State
 
+**Project:** **FOSSIL — Fault-tolerant Open Semantic Store for Intellectual Lineage**  
+**Durable substrate nickname:** **DICKS — Durable Intellectual Corpus & Knowledge System**  
 **Current phase:** Gate 1 durable executable proof — core durable layer complete; live Graphiti integration next  
 **Control plane:** GitHub issues + durable repository docs  
 **Last updated:** 2026-08-09
+
+## Repository family
+
+Intended GitHub repository layout:
+
+- `fossil-core` — this repository after GitHub-level rename;
+- `fossil-common` — stable pack `pack_269099f7b2ba43b7a99b9427d64092de`;
+- `fossil-ai-systems` — stable pack `pack_f024177f89a5442db84171c3dd7f58e5`, with a required dependency on the common pack.
+
+The current GitHub slug remains `Pukujan/durable-knowledge-graph-dkg` until the account-level rename is performed. The current ChatGPT GitHub connector does not expose repository rename/create actions. This tooling limitation must not cause new pack IDs to be minted: repository names and physical placement are operational details, while stable `pack_id` values are identity.
 
 ## Continuation entry point
 
@@ -104,12 +116,12 @@ Then execute **Issue #5**: destroy the graph, rebuild from durable events, build
 
 Future Git repositories are **knowledge-pack repositories**, not database shards.
 
-Issue #3 has now passed, so the first two external pack repositories can be created when desired:
+Issue #3 has passed, so the first two external pack repositories are authorized and named:
 
-1. a shared/common knowledge pack;
-2. an AI-systems/plugin-harness knowledge pack.
+1. `fossil-common` — shared/common research + engineering methods;
+2. `fossil-ai-systems` — AI-systems/plugin-harness knowledge.
 
-Each should use the existing `dkg.pack.v1` contract and preserve its stable `pack_id`. Repository location, Graphiti namespace, and future physical database placement are operational details rather than identity.
+They must preserve the existing `dkg.pack.v1` contract and stable pack IDs listed at the top of this file. Repository location, Graphiti namespace, and future physical database placement are operational details rather than identity.
 
 ## Current implementation evidence
 
