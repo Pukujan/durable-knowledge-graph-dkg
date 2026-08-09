@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pukujan.github.io/durable-knowledge-graph-dkg/schemas/research-trace/v1.schema.json",
+  "title": "Research Trace Envelope v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "research_run_id",
+    "schema_version",
+    "started_at",
+    "question",
+    "decision_state",
+    "actors",
+    "source_refs",
+    "claim_refs"
+  ],
+  "properties": {
+    "research_run_id": {"type": "string", "minLength": 1},
+    "schema_version": {"const": "1.0"},
+    "started_at": {"type": "string", "format": "date-time"},
+    "ended_at": {"type": ["string", "null"], "format": "date-time"},
+    "question": {"type": "string", "minLength": 1},
+    "scope": {"type": "string"},
+    "initiated_by_refs": {
+      "type": "array",
+      "items": {"type": "string"},
+      "uniqueItems": true
+    },
+    "actors": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["actor_id", "actor_type"],
+        "properties": {
+          "actor_id": {"type": "string", "minLength": 1},
+          "actor_type": {"enum": ["human", "agent", "model", "service"]},
+          "provider": {"type": "string"},
+          "model": {"type": "string"},
+          "harness_version": {"type": "string"},
+          "skill_version": {"type": "string"}
+        }
+      }
+    },
+    "search_queries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["query"],
+        "properties": {
+          "query": {"type": "string", "minLength": 1},
+          "purpose": {"type": "string"},
+          "executed_at": {"type": "string", "format": "date-time"}
+        }
+      }
+    },
+    "source_refs": {
+      "type": "array",
+      "items": {"type": "string"},
+      "uniqueItems": true
+    },
+    "claim_refs": {
+      "type": "array",
+      "items": {"type": "string"},
+      "uniqueItems": true
+    },
+    "alternative_refs": {
+      "type": "array",
+      "items": {"type": "string"},
+      "uniqueItems": true
+    },
+    "critique_refs": {
+      "type": "array",
+      "items": {"type": "string"},
+      "uniqueItems": true
+    },
+    "unresolved_question_refs": {
+      "type": "array",
+      "items": {"type": "string"},
+      "uniqueItems": true
+    },
+    "decision_refs": {
+      "type": "array",
+      "items": {"type": "string"},
+      "uniqueItems": true
+    },
+    "implementation_refs": {
+      "type": "array",
+      "items": {"type": "string"},
+      "uniqueItems": true
+    },
+    "decision_state": {
+      "enum": ["open", "provisional", "accepted_for_now", "rejected", "superseded"]
+    },
+    "trace_refs": {
+      "type": "array",
+      "items": {"type": "string"},
+      "uniqueItems": true
+    },
+    "code_commit": {"type": "string"},
+    "ontology_version": {"type": "string"},
+    "research_policy_version": {"type": "string"},
+    "notes": {"type": "string"}
+  }
+}
