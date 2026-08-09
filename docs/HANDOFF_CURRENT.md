@@ -2,8 +2,8 @@
 
 **Date:** 2026-08-09  
 **Project:** **FOSSIL — Fault-tolerant Open Semantic Store for Intellectual Lineage**  
-**Current GitHub repository:** `Pukujan/fossil-core`
-**Status:** research frozen; durable event/artifact, pack-boundary, promotion, and lifecycle layers implemented; Graphiti adapter implemented; live Neo4j/Graphiti proof is next.
+**Current GitHub repository:** `Pukujan/fossil-core`  
+**Status:** durable core, pack boundaries, lifecycle, Graphiti adapter, and real Graphiti/Neo4j materialization proof complete; destructive rebuild/blue-green is active.
 
 ## Naming and repository family
 
@@ -11,13 +11,11 @@ The durable corpus substrate is **DICS — Durable Intellectual Corpus System**.
 
 The repository family is:
 
-1. `fossil-core` — this architecture/contracts/core/projection/control-plane repository;
+1. `fossil-core` — architecture/contracts/core/projection/control-plane repository;
 2. `fossil-common` — shared research and engineering methods, preserving stable pack ID `pack_269099f7b2ba43b7a99b9427d64092de`;
 3. `fossil-ai-systems` — AI systems/plugin-harness knowledge, preserving stable pack ID `pack_f024177f89a5442db84171c3dd7f58e5` and depending on the common pack.
 
 Repository names and physical placement are not knowledge identity. Stable `pack_id` values remain authoritative across renames, repository moves, graph namespaces, and future physical shards.
-
-The GitHub-level rename is complete, and the two external knowledge-pack repositories now exist as `Pukujan/fossil-common` and `Pukujan/fossil-ai-systems`. Do not mint replacement pack IDs: repositories are physical placement, while stable `pack_id` values are logical identity.
 
 ## Fresh-session continuation order
 
@@ -25,11 +23,12 @@ The GitHub-level rename is complete, and the two external knowledge-pack reposit
 2. `ARCHITECTURE.md`
 3. `docs/PROJECT_STATE.md`
 4. this file
-5. `docs/research/2026-08-09-final-research-synthesis.md`
-6. `docs/research/2026-08-09-evidence-ledger.md`
-7. `docs/research/RESEARCH_TRACE_CONTRACT.md`
-8. `docs/DECISION_LOG.md`
-9. Issue #1 and active Issue #4
+5. `docs/implementation/2026-08-09-gate1-live-graphiti-proof.md`
+6. `docs/research/2026-08-09-final-research-synthesis.md`
+7. `docs/research/2026-08-09-evidence-ledger.md`
+8. `docs/research/RESEARCH_TRACE_CONTRACT.md`
+9. `docs/DECISION_LOG.md`
+10. Issue #1 and active Issue #5
 
 The chat UI is source material, not the control plane.
 
@@ -39,7 +38,7 @@ The canonical system is immutable evidence + stable corpus IDs + append-only val
 
 A graph deletion must never delete irreplaceable intellectual history.
 
-## Work completed in the latest implementation pass
+## Completed implementation gates
 
 ### Issue #2 — complete
 
@@ -66,66 +65,80 @@ A graph deletion must never delete irreplaceable intellectual history.
 - support/challenge/contradiction/refinement/dependency relations;
 - superseded premises mark active dependents `stale_pending_review` instead of silently rewriting them.
 
-### Issue #4 — partially complete
+### Issue #4 — complete, including real integration
 
-Committed:
+Committed implementation:
 
 - `src/dkg/projection/graphiti.py`;
 - `src/dkg/projection/ledger.py`;
+- `scripts/live_graphiti_smoke.py`;
 - fake-client projection tests;
-- Graphiti pinned as optional `graphiti-core==0.29.3` dependency.
+- optional dependency `graphiti-core==0.29.3`.
 
-Behavior already proved in unit tests:
+The real proof passed in GitHub Actions `DKG contract tests` run #70 (`31338875226`), job `93309155019`.
 
-- `pack_id` maps directly to Graphiti `group_id`;
-- already-applied events are skipped on retry;
-- failed projection attempts are recorded without losing the durable event;
-- successful projection records build-manifest versions.
+Proven runtime:
 
-Do **not** close #4 yet. A real Neo4j + Graphiti run is still required.
+- Graphiti `0.29.3`;
+- Neo4j `5.26.29`;
+- Ollama OpenAI-compatible provider;
+- `deepseek-r1:7b`;
+- `nomic-embed-text`, dimension 768;
+- ontology `1.0.0`;
+- `structured_output_mode=json_schema`.
 
-## Exact next task
+Durable event `evt_27769393996d2827172f6abc0aa086dc` existed before projection. It appeared as exactly one real Graphiti episode under stable group/pack `pack_269099f7b2ba43b7a99b9427d64092de`, with two mentioned entities. Retrying the event returned `skipped: already applied` and left one episode.
 
-Finish Issue #4 with a live local integration:
+The first live run with `json_object` failed because the local model returned `Edges` instead of Graphiti's required `edges`. The failure was recorded without losing the durable event; the same proof passed when schema-constrained `json_schema` output was used. This is now the reusable live-smoke default.
 
-1. start Neo4j 5.26+;
-2. install the project with the `graphiti` optional dependency;
-3. supply the configured Graphiti LLM/embedding provider credentials or a proven local provider;
-4. initialize Graphiti indices/constraints;
-5. commit a durable event before projection;
-6. run it through `GraphitiProjectionAdapter`;
-7. verify the expected Graphiti namespace/group contains the projected episode/facts;
-8. record real runtime/model/ontology/code versions in a durable implementation checkpoint;
-9. rerun the event and prove no duplicate projection occurs.
+Full durable evidence: `docs/implementation/2026-08-09-gate1-live-graphiti-proof.md`.
 
-The current execution environment used by ChatGPT does not contain Docker, so mocked adapter tests were run here but the live Neo4j gate was deliberately left open rather than falsely marked complete.
+## Exact next task — Issue #5
 
-## After #4
+Implement destructive rebuild and blue/green migration as a normal product capability:
+
+1. preserve the immutable event/artifact layer;
+2. destroy the current graph projection;
+3. rebuild a fresh projection solely from durable events;
+4. verify stable corpus IDs, pack namespaces, provenance, claim/relation state semantics, and build manifests;
+5. build candidate projection B beside projection A;
+6. compare deterministic semantic/invariant snapshots;
+7. change an active-projection pointer only if candidate checks pass;
+8. retain enough projection/build history to explain a switch or rollback.
+
+Migration fixtures must exercise concept rename/split/merge, claim supersession, disputed claims, temporal change, and cross-pack references.
+
+Do not make a graph-native node/edge ID part of the comparison contract. Compare durable IDs and semantic invariants instead.
+
+## After #5
 
 Execute:
 
-`#5 destructive rebuild/blue-green -> #9 conversation lineage benchmark -> #8 Skills/API/MCP -> #7 retrieval/model benchmarks`
+`#9 conversation lineage benchmark -> #8 Skills/API/MCP -> #7 retrieval/model benchmarks`
 
 Apply #10 citation/source-snapshot/redaction requirements throughout source ingestion.
 
 ## External knowledge-pack repositories
 
-Issue #3 has passed. The first two external logical knowledge packs are physically present:
+The first two external logical knowledge packs are physically present:
 
 1. `fossil-common` — shared/common research + engineering methods;
 2. `fossil-ai-systems` — AI systems / plugin-harness knowledge.
 
 They use the same `dkg.pack.v1` contract and the stable pack IDs recorded above. Do not call them physical shards; they may later be placed on separate graph/database shards without changing identity.
 
-## Durable trace of this implementation pass
+## Durable trace
 
-Read `docs/implementation/2026-08-09-gate1-core-proof.md` for the implementation-evidence checkpoint. The project research trace is intentionally future corpus material so the knowledge graph can later explain how its own architecture moved from question -> research -> decision -> issue -> code -> test -> revision.
+Implementation evidence now includes:
+
+- `docs/implementation/2026-08-09-gate1-core-proof.md`;
+- `docs/implementation/2026-08-09-gate1-live-graphiti-proof.md`.
+
+The project research trace is intentionally future corpus material so the knowledge graph can later explain how its own architecture moved from question -> research -> decision -> issue -> code -> test -> failure -> revision -> proof.
 
 ## Research status
 
-The 127-source research pass is frozen enough to implement. Current Graphiti primary documentation confirms namespaced ingestion through `group_id`, JSON episodes, and Neo4j 5.26+ support. Graphiti 0.29.3 was the latest release observed during the adapter implementation pass.
-
-Do not restart broad research because a new library appears. Put new approaches behind existing interfaces and make them win a benchmark.
+The broad architecture research is frozen enough to implement. Do not restart broad research because a new library appears. Put new approaches behind existing interfaces and make them win a benchmark.
 
 ## End-of-session rule
 
