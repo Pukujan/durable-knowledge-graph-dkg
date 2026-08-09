@@ -24,6 +24,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
 
 jobs:
   live-graphiti-smoke:
@@ -106,6 +107,61 @@ jobs:
           name: fossil-live-graphiti-proof
           path: ${{ runner.temp }}/fossil-live-graphiti-proof.json
           if-no-files-found: warn
+
+      - name: Report proof result to Issue 4
+        if: always() && github.event_name == 'issue_comment'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          JOB_STATUS: ${{ job.status }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY' > "${RUNNER_TEMP}/issue-report.md"
+          import json
+          import os
+          from pathlib import Path
+
+          proof_path = Path(os.environ["FOSSIL_PROOF_PATH"])
+          status = os.environ.get("JOB_STATUS", "unknown")
+          run_url = (
+              f'{os.environ["GITHUB_SERVER_URL"]}/'
+              f'{os.environ["GITHUB_REPOSITORY"]}/actions/runs/'
+              f'{os.environ["GITHUB_RUN_ID"]}'
+          )
+          print(f"Automated FOSSIL Issue #4 live Graphiti proof: **{status}**")
+          print()
+          print(f"- workflow run: {run_url}")
+          print(f"- workflow SHA: `{os.environ['GITHUB_SHA']}`")
+          if proof_path.exists():
+              proof = json.loads(proof_path.read_text(encoding="utf-8"))
+              selected = {
+                  key: proof.get(key)
+                  for key in (
+                      "status",
+                      "stage",
+                      "error_type",
+                      "error",
+                      "event_id",
+                      "pack_id",
+                      "build_manifest",
+                      "first_receipt",
+                      "after_first_projection",
+                      "second_receipt",
+                      "after_idempotent_retry",
+                  )
+                  if proof.get(key) is not None
+              }
+              print("- structured proof artifact: present")
+              print()
+              print("```json")
+              print(json.dumps(selected, indent=2, sort_keys=True)[:12000])
+              print("```")
+          else:
+              print("- structured proof artifact: **missing** (failure occurred before the proof runner produced it)")
+          PY
+          gh api "repos/${GITHUB_REPOSITORY}/issues/4/comments" \
+            --method POST \
+            -f "body=$(cat "${RUNNER_TEMP}/issue-report.md")"
 
       - name: Show Ollama log on failure
         if: failure()
