@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://pukujan.github.io/durable-knowledge-graph-dkg/schemas/events/v1.schema.json",
+  "$id": "https://pukujan.github.io/fossil-core/schemas/events/v1.schema.json",
   "title": "DKG Durable Knowledge Event v1",
   "type": "object",
   "additionalProperties": false,

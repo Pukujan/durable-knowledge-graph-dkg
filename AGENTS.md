@@ -61,7 +61,7 @@ Unless a failing test changes the order:
 8. #7 pluggable retrieval/model-service benchmarking
 9. #10 source snapshot/redaction hardening as required across the above work
 
-Do not create external knowledge-pack repositories until #3 proves the pack contract and namespace isolation.
+External knowledge-pack repositories are created only after #3 proves the pack contract and namespace isolation. That gate has passed; preserve the existing stable pack IDs and read/write boundaries when maintaining those repositories.
 
 ## Session continuity protocol
 

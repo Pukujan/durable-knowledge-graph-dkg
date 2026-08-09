@@ -4,7 +4,7 @@
   "started_at": "2026-08-09T12:00:00-04:00",
   "ended_at": null,
   "question": "How should a local-first durable knowledge graph preserve research lineage, provenance, disagreement, migrations, boundaries, retrieval and agent access without coupling durable knowledge to one database or model?",
-  "scope": "Architecture research and freeze for the durable-knowledge-graph-dkg project.",
+  "scope": "Architecture research and freeze for the FOSSIL project.",
   "initiated_by_refs": [
     "artifact:conversation:2026-08-09",
     "github:issue:1"
@@ -52,7 +52,7 @@
     "decision:architecture-contract-2026-08-09"
   ],
   "implementation_refs": [
-    "github:repo:Pukujan/durable-knowledge-graph-dkg",
+    "github:repo:Pukujan/fossil-core",
     "github:issue:1",
     "doc:ARCHITECTURE.md"
   ],

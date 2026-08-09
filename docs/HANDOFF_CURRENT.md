@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-09  
 **Project:** **FOSSIL — Fault-tolerant Open Semantic Store for Intellectual Lineage**  
-**Current GitHub repository:** `Pukujan/durable-knowledge-graph-dkg` (intended GitHub-level rename: `Pukujan/fossil-core`)  
+**Current GitHub repository:** `Pukujan/fossil-core`
 **Status:** research frozen; durable event/artifact, pack-boundary, promotion, and lifecycle layers implemented; Graphiti adapter implemented; live Neo4j/Graphiti proof is next.
 
 ## Naming and repository family
@@ -17,7 +17,7 @@ The intended repository family is:
 
 Repository names and physical placement are not knowledge identity. Stable `pack_id` values remain authoritative across renames, repository moves, graph namespaces, and future physical shards.
 
-The README, Python project metadata, Decision D017, and Issue #1 have been updated for this naming decision. The current ChatGPT GitHub connector does not expose repository rename/create operations, so the GitHub-level rename and creation of the two external repositories are still pending account-level operations; do not mint replacement pack IDs when they are created.
+The GitHub-level rename is complete, and the two external knowledge-pack repositories now exist as `Pukujan/fossil-common` and `Pukujan/fossil-ai-systems`. Do not mint replacement pack IDs: repositories are physical placement, while stable `pack_id` values are logical identity.
 
 ## Fresh-session continuation order
 
@@ -110,7 +110,7 @@ Apply #10 citation/source-snapshot/redaction requirements throughout source inge
 
 ## External knowledge-pack repositories
 
-Issue #3 has passed. The first two external logical knowledge packs are authorized and named:
+Issue #3 has passed. The first two external logical knowledge packs are physically present:
 
 1. `fossil-common` — shared/common research + engineering methods;
 2. `fossil-ai-systems` — AI systems / plugin-harness knowledge.

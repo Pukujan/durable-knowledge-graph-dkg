@@ -10,7 +10,7 @@ The durable substrate is called **DICS**: **Durable Intellectual Corpus System**
 
 ## Repository family
 
-The intended repository layout is:
+The FOSSIL repository family is:
 
 - `fossil-core` — architecture, contracts, durable event/artifact core, projection adapters, migration/rebuild machinery, and project control plane;
 - `fossil-common` — shared research and engineering methods, using stable pack ID `pack_269099f7b2ba43b7a99b9427d64092de`;

@@ -1,20 +1,20 @@
 # Project State
 
 **Project:** **FOSSIL — Fault-tolerant Open Semantic Store for Intellectual Lineage**  
-**Durable substrate nickname:** **DICKS — Durable Intellectual Corpus & Knowledge System**  
+**Durable substrate:** **DICS — Durable Intellectual Corpus System**
 **Current phase:** Gate 1 durable executable proof — core durable layer complete; live Graphiti integration next  
 **Control plane:** GitHub issues + durable repository docs  
 **Last updated:** 2026-08-09
 
 ## Repository family
 
-Intended GitHub repository layout:
+GitHub repository family:
 
-- `fossil-core` — this repository after GitHub-level rename;
+- `fossil-core` — architecture, contracts, durable core, projections, and control plane;
 - `fossil-common` — stable pack `pack_269099f7b2ba43b7a99b9427d64092de`;
 - `fossil-ai-systems` — stable pack `pack_f024177f89a5442db84171c3dd7f58e5`, with a required dependency on the common pack.
 
-The current GitHub slug remains `Pukujan/durable-knowledge-graph-dkg` until the account-level rename is performed. The current ChatGPT GitHub connector does not expose repository rename/create actions. This tooling limitation must not cause new pack IDs to be minted: repository names and physical placement are operational details, while stable `pack_id` values are identity.
+The repository family now physically exists as `Pukujan/fossil-core`, `Pukujan/fossil-common`, and `Pukujan/fossil-ai-systems`. This physical split does not change pack identity: stable `pack_id` values remain authoritative across repository moves, projections, and future storage changes.
 
 ## Continuation entry point
 
@@ -116,7 +116,7 @@ Then execute **Issue #5**: destroy the graph, rebuild from durable events, build
 
 Future Git repositories are **knowledge-pack repositories**, not database shards.
 
-Issue #3 has passed, so the first two external pack repositories are authorized and named:
+Issue #3 has passed, and the first two external knowledge-pack repositories now exist:
 
 1. `fossil-common` — shared/common research + engineering methods;
 2. `fossil-ai-systems` — AI-systems/plugin-harness knowledge.

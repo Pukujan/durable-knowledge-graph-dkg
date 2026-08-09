@@ -128,10 +128,10 @@ This file records accepted architectural decisions, serious alternatives, and th
 
 **Reconsider/refine when:** real sensitive/legal requirements exist; then define exact retention/removal policy.
 
-## D017 — FOSSIL is the project name; DICKS is the durable substrate nickname
+## D017 — FOSSIL is the project name; DICS is the durable substrate name
 
 **State:** accepted  
-**Decision:** the project is named **FOSSIL — Fault-tolerant Open Semantic Store for Intellectual Lineage**. The durable corpus substrate may be referred to internally as **DICKS — Durable Intellectual Corpus & Knowledge System**.
+**Decision:** the project is named **FOSSIL — Fault-tolerant Open Semantic Store for Intellectual Lineage**. The durable corpus substrate is **DICS — Durable Intellectual Corpus System**.
 
 **Repository family:**
 - `fossil-core` — architecture/contracts/core/projections/control plane;
@@ -140,7 +140,7 @@ This file records accepted architectural decisions, serious alternatives, and th
 
 **Invariant:** repository names do not define knowledge identity. The existing stable `pack_id` values remain authoritative through renames, moves, or future physical sharding.
 
-**Why:** FOSSIL reflects the core rebuild-from-preserved-history property while giving the repository family a durable, memorable public name. DICKS preserves a deliberately unserious internal name without changing architectural semantics.
+**Why:** FOSSIL reflects the core rebuild-from-preserved-history property while giving the repository family a durable, memorable public name. DICS names the durable corpus substrate without changing the architectural semantics.
 
 ## How to add a decision
 
