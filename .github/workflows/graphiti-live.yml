@@ -1,3 +1,4 @@
+# Observable Gate 1 proof trigger; executable behavior matches main.
 name: Graphiti live integration
 
 on:
