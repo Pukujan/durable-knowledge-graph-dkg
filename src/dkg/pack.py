@@ -1,10 +1,38 @@
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
 
 from jsonschema import Draft202012Validator, FormatChecker
+
+
+class PackBoundaryError(ValueError):
+    pass
+
+
+@dataclass(frozen=True)
+class PackAccess:
+    pack_id: str
+    read_mounts: frozenset[str]
+    write_targets: frozenset[str]
+
+    @classmethod
+    def from_manifest(cls, manifest: dict[str, Any]) -> "PackAccess":
+        return cls(
+            pack_id=manifest["pack_id"],
+            read_mounts=frozenset(manifest["read_mounts"]),
+            write_targets=frozenset(manifest["write_targets"]),
+        )
+
+    def require_read(self, pack_id: str) -> None:
+        if pack_id not in self.read_mounts:
+            raise PackBoundaryError(f"pack {pack_id} is not mounted for reading")
+
+    def require_write(self, pack_id: str) -> None:
+        if pack_id not in self.write_targets:
+            raise PackBoundaryError(f"pack {pack_id} is not an allowed write target")
 
 
 class KnowledgePackValidator:
@@ -17,10 +45,29 @@ class KnowledgePackValidator:
         self.validator.validate(manifest)
         pack_id = manifest["pack_id"]
         if pack_id not in manifest["read_mounts"]:
-            raise ValueError("a pack must be able to read itself")
+            raise PackBoundaryError("a pack must be able to read itself")
         for target in manifest["write_targets"]:
             if target not in manifest["read_mounts"]:
-                raise ValueError("every write target must also be readable")
+                raise PackBoundaryError("every write target must also be readable")
+        for dependency in manifest.get("dependencies", []):
+            if dependency["required"] and dependency["pack_id"] not in manifest["read_mounts"]:
+                raise PackBoundaryError("every required dependency must be in read_mounts")
+
+    def validate_set(self, manifests: Iterable[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+        by_id: dict[str, dict[str, Any]] = {}
+        for manifest in manifests:
+            self.validate(manifest)
+            pack_id = manifest["pack_id"]
+            if pack_id in by_id:
+                raise PackBoundaryError(f"duplicate pack_id: {pack_id}")
+            by_id[pack_id] = manifest
+        for manifest in by_id.values():
+            for dependency in manifest.get("dependencies", []):
+                if dependency["required"] and dependency["pack_id"] not in by_id:
+                    raise PackBoundaryError(
+                        f"required dependency {dependency['pack_id']} is unavailable"
+                    )
+        return by_id
 
     def load_and_validate(self, path: Path) -> dict[str, Any]:
         manifest = json.loads(Path(path).read_text(encoding="utf-8"))
