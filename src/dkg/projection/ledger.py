@@ -13,8 +13,9 @@ class ProjectionLedger:
     """Local operational ledger for retryable projection work.
 
     Accepted knowledge remains in the durable event store. This ledger records
-    only whether a replaceable projection build has materialized an event and why
-    a prior attempt failed.
+    whether a replaceable projection build materialized an event, why attempts
+    failed, and whether already-materialized content was later purged for an
+    exceptional redaction.
 
     A destructive rebuild must use a fresh ``build_id`` (or a separate root).
     Reusing applied markers from a destroyed graph would incorrectly skip events
@@ -32,6 +33,7 @@ class ProjectionLedger:
         )
         self.applied_root = self.root / "applied"
         self.failure_root = self.root / "failures"
+        self.redaction_root = self.root / "redactions"
 
     @staticmethod
     def _canonical(value: dict[str, Any]) -> bytes:
@@ -44,12 +46,22 @@ class ProjectionLedger:
         suffix = event_id.removeprefix("evt_")
         return self.applied_root / suffix[:2] / f"{event_id}.json"
 
+    def _redaction_path(self, event_id: str) -> Path:
+        suffix = event_id.removeprefix("evt_")
+        return self.redaction_root / suffix[:2] / f"{event_id}.json"
+
     def is_applied(self, event_id: str) -> bool:
         return self._applied_path(event_id).exists()
 
     def get_applied(self, event_id: str) -> dict[str, Any] | None:
         path = self._applied_path(event_id)
         return json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
+
+    def iter_applied(self) -> list[dict[str, Any]]:
+        return [
+            json.loads(path.read_text(encoding="utf-8"))
+            for path in sorted(self.applied_root.glob("*/*.json"))
+        ]
 
     def record_applied(self, event_id: str, record: dict[str, Any]) -> dict[str, Any]:
         path = self._applied_path(event_id)
@@ -74,3 +86,30 @@ class ProjectionLedger:
             payload["projection_build_id"] = self.build_id
         publish_immutable(path, self._canonical(payload))
         return path
+
+    def is_redacted(self, event_id: str) -> bool:
+        return self._redaction_path(event_id).exists()
+
+    def get_redaction(self, event_id: str) -> dict[str, Any] | None:
+        path = self._redaction_path(event_id)
+        return json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
+
+    def record_redaction(self, event_id: str, record: dict[str, Any]) -> dict[str, Any]:
+        path = self._redaction_path(event_id)
+        payload = {
+            "event_id": event_id,
+            "status": "redacted",
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            **record,
+        }
+        if self.build_id is not None:
+            payload["projection_build_id"] = self.build_id
+        encoded = self._canonical(payload)
+        if not publish_immutable(path, encoded):
+            existing = json.loads(path.read_text(encoding="utf-8"))
+            if self._canonical(existing) != encoded:
+                # recorded_at is intentionally generated only on first write; a
+                # subsequent idempotent purge returns the existing record.
+                return existing
+            return existing
+        return payload
