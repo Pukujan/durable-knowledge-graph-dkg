@@ -1,3 +1,4 @@
+# Proof-run trigger: no executable behavior differs from main.
 name: Graphiti live integration
 
 on:
