@@ -32,6 +32,9 @@ jobs:
         image: neo4j:5.26
         env:
           NEO4J_AUTH: neo4j/fossil-gate1-pass
+          NEO4J_server_memory_heap_initial__size: 256m
+          NEO4J_server_memory_heap_max__size: 512m
+          NEO4J_server_memory_pagecache_size: 256m
         ports:
           - 7474:7474
           - 7687:7687
@@ -42,8 +45,8 @@ jobs:
       NEO4J_PASSWORD: fossil-gate1-pass
       GRAPHITI_LLM_BASE_URL: http://127.0.0.1:11434/v1
       GRAPHITI_LLM_API_KEY: ollama
-      GRAPHITI_LLM_MODEL: qwen2.5:3b
-      GRAPHITI_SMALL_MODEL: qwen2.5:3b
+      GRAPHITI_LLM_MODEL: deepseek-r1:7b
+      GRAPHITI_SMALL_MODEL: deepseek-r1:7b
       GRAPHITI_EMBEDDING_MODEL: nomic-embed-text
       GRAPHITI_EMBEDDING_DIM: "768"
       GRAPHITI_STRUCTURED_OUTPUT_MODE: json_object
@@ -53,6 +56,7 @@ jobs:
       FOSSIL_SOFTWARE_COMMIT: ${{ github.sha }}
       FOSSIL_PROOF_PATH: ${{ runner.temp }}/fossil-live-graphiti-proof.json
       OLLAMA_NUM_PARALLEL: "1"
+      OLLAMA_MAX_LOADED_MODELS: "1"
 
     steps:
       - uses: actions/checkout@v4
@@ -82,7 +86,7 @@ jobs:
 
       - name: Pull local Graphiti models
         run: |
-          ollama pull qwen2.5:3b
+          ollama pull deepseek-r1:7b
           ollama pull nomic-embed-text
 
       - name: Run durable-to-Graphiti live smoke
