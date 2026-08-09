@@ -3,9 +3,9 @@ requires = ["setuptools>=75"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "durable-knowledge-graph-dkg"
+name = "fossil-core"
 version = "0.1.0"
-description = "Durable contracts and rebuildable projections for a local-first knowledge graph"
+description = "FOSSIL: durable contracts and rebuildable projections for intellectual lineage"
 requires-python = ">=3.11"
 dependencies = [
   "jsonschema>=4.23,<5",
