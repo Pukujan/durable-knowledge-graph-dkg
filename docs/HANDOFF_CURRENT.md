@@ -9,7 +9,7 @@
 
 The durable corpus substrate is **DICS — Durable Intellectual Corpus System**.
 
-The intended repository family is:
+The repository family is:
 
 1. `fossil-core` — this architecture/contracts/core/projection/control-plane repository;
 2. `fossil-common` — shared research and engineering methods, preserving stable pack ID `pack_269099f7b2ba43b7a99b9427d64092de`;
