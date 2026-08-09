@@ -87,7 +87,9 @@ async def observe_projection(
             MATCH (e:Episodic {group_id: $group_id, name: $episode_name})
             OPTIONAL MATCH (e)-[:MENTIONS]->(entity:Entity)
             WITH e, count(DISTINCT entity) AS mentioned_entity_count
-            OPTIONAL MATCH (left:Entity {group_id: $group_id})-[fact:RELATES_TO]->(right:Entity {group_id: $group_id})
+            OPTIONAL MATCH (left:Entity {group_id: $group_id})
+              -[fact:RELATES_TO]->
+              (right:Entity {group_id: $group_id})
             RETURN
                 count(DISTINCT e) AS episode_count,
                 max(mentioned_entity_count) AS mentioned_entity_count,
@@ -149,115 +151,126 @@ def build_event(commit: str) -> dict[str, Any]:
 
 async def main() -> None:
     repo_root = Path(__file__).resolve().parents[1]
-    requested_root = os.environ.get("FOSSIL_SMOKE_ROOT")
-    root = (
-        Path(requested_root)
-        if requested_root
-        else Path(tempfile.mkdtemp(prefix="fossil-graphiti-smoke-"))
+    root = Path(
+        os.environ.get(
+            "FOSSIL_SMOKE_ROOT",
+            tempfile.mkdtemp(prefix="fossil-graphiti-smoke-"),
+        )
     )
     root.mkdir(parents=True, exist_ok=True)
-
-    commit = software_commit()
-    event_store = DurableEventStore(
-        root / "events",
-        repo_root / "schemas" / "events" / "v1.schema.json",
-    )
-    accepted_event = event_store.commit(build_event(commit))
-    event_id = accepted_event["event_id"]
-    if event_store.get(event_id) != accepted_event:
-        raise AssertionError("durable event was not readable before graph projection")
-
-    neo4j_uri = os.environ.get("NEO4J_URI", "bolt://localhost:7687")
-    neo4j_user = os.environ.get("NEO4J_USER", "neo4j")
-    neo4j_password = required_env("NEO4J_PASSWORD")
-
-    llm_base_url = os.environ.get(
-        "GRAPHITI_LLM_BASE_URL", "http://127.0.0.1:11434/v1"
-    )
-    llm_api_key = os.environ.get("GRAPHITI_LLM_API_KEY", "ollama")
-    llm_model = os.environ.get("GRAPHITI_LLM_MODEL", "qwen2.5:3b")
-    small_model = os.environ.get("GRAPHITI_SMALL_MODEL", llm_model)
-    embedding_model = os.environ.get(
-        "GRAPHITI_EMBEDDING_MODEL", "nomic-embed-text"
-    )
-    embedding_dim = int(os.environ.get("GRAPHITI_EMBEDDING_DIM", "768"))
-    structured_output_mode = os.environ.get(
-        "GRAPHITI_STRUCTURED_OUTPUT_MODE", "json_object"
-    )
-    if structured_output_mode not in {"json_schema", "json_object"}:
-        raise ValueError(
-            "GRAPHITI_STRUCTURED_OUTPUT_MODE must be json_schema or json_object"
-        )
-
-    neo4j_version = await wait_for_neo4j(neo4j_uri, neo4j_user, neo4j_password)
-
-    llm_config = LLMConfig(
-        api_key=llm_api_key,
-        model=llm_model,
-        small_model=small_model,
-        base_url=llm_base_url,
-    )
-    llm_client = OpenAIGenericClient(
-        config=llm_config,
-        structured_output_mode=structured_output_mode,
-        max_tokens=4096,
-    )
-    embedder = OpenAIEmbedder(
-        config=OpenAIEmbedderConfig(
-            api_key=llm_api_key,
-            embedding_model=embedding_model,
-            embedding_dim=embedding_dim,
-            base_url=llm_base_url,
+    proof_path = Path(
+        os.environ.get(
+            "FOSSIL_PROOF_PATH",
+            str(root / "live-graphiti-proof.json"),
         )
     )
-    graphiti = Graphiti(
-        neo4j_uri,
-        neo4j_user,
-        neo4j_password,
-        llm_client=llm_client,
-        embedder=embedder,
-        cross_encoder=OpenAIRerankerClient(
-            client=llm_client.client,
-            config=llm_config,
-        ),
-        max_coroutines=1,
-    )
-
-    build_manifest = {
-        "graphiti_version": importlib.metadata.version("graphiti-core"),
-        "neo4j_version": neo4j_version,
-        "llm_provider": "openai-compatible",
-        "llm_base_url": llm_base_url,
-        "model_id": llm_model,
-        "small_model_id": small_model,
-        "embedding_model_id": embedding_model,
-        "embedding_dim": embedding_dim,
-        "structured_output_mode": structured_output_mode,
-        "ontology_version": os.environ.get("FOSSIL_ONTOLOGY_VERSION", "1.0.0"),
-        "software_commit": commit,
-    }
-    projection = GraphitiProjectionAdapter(
-        client=graphiti,
-        ledger=ProjectionLedger(
-            root / "projection-ledger",
-            GraphitiProjectionAdapter.name,
-        ),
-        build_manifest=build_manifest,
-        episode_type_json=EpisodeType.json,
-    )
-
-    episode_name = f"dkg-event:{event_id}"
-    proof: dict[str, Any] = {
-        "status": "started",
-        "event_id": event_id,
-        "pack_id": PACK_ID,
-        "episode_name": episode_name,
-        "durable_event_path_exists_before_projection": True,
-        "build_manifest": build_manifest,
-    }
+    proof: dict[str, Any] = {"status": "starting", "pack_id": PACK_ID}
+    graphiti: Graphiti | None = None
 
     try:
+        commit = software_commit()
+        event_store = DurableEventStore(
+            root / "events",
+            repo_root / "schemas" / "events" / "v1.schema.json",
+        )
+        accepted_event = event_store.commit(build_event(commit))
+        event_id = accepted_event["event_id"]
+        durable_event_path = next((root / "events").rglob(f"{event_id}.json"))
+        if event_store.get(event_id) != accepted_event:
+            raise AssertionError("durable event was not readable before graph projection")
+
+        proof.update(
+            {
+                "status": "durable_event_committed",
+                "event_id": event_id,
+                "episode_name": f"dkg-event:{event_id}",
+                "durable_event_path": str(durable_event_path),
+                "durable_event_path_exists_before_projection": durable_event_path.exists(),
+            }
+        )
+        if not proof["durable_event_path_exists_before_projection"]:
+            raise AssertionError("durable event file does not exist before projection")
+
+        neo4j_uri = os.environ.get("NEO4J_URI", "bolt://localhost:7687")
+        neo4j_user = os.environ.get("NEO4J_USER", "neo4j")
+        neo4j_password = required_env("NEO4J_PASSWORD")
+        llm_base_url = os.environ.get(
+            "GRAPHITI_LLM_BASE_URL", "http://127.0.0.1:11434/v1"
+        )
+        llm_api_key = os.environ.get("GRAPHITI_LLM_API_KEY", "ollama")
+        llm_model = os.environ.get("GRAPHITI_LLM_MODEL", "deepseek-r1:7b")
+        small_model = os.environ.get("GRAPHITI_SMALL_MODEL", llm_model)
+        embedding_model = os.environ.get(
+            "GRAPHITI_EMBEDDING_MODEL", "nomic-embed-text"
+        )
+        embedding_dim = int(os.environ.get("GRAPHITI_EMBEDDING_DIM", "768"))
+        structured_output_mode = os.environ.get(
+            "GRAPHITI_STRUCTURED_OUTPUT_MODE", "json_object"
+        )
+        if structured_output_mode not in {"json_schema", "json_object"}:
+            raise ValueError(
+                "GRAPHITI_STRUCTURED_OUTPUT_MODE must be json_schema or json_object"
+            )
+
+        neo4j_version = await wait_for_neo4j(
+            neo4j_uri, neo4j_user, neo4j_password
+        )
+        llm_config = LLMConfig(
+            api_key=llm_api_key,
+            model=llm_model,
+            small_model=small_model,
+            base_url=llm_base_url,
+        )
+        llm_client = OpenAIGenericClient(
+            config=llm_config,
+            structured_output_mode=structured_output_mode,
+        )
+        embedder = OpenAIEmbedder(
+            config=OpenAIEmbedderConfig(
+                api_key=llm_api_key,
+                embedding_model=embedding_model,
+                embedding_dim=embedding_dim,
+                base_url=llm_base_url,
+            )
+        )
+        graphiti = Graphiti(
+            neo4j_uri,
+            neo4j_user,
+            neo4j_password,
+            llm_client=llm_client,
+            embedder=embedder,
+            cross_encoder=OpenAIRerankerClient(
+                client=llm_client,
+                config=llm_config,
+            ),
+            max_coroutines=1,
+        )
+        build_manifest = {
+            "graphiti_version": importlib.metadata.version("graphiti-core"),
+            "neo4j_version": neo4j_version,
+            "llm_provider": "ollama-openai-compatible",
+            "llm_base_url": llm_base_url,
+            "model_id": llm_model,
+            "small_model_id": small_model,
+            "embedding_model_id": embedding_model,
+            "embedding_dim": embedding_dim,
+            "structured_output_mode": structured_output_mode,
+            "ontology_version": os.environ.get("FOSSIL_ONTOLOGY_VERSION", "1.0.0"),
+            "software_commit": commit,
+        }
+        proof["build_manifest"] = build_manifest
+        projection = GraphitiProjectionAdapter(
+            client=graphiti,
+            ledger=ProjectionLedger(
+                root / "projection-ledger",
+                GraphitiProjectionAdapter.name,
+            ),
+            build_manifest=build_manifest,
+            episode_type_json=EpisodeType.json,
+        )
+
         await projection.initialize_async()
+        proof["status"] = "graphiti_initialized"
 
         first = await projection.apply_event_async(accepted_event)
         proof["first_receipt"] = {
@@ -267,6 +280,7 @@ async def main() -> None:
         if first.status != "applied":
             raise AssertionError(f"first projection did not apply: {first}")
 
+        episode_name = proof["episode_name"]
         after_first = await observe_projection(
             neo4j_uri,
             neo4j_user,
@@ -317,21 +331,28 @@ async def main() -> None:
             raise AssertionError("projection ledger did not preserve pack namespace")
 
         proof["status"] = "passed"
+    except Exception as exc:
+        proof["status"] = "failed"
+        proof["error"] = {
+            "type": type(exc).__name__,
+            "message": str(exc),
+        }
+        raise
     finally:
-        await projection.close_async()
-
-    proof_path = Path(
-        os.environ.get(
-            "FOSSIL_PROOF_PATH",
-            str(root / "live-graphiti-proof.json"),
+        if graphiti is not None:
+            try:
+                await graphiti.close()
+            except Exception as exc:
+                proof["close_error"] = {
+                    "type": type(exc).__name__,
+                    "message": str(exc),
+                }
+        proof_path.parent.mkdir(parents=True, exist_ok=True)
+        proof_path.write_text(
+            json.dumps(proof, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
         )
-    )
-    proof_path.parent.mkdir(parents=True, exist_ok=True)
-    proof_path.write_text(
-        json.dumps(proof, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
-    print(json.dumps(proof, indent=2, sort_keys=True))
+        print(json.dumps(proof, indent=2, sort_keys=True))
 
 
 if __name__ == "__main__":
