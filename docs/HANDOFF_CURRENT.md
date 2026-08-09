@@ -2,7 +2,22 @@
 
 **Date:** 2026-08-09  
 **Repository:** `Pukujan/durable-knowledge-graph-dkg`  
-**Status:** research freeze complete; durable executable skeleton started; next work is Gate 1 durability proof.
+**Status:** research freeze complete; durable executable skeleton started; continuity docs committed; next work is Gate 1 durability proof.
+
+## Fresh-session continuation order
+
+A future GPT/Codex/Claude session should be able to continue without this chat. Read, in order:
+
+1. `AGENTS.md`
+2. `ARCHITECTURE.md`
+3. `docs/PROJECT_STATE.md`
+4. this file
+5. `docs/research/2026-08-09-final-research-synthesis.md`
+6. `docs/research/2026-08-09-evidence-ledger.md`
+7. `docs/DECISION_LOG.md`
+8. Issue #1 and the active child issue
+
+The chat UI is source material, not the control plane.
 
 ## What has already been decided
 
@@ -177,3 +192,7 @@ Therefore:
 Do not add Redis, Elasticsearch/OpenSearch, Citus, Kubernetes, a dedicated vector DB, custom OAuth, a large dashboard, dozens of local model servers, or physical sharding until measured workload/benchmarks justify them.
 
 The goal is a small implementation of permanent contracts, not a throwaway MVP and not infrastructure maximalism.
+
+## Next-session success condition
+
+A fresh agent that has never seen this chat should be able to read the files above, identify Issue #2 as the current execution point, explain the durable-vs-projection distinction, and continue implementation without asking the user to reconstruct the architecture from memory.
