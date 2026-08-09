@@ -3,6 +3,8 @@ name: Graphiti live integration
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "10 20 9 8 *"
   issue_comment:
     types: [created]
   push:
