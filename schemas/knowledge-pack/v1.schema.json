@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pukujan.github.io/durable-knowledge-graph-dkg/schemas/knowledge-pack/v1.schema.json",
+  "title": "DKG Knowledge Pack v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "pack_id",
+    "name",
+    "kind",
+    "schema_version",
+    "read_mounts",
+    "write_targets",
+    "event_roots",
+    "artifact_manifests"
+  ],
+  "properties": {
+    "contract_version": {
+      "const": "dkg.pack.v1"
+    },
+    "pack_id": {
+      "type": "string",
+      "pattern": "^pack_[A-Za-z0-9_-]{16,}$",
+      "description": "Globally stable corpus-owned identity. It must not change when a pack moves repository/database/shard."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "kind": {
+      "enum": ["common", "domain", "project", "personal", "experimental"]
+    },
+    "description": {
+      "type": "string"
+    },
+    "schema_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ontology_requirements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["ontology_id", "version_constraint"],
+        "properties": {
+          "ontology_id": {"type": "string", "minLength": 1},
+          "version_constraint": {"type": "string", "minLength": 1}
+        }
+      },
+      "default": []
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["pack_id", "required"],
+        "properties": {
+          "pack_id": {"type": "string", "pattern": "^pack_[A-Za-z0-9_-]{16,}$"},
+          "required": {"type": "boolean"},
+          "reason": {"type": "string"}
+        }
+      },
+      "default": []
+    },
+    "read_mounts": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^pack_[A-Za-z0-9_-]{16,}$"}
+    },
+    "write_targets": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^pack_[A-Za-z0-9_-]{16,}$"}
+    },
+    "event_roots": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "artifact_manifests": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1}
+    },
+    "placement_hint": {
+      "enum": ["unspecified", "shared", "dedicated", "external"],
+      "default": "unspecified",
+      "description": "Operational hint only; never part of durable semantic identity."
+    },
+    "projection_namespace": {
+      "type": ["string", "null"],
+      "description": "Optional projection-specific namespace such as a Graphiti group_id. It is replaceable and not canonical identity."
+    },
+    "source_policy_ref": {
+      "type": ["string", "null"]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}
