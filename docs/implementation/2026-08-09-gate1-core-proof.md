@@ -4,6 +4,8 @@ Date: 2026-08-09
 
 This checkpoint records the first implementation proof after the research freeze. It is intended to become ingestible project provenance later, not merely a release note.
 
+> **Later status note:** the `Still not proven` section below records what was genuinely unproven **at the time of this checkpoint**. It is preserved as historical project evidence rather than rewritten. Later durable checkpoints supersede that status: claim/relation lifecycle work completed in Issue #6, live Graphiti/Neo4j proof is recorded in `docs/implementation/2026-08-09-gate1-live-graphiti-proof.md`, and destructive rebuild/blue-green proof is recorded in `docs/implementation/2026-08-09-gate1-rebuild-blue-green-proof.md`. Conversation lineage (#9) remains the active next gate at the time of this note.
+
 ## What changed
 
 - Added an atomic immutable-file publication primitive. Data is written and fsynced to a temporary file, then published without replacing an existing durable path.
@@ -32,6 +34,8 @@ The implementation was reconstructed in an isolated local test fixture and exerc
 The local fixture passed all exercised checks before the corresponding repository changes were committed. GitHub-hosted CI should remain the independent repository-level check; this document does not claim a remote CI result unless one is separately observed.
 
 ## Still not proven
+
+The following list is intentionally historical: these items were not yet proven when this checkpoint was written.
 
 - Claim/relation lifecycle replay and stale-dependency propagation (#6).
 - Graphiti/Neo4j projection behavior (#4).
