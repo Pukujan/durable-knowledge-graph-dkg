@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import copy
 import json
-import os
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterator
 
 from jsonschema import Draft202012Validator, FormatChecker
 
 from .ids import deterministic_event_id, new_id
+from .io import publish_immutable
 
 
 class IdempotencyConflict(RuntimeError):
@@ -16,10 +16,10 @@ class IdempotencyConflict(RuntimeError):
 
 
 class DurableEventStore:
-    """Filesystem-first immutable event store.
+    """Immutable filesystem event store with atomic publication.
 
-    One accepted event is one immutable JSON file. JSONL is reserved for
-    import/export, avoiding one shared append hotspot for concurrent agents.
+    Accepted knowledge history is durable without requiring a graph database.
+    One event is one JSON file; JSONL is reserved for import/export.
     """
 
     def __init__(self, root: Path, schema_path: Path):
@@ -44,44 +44,34 @@ class DurableEventStore:
         pack_id = candidate.get("pack_id")
         idem = candidate.get("idempotency_key")
 
-        if not candidate.get("event_id"):
-            candidate["event_id"] = (
-                deterministic_event_id(pack_id, idem)
-                if pack_id and idem
-                else new_id("evt")
-            )
+        if pack_id and idem:
+            expected = deterministic_event_id(pack_id, idem)
+            supplied = candidate.get("event_id")
+            if supplied and supplied != expected:
+                raise IdempotencyConflict(
+                    "event_id does not match deterministic idempotency identity"
+                )
+            candidate["event_id"] = expected
+        elif not candidate.get("event_id"):
+            candidate["event_id"] = new_id("evt")
 
         self.validator.validate(candidate)
         path = self._event_path(candidate["event_id"])
-        path.parent.mkdir(parents=True, exist_ok=True)
         data = self._canonical(candidate)
 
-        try:
-            fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644)
-        except FileExistsError:
-            existing = json.loads(path.read_text(encoding="utf-8"))
-            if self._canonical(existing) == data:
-                return existing
-            raise IdempotencyConflict(
-                f"event {candidate['event_id']} already exists with different content"
-            )
+        if publish_immutable(path, data):
+            return candidate
 
-        try:
-            with os.fdopen(fd, "wb") as handle:
-                handle.write(data)
-                handle.flush()
-                os.fsync(handle.fileno())
-        except Exception:
-            try:
-                path.unlink(missing_ok=True)
-            finally:
-                raise
-
-        return candidate
+        existing = json.loads(path.read_text(encoding="utf-8"))
+        if self._canonical(existing) == data:
+            return existing
+        raise IdempotencyConflict(
+            f"event {candidate['event_id']} already exists with different content"
+        )
 
     def get(self, event_id: str) -> dict[str, Any]:
         return json.loads(self._event_path(event_id).read_text(encoding="utf-8"))
 
-    def iter_events(self):
+    def iter_events(self) -> Iterator[dict[str, Any]]:
         for path in sorted(self.root.glob("*/*.json")):
             yield json.loads(path.read_text(encoding="utf-8"))
