@@ -9,7 +9,7 @@ from typing import Any, Iterable, Mapping
 
 from jsonschema import Draft202012Validator, FormatChecker
 
-from dkg.artifact_store import ArtifactRedactedError, ArtifactStore
+from dkg.artifact_store import ArtifactStore
 from dkg.io import publish_immutable
 
 
@@ -60,10 +60,27 @@ class SourceSnapshotStore:
         )
 
     @staticmethod
-    def source_id_for_locator(locator: Mapping[str, Any]) -> str:
+    def normalized_locator(locator: Mapping[str, Any]) -> dict[str, str | None]:
+        normalized = {
+            "url": locator.get("url"),
+            "identifier": locator.get("identifier"),
+            "repository_ref": locator.get("repository_ref"),
+        }
+        if not any(
+            isinstance(value, str) and bool(value.strip())
+            for value in normalized.values()
+        ):
+            raise ValueError(
+                "source snapshot requires a non-empty URL, identifier, or repository_ref"
+            )
+        return normalized
+
+    @classmethod
+    def source_id_for_locator(cls, locator: Mapping[str, Any]) -> str:
+        normalized = cls.normalized_locator(locator)
         return _stable_id(
             "source",
-            json.dumps(locator, sort_keys=True, separators=(",", ":"), ensure_ascii=False),
+            json.dumps(normalized, sort_keys=True, separators=(",", ":"), ensure_ascii=False),
             length=20,
         )
 
@@ -85,15 +102,7 @@ class SourceSnapshotStore:
         media_type: str = "application/octet-stream",
         source_id: str | None = None,
     ) -> dict[str, Any]:
-        artifact = self.artifact_store.put_bytes(data, media_type=media_type)
-        source_id = source_id or self.source_id_for_locator(locator)
-        version = {
-            "etag": None,
-            "last_modified": None,
-            "version_id": None,
-            "commit_sha": None,
-            **dict(version_metadata or {}),
-        }
+        normalized_locator = self.normalized_locator(locator)
         if source_role in {"derived", "reconstructed"}:
             if not derivation or not derivation.get("parent_snapshot_refs"):
                 raise ValueError(
@@ -103,6 +112,16 @@ class SourceSnapshotStore:
                 self.get_snapshot(parent_id)
         elif derivation is not None:
             raise ValueError("primary/secondary/local snapshots must not claim derivation")
+
+        artifact = self.artifact_store.put_bytes(data, media_type=media_type)
+        source_id = source_id or self.source_id_for_locator(normalized_locator)
+        version = {
+            "etag": None,
+            "last_modified": None,
+            "version_id": None,
+            "commit_sha": None,
+            **dict(version_metadata or {}),
+        }
 
         snapshot_id = _stable_id(
             "snap",
@@ -116,11 +135,7 @@ class SourceSnapshotStore:
             "snapshot_id": snapshot_id,
             "source_id": source_id,
             "source_role": source_role,
-            "locator": {
-                "url": locator.get("url"),
-                "identifier": locator.get("identifier"),
-                "repository_ref": locator.get("repository_ref"),
-            },
+            "locator": normalized_locator,
             "retrieved_at": retrieved_at,
             "published_at": published_at,
             "artifact_id": artifact["artifact_id"],
