@@ -13,6 +13,7 @@ dependencies = [
 
 [project.optional-dependencies]
 test = ["pytest>=8,<9"]
+graphiti = ["graphiti-core==0.29.3"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
