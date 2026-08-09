@@ -101,8 +101,6 @@ def test_gate1_live_graphiti_neo4j(capsys: pytest.CaptureFixture[str], tmp_path:
         )
         _wait_http("http://127.0.0.1:11434/api/tags")
 
-        # Install exactly the projection dependency pinned by fossil-core. The ordinary
-        # CI job intentionally installs only the fast test extra before pytest starts.
         _run(
             sys.executable,
             "-m",
@@ -112,7 +110,6 @@ def test_gate1_live_graphiti_neo4j(capsys: pytest.CaptureFixture[str], tmp_path:
             timeout=300,
         )
 
-        # Use Graphiti's documented Ollama-compatible models for this real gate.
         _run("docker", "exec", OLLAMA_CONTAINER, "ollama", "pull", "deepseek-r1:7b", timeout=900)
         _run("docker", "exec", OLLAMA_CONTAINER, "ollama", "pull", "nomic-embed-text", timeout=600)
 
@@ -128,7 +125,9 @@ def test_gate1_live_graphiti_neo4j(capsys: pytest.CaptureFixture[str], tmp_path:
                 "GRAPHITI_SMALL_MODEL": "deepseek-r1:7b",
                 "GRAPHITI_EMBEDDING_MODEL": "nomic-embed-text",
                 "GRAPHITI_EMBEDDING_DIM": "768",
-                "GRAPHITI_STRUCTURED_OUTPUT_MODE": "json_object",
+                # Use Graphiti's native schema-constrained mode. The first live run
+                # proved json_object let DeepSeek emit `Edges` instead of `edges`.
+                "GRAPHITI_STRUCTURED_OUTPUT_MODE": "json_schema",
                 "GRAPHITI_TELEMETRY_ENABLED": "false",
                 "SEMAPHORE_LIMIT": "1",
                 "FOSSIL_ONTOLOGY_VERSION": "1.0.0",
@@ -146,8 +145,6 @@ def test_gate1_live_graphiti_neo4j(capsys: pytest.CaptureFixture[str], tmp_path:
             check=False,
         )
 
-        # Bypass pytest capture so the connected GitHub tooling can recover durable
-        # runtime evidence from an otherwise successful `pytest -q` job.
         with capsys.disabled():
             print("\nFOSSIL_GATE1_LIVE_PROOF_BEGIN")
             if proof_path.exists():
