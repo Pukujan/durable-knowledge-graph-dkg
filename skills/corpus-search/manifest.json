@@ -1,0 +1,11 @@
+{
+  "schema_version": "fossil.agent-skill.v1",
+  "skill_id": "skill_corpus-search",
+  "version": "1.0.0",
+  "name": "Corpus search",
+  "summary": "Find durable FOSSIL knowledge across readable packs while preserving stable IDs and provenance.",
+  "methodology_ref": "SKILL.md",
+  "capabilities": ["search", "read", "lineage"],
+  "triggers": ["search", "find", "locate", "what do we know", "history", "lineage"],
+  "risk_notes": "Search results are evidence pointers and corpus state, not permission to mutate graph storage."
+}
