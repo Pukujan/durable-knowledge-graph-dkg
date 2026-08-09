@@ -1,0 +1,96 @@
+ontology_id: dkg.core
+version: 1.0.0
+status: working
+
+principles:
+  - Stable IDs belong to the corpus, not a graph/database vendor.
+  - Claim state and relationship state are explicit and historical.
+  - Disagreement is preserved rather than forced into consensus.
+  - Source/evidence provenance is separate from model confidence.
+
+entity_types:
+  Artifact:
+    description: Immutable original evidence object or source snapshot metadata.
+  Episode:
+    description: Addressable observation/import/conversation/document episode from which knowledge may be derived.
+  Source:
+    description: External or internal source with source-quality metadata.
+  Evidence:
+    description: Specific support/challenge material linked to an addressable source location when possible.
+  Claim:
+    description: A proposition whose lifecycle, evidence, scope, and disagreements can be tracked.
+  Assumption:
+    description: A proposition explicitly depended on by another claim/decision/model.
+  Argument:
+    description: Structured reasoning connecting claims/evidence without collapsing them into one fact.
+  Observation:
+    description: Recorded observed result, including failures and experiment outcomes.
+  Experiment:
+    description: A test designed to distinguish claims/theories or validate system behavior.
+  Decision:
+    description: An action/architecture/research decision and the reasons/evidence that supported it at that time.
+  Question:
+    description: An unresolved question worth preserving as a first-class research object.
+  Concept:
+    description: Stable ontology/taxonomy concept whose labels/relationships can evolve.
+  Methodology:
+    description: A reusable procedure, policy, Skill, or evaluation method.
+
+claim_states:
+  - proposed
+  - open
+  - supported
+  - disputed
+  - rejected
+  - superseded
+  - retracted
+  - stale_pending_review
+
+relation_types:
+  SUPPORTS:
+    source_types: [Evidence, Claim, Observation, Experiment]
+    target_types: [Claim, Assumption, Decision]
+  CHALLENGES:
+    source_types: [Evidence, Claim, Observation, Argument]
+    target_types: [Claim, Assumption, Decision]
+  CONTRADICTS:
+    source_types: [Claim, Evidence, Observation]
+    target_types: [Claim, Assumption]
+  REFINES:
+    source_types: [Claim, Concept, Methodology]
+    target_types: [Claim, Concept, Methodology]
+  DEPENDS_ON:
+    source_types: [Claim, Decision, Argument, Methodology]
+    target_types: [Claim, Assumption, Concept, Source]
+  ASSUMES:
+    source_types: [Claim, Argument, Decision, Methodology]
+    target_types: [Assumption, Claim]
+  DERIVED_FROM:
+    source_types: [Claim, Concept, Decision, Evidence, Methodology]
+    target_types: [Artifact, Episode, Source, Evidence, Claim, Observation]
+  EXEMPLIFIES:
+    source_types: [Observation, Evidence, Episode]
+    target_types: [Claim, Concept, Methodology]
+  SUPERSEDES:
+    source_types: [Claim, Concept, Decision, Methodology]
+    target_types: [Claim, Concept, Decision, Methodology]
+  RELATED_TO:
+    source_types: [Claim, Concept, Source, Methodology]
+    target_types: [Claim, Concept, Source, Methodology]
+  BROADER_THAN:
+    source_types: [Concept]
+    target_types: [Concept]
+  NARROWER_THAN:
+    source_types: [Concept]
+    target_types: [Concept]
+
+relation_states:
+  - proposed
+  - active
+  - disputed
+  - superseded
+  - invalidated
+
+notes:
+  skos_alignment: BROADER_THAN/NARROWER_THAN/RELATED_TO may be exported using SKOS semantics where applicable.
+  prov_alignment: DERIVED_FROM, generation/activity/agent metadata should support a PROV-O export without making RDF the primary runtime storage.
