@@ -3,6 +3,7 @@
 from .artifact_store import ArtifactIntegrityError, ArtifactStore
 from .event_store import DurableEventStore, IdempotencyConflict
 from .pack import KnowledgePackValidator, PackAccess, PackBoundaryError
+from .promotion import build_promotion_event
 
 __all__ = [
     "ArtifactIntegrityError",
@@ -12,4 +13,5 @@ __all__ = [
     "KnowledgePackValidator",
     "PackAccess",
     "PackBoundaryError",
+    "build_promotion_event",
 ]
