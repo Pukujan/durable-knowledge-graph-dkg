@@ -1,0 +1,11 @@
+{
+  "schema_version": "fossil.agent-skill.v1",
+  "skill_id": "skill_knowledge-promotion",
+  "version": "1.0.0",
+  "name": "Knowledge promotion",
+  "summary": "Promote reusable knowledge across pack boundaries through a new provenance-preserving durable event.",
+  "methodology_ref": "SKILL.md",
+  "capabilities": ["search", "read", "lineage", "propose", "validate", "commit"],
+  "triggers": ["promote", "shared knowledge", "common pack", "reuse", "cross-pack"],
+  "risk_notes": "Promotion never mutates the source pack and requires target-pack write permission."
+}
