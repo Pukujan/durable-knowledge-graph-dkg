@@ -199,6 +199,12 @@ class ProjectionSwitchLedger:
         if comparison.candidate_slot != to_slot:
             raise ValueError("comparison candidate slot does not match switch target")
 
+        active = self.active_slot()
+        if active is not None and from_slot != active:
+            raise ValueError(
+                f"switch source {from_slot!r} does not match active projection {active!r}"
+            )
+
         timestamp = switched_at or datetime.now(timezone.utc).isoformat()
         switch_id = f"switch_{uuid.uuid4().hex}"
         payload = {
