@@ -6,7 +6,7 @@ A local-first, migration-safe knowledge system for durable research and agent me
 
 > **Evidence is permanent. History is append-only. Interpretations can evolve. Databases are replaceable. Disagreement is data. Every conclusion must be able to explain where it came from.**
 
-The durable substrate is affectionately called **DICKS**: **Durable Intellectual Corpus & Knowledge System**. The joke is optional; the durability contract is not.
+The durable substrate is called **DICS**: **Durable Intellectual Corpus System**.
 
 ## Repository family
 
