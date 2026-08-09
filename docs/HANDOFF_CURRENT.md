@@ -7,7 +7,7 @@
 
 ## Naming and repository family
 
-The durable corpus substrate may be referred to internally as **DICKS — Durable Intellectual Corpus & Knowledge System**.
+The durable corpus substrate is **DICS — Durable Intellectual Corpus System**.
 
 The intended repository family is:
 
