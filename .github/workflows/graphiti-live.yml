@@ -2,6 +2,15 @@ name: Graphiti live integration
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/graphiti-live.yml"
+      - "scripts/live_graphiti_smoke.py"
+      - "src/dkg/event_store.py"
+      - "src/dkg/projection/**"
+      - "schemas/events/**"
+      - "pyproject.toml"
   pull_request:
     paths:
       - ".github/workflows/graphiti-live.yml"
