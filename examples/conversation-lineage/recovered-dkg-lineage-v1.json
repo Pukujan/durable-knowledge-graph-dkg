@@ -117,12 +117,12 @@
     }
   ],
   "edges": [
-    {"edge_id": "le_path_01", "source_node_id": "ln_learning_ux", "target_node_id": "ln_representation_mismatch", "relation_type": "leads_to"},
-    {"edge_id": "le_path_02", "source_node_id": "ln_representation_mismatch", "target_node_id": "ln_ai_translation", "relation_type": "leads_to"},
-    {"edge_id": "le_path_03", "source_node_id": "ln_ai_translation", "target_node_id": "ln_failure_learning", "relation_type": "leads_to"},
-    {"edge_id": "le_path_04", "source_node_id": "ln_failure_learning", "target_node_id": "ln_mapek_kedb", "relation_type": "leads_to"},
-    {"edge_id": "le_path_05", "source_node_id": "ln_mapek_kedb", "target_node_id": "ln_truth_maintenance", "relation_type": "leads_to"},
-    {"edge_id": "le_path_06", "source_node_id": "ln_truth_maintenance", "target_node_id": "ln_temporal_knowledge_graph", "relation_type": "leads_to"},
+    {"edge_id": "le_path_001", "source_node_id": "ln_learning_ux", "target_node_id": "ln_representation_mismatch", "relation_type": "leads_to"},
+    {"edge_id": "le_path_002", "source_node_id": "ln_representation_mismatch", "target_node_id": "ln_ai_translation", "relation_type": "leads_to"},
+    {"edge_id": "le_path_003", "source_node_id": "ln_ai_translation", "target_node_id": "ln_failure_learning", "relation_type": "leads_to"},
+    {"edge_id": "le_path_004", "source_node_id": "ln_failure_learning", "target_node_id": "ln_mapek_kedb", "relation_type": "leads_to"},
+    {"edge_id": "le_path_005", "source_node_id": "ln_mapek_kedb", "target_node_id": "ln_truth_maintenance", "relation_type": "leads_to"},
+    {"edge_id": "le_path_006", "source_node_id": "ln_truth_maintenance", "target_node_id": "ln_temporal_knowledge_graph", "relation_type": "leads_to"},
     {"edge_id": "le_truth_01", "source_node_id": "ln_model_consensus_challenge", "target_node_id": "ln_external_truth_rebuttal", "relation_type": "leads_to"},
     {"edge_id": "le_truth_02", "source_node_id": "ln_external_truth_rebuttal", "target_node_id": "ln_truth_maintenance", "relation_type": "supports"},
     {"edge_id": "le_position_01", "source_node_id": "ln_durable_events_position_change", "target_node_id": "ln_database_canonical", "relation_type": "challenges"},
