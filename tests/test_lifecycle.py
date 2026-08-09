@@ -1,3 +1,5 @@
+import pytest
+
 from dkg.lifecycle import KnowledgeState
 
 PACK = "pack_269099f7b2ba43b7a99b9427d64092de"
@@ -17,7 +19,7 @@ def event(event_type, subject, payload, key):
     }
 
 
-def test_disputed_can_remain_a_valid_state():
+def test_disputed_can_remain_a_valid_state_and_history_survives():
     state = KnowledgeState()
     claim = "clm_disputed_00000000000001"
     state.apply(event("claim.proposed", claim, {"claim_text": "X"}, "claim-x"))
@@ -30,16 +32,58 @@ def test_disputed_can_remain_a_valid_state():
         )
     )
     assert state.claims[claim] == "disputed"
+    assert state.claim_history[claim] == ["proposed", "disputed"]
+
+
+@pytest.mark.parametrize(
+    "relation_type",
+    ["SUPPORTS", "CHALLENGES", "CONTRADICTS", "REFINES", "DEPENDS_ON"],
+)
+def test_argument_relation_types_have_independent_lifecycle(relation_type):
+    state = KnowledgeState()
+    relation_id = f"rel_{relation_type.lower()}_00000000000001"
+    state.apply(
+        event(
+            "relation.proposed",
+            relation_id,
+            {
+                "relation_id": relation_id,
+                "relation_type": relation_type,
+                "source_ref": "clm_source_000000000000001",
+                "target_ref": "clm_target_000000000000001",
+                "state": "active",
+            },
+            f"relation:{relation_type}",
+        )
+    )
+    state.apply(
+        event(
+            "relation.state_changed",
+            relation_id,
+            {"relation_id": relation_id, "from_state": "active", "to_state": "disputed"},
+            f"relation:{relation_type}:disputed",
+        )
+    )
+    state.apply(
+        event(
+            "relation.superseded",
+            relation_id,
+            {"relation_id": relation_id, "from_state": "disputed"},
+            f"relation:{relation_type}:superseded",
+        )
+    )
+    assert state.relations[relation_id].state == "superseded"
+    assert state.relation_history[relation_id] == ["active", "disputed", "superseded"]
 
 
 def test_superseding_premise_marks_active_dependents_stale():
-    state = KnowledgeState()
+    events = []
     premise = "clm_premise_000000000000001"
     dependent = "clm_dependent_000000000001"
 
     for claim in (premise, dependent):
-        state.apply(event("claim.proposed", claim, {"claim_text": claim}, f"propose:{claim}"))
-        state.apply(
+        events.append(event("claim.proposed", claim, {"claim_text": claim}, f"propose:{claim}"))
+        events.append(
             event(
                 "claim.state_changed",
                 claim,
@@ -49,7 +93,7 @@ def test_superseding_premise_marks_active_dependents_stale():
         )
 
     relation_id = "rel_dependency_00000000000001"
-    state.apply(
+    events.append(
         event(
             "relation.proposed",
             relation_id,
@@ -63,7 +107,7 @@ def test_superseding_premise_marks_active_dependents_stale():
             "dependency",
         )
     )
-    state.apply(
+    events.append(
         event(
             "claim.superseded",
             premise,
@@ -72,6 +116,8 @@ def test_superseding_premise_marks_active_dependents_stale():
         )
     )
 
+    state = KnowledgeState.replay(events)
     assert state.claims[premise] == "superseded"
     assert state.claims[dependent] == "stale_pending_review"
+    assert state.claim_history[dependent] == ["proposed", "supported", "stale_pending_review"]
     assert state.relations[relation_id].state == "active"
