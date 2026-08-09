@@ -13,8 +13,9 @@ A new agent/session should read:
 3. `docs/HANDOFF_CURRENT.md`
 4. this file
 5. `docs/research/2026-08-09-final-research-synthesis.md`
-6. `docs/DECISION_LOG.md`
-7. Issue #1 and the child issue being executed
+6. `docs/research/RESEARCH_TRACE_CONTRACT.md`
+7. `docs/DECISION_LOG.md`
+8. Issue #1 and the child issue being executed
 
 The chat UI is **not** the project record.
 
@@ -25,6 +26,21 @@ GitHub issues track **work state**. Durable docs track **decisions/evidence/cont
 An issue may close because work was completed or rejected, but an architectural decision should not exist only inside an issue comment. It must point to a durable document/ADR/schema/benchmark result committed in the repository.
 
 Likewise, durable docs should link to the issue that caused a decision when useful so implementation history remains reconstructable.
+
+## Research-trace rule
+
+The **research process itself is future corpus data**.
+
+The graph must eventually be able to reconstruct how this project was researched: original questions, alternative architectures, searches/source snapshots, claims, critiques, unresolved uncertainty, accepted-for-now decisions, issues, commits, benchmarks, failures, and later supersession.
+
+Durable trace references now include:
+
+- `docs/research/RESEARCH_TRACE_CONTRACT.md`
+- `schemas/research-trace/v1.schema.json`
+- `docs/research/2026-08-09-dkg-project-research-trace-seed.md`
+- `examples/research-trace/dkg-project-research-run-v1.json`
+
+High-volume operational telemetry remains external. The durable corpus stores compact intellectual lineage plus trace IDs when deeper debugging evidence is needed.
 
 ## Milestone structure
 
@@ -41,6 +57,7 @@ Research freeze and durable contracts now include:
 - architecture contract;
 - event schema v1;
 - knowledge-pack schema v1;
+- research-trace contract/schema/seed;
 - core ontology skeleton;
 - source-quality policy;
 - projection/model interface skeletons;
@@ -66,7 +83,8 @@ The first executable build is accepted only if it can:
 8. answer lineage/reconstruction benchmark questions;
 9. resolve citations/provenance to the intended evidence snapshot;
 10. record projection/model/schema versions used;
-11. survive projection failure without losing an accepted durable event.
+11. survive projection failure without losing an accepted durable event;
+12. reconstruct how a research decision moved from question/evidence/critique to implementation.
 
 ## Current issue map
 
@@ -88,6 +106,8 @@ Unless a failing benchmark changes it:
 `#2 -> #3 -> #6 -> #4 -> #5 -> #9 -> #8 -> #7`
 
 Issue #10 contributes requirements across these stages and should be hardened when source ingestion/redaction becomes executable.
+
+The research-trace contract should be exercised through #9 rather than implemented as a separate large subsystem.
 
 ## Immediate next task
 
@@ -122,4 +142,5 @@ At the end of substantial work:
 - update this file if the gate or execution order changed;
 - update relevant GitHub issue state/checklist;
 - commit material benchmark/test results;
-- update `docs/DECISION_LOG.md` for any architectural change.
+- update `docs/DECISION_LOG.md` for any architectural change;
+- append or supersede the relevant research trace when new evidence changes a project decision.
