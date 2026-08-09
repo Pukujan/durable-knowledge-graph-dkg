@@ -100,10 +100,12 @@ This file records accepted architectural decisions, serious alternatives, and th
 
 ## D013 — Delay physical pack repositories until boundary contract passes
 
-**State:** accepted / current sequencing decision  
+**State:** accepted / sequencing condition satisfied  
 **Decision:** first prove Issue #3 knowledge-pack validation/isolation locally; then create the initial common/shared and AI-systems/plugin-harness pack repos.
 
 **Why:** avoid freezing an untested cross-repository contract twice.
+
+**Current result:** Issue #3 has passed, so external pack repositories are now authorized without changing their stable pack identities.
 
 ## D014 — Security is deliberately minimal for the first local build
 
@@ -125,6 +127,20 @@ This file records accepted architectural decisions, serious alternatives, and th
 **Decision:** append-only intellectual history must not make future sensitive-data deletion impossible. Redaction/tombstone behavior is modeled separately from ordinary claim revision.
 
 **Reconsider/refine when:** real sensitive/legal requirements exist; then define exact retention/removal policy.
+
+## D017 — FOSSIL is the project name; DICKS is the durable substrate nickname
+
+**State:** accepted  
+**Decision:** the project is named **FOSSIL — Fault-tolerant Open Semantic Store for Intellectual Lineage**. The durable corpus substrate may be referred to internally as **DICKS — Durable Intellectual Corpus & Knowledge System**.
+
+**Repository family:**
+- `fossil-core` — architecture/contracts/core/projections/control plane;
+- `fossil-common` — common research and engineering methods, preserving `pack_269099f7b2ba43b7a99b9427d64092de`;
+- `fossil-ai-systems` — AI systems/plugin-harness knowledge, preserving `pack_f024177f89a5442db84171c3dd7f58e5` and depending on the common pack.
+
+**Invariant:** repository names do not define knowledge identity. The existing stable `pack_id` values remain authoritative through renames, moves, or future physical sharding.
+
+**Why:** FOSSIL reflects the core rebuild-from-preserved-history property while giving the repository family a durable, memorable public name. DICKS preserves a deliberately unserious internal name without changing architectural semantics.
 
 ## How to add a decision
 
