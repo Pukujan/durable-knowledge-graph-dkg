@@ -1,0 +1,27 @@
+{
+  "contract_version": "dkg.pack.v1",
+  "pack_id": "pack_269099f7b2ba43b7a99b9427d64092de",
+  "name": "Common research and engineering methods",
+  "kind": "common",
+  "description": "Example shared pack for methods and cross-project knowledge. This ID is intentionally stable if the example becomes a real seed pack.",
+  "schema_version": "dkg.event.v1",
+  "ontology_requirements": [
+    {
+      "ontology_id": "dkg.core",
+      "version_constraint": ">=1.0.0 <2.0.0"
+    }
+  ],
+  "dependencies": [],
+  "read_mounts": [
+    "pack_269099f7b2ba43b7a99b9427d64092de"
+  ],
+  "write_targets": [
+    "pack_269099f7b2ba43b7a99b9427d64092de"
+  ],
+  "event_roots": ["events/"],
+  "artifact_manifests": ["artifacts/manifest.jsonl"],
+  "placement_hint": "shared",
+  "projection_namespace": "common-research-methods",
+  "source_policy_ref": "policies/source-quality-v1.md",
+  "created_at": "2026-08-09T17:21:00Z"
+}
