@@ -1,0 +1,11 @@
+{
+  "schema_version": "fossil.agent-skill.v1",
+  "skill_id": "skill_stale-assumption-review",
+  "version": "1.0.0",
+  "name": "Stale assumption review",
+  "summary": "Trace superseded premises and stale dependents before proposing a refreshed knowledge state.",
+  "methodology_ref": "SKILL.md",
+  "capabilities": ["search", "read", "lineage", "propose", "validate"],
+  "triggers": ["stale", "assumption", "superseded premise", "recheck", "dependency review"],
+  "risk_notes": "Stale status invites review; it does not authorize automatic truth-state replacement."
+}
