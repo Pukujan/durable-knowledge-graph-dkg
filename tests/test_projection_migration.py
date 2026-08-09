@@ -193,6 +193,35 @@ def test_blue_green_switch_requires_equal_semantics_and_passing_benchmarks(tmp_p
     assert switch["expected_semantic_digest"] == expected.digest()
 
 
+def test_switch_ledger_rejects_stale_source_after_activation(tmp_path):
+    expected = SemanticSnapshot.from_events(migration_events())
+    switch_ledger = ProjectionSwitchLedger(tmp_path / "active")
+    harness = ProjectionMigrationHarness(switch_ledger)
+
+    harness.compare_and_switch(
+        expected=expected,
+        current=expected,
+        current_slot="blue",
+        candidate=expected,
+        candidate_slot="green",
+        build_manifest={"projection_build_id": "green-build-1"},
+        switched_at="2026-08-09T21:00:00+00:00",
+    )
+    assert switch_ledger.active_slot() == "green"
+
+    with pytest.raises(ValueError, match="does not match active projection"):
+        harness.compare_and_switch(
+            expected=expected,
+            current=expected,
+            current_slot="blue",
+            candidate=expected,
+            candidate_slot="red",
+            build_manifest={"projection_build_id": "red-build-stale"},
+            switched_at="2026-08-09T21:05:00+00:00",
+        )
+    assert switch_ledger.active_slot() == "green"
+
+
 def test_blue_green_switch_rejects_semantic_or_benchmark_mismatch(tmp_path):
     expected = SemanticSnapshot.from_events(migration_events())
     missing_event_candidate = replace(expected, event_ids=expected.event_ids[:-1])
