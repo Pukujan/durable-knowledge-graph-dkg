@@ -1,0 +1,85 @@
+# Research Index
+
+This directory is the durable research record behind the architecture. It exists so future sessions do not have to rediscover why decisions were made.
+
+## Frozen research set
+
+### Final synthesis
+
+`2026-08-09-final-research-synthesis.md`
+
+Use this first. It explains what the research changed and which architecture was selected.
+
+### Evidence ledger
+
+`2026-08-09-evidence-ledger.md`
+
+Companion source ledger containing the broad review of 127 primary/official sources and original papers used for the research freeze.
+
+## Covered research areas
+
+The frozen review includes:
+
+- temporal knowledge graphs and Graphiti/Zep;
+- Neo4j and graph operations;
+- PostgreSQL, pgvector, Citus, Supabase/PostgREST;
+- Qdrant, Milvus, Weaviate and multi-tenant/vector-database patterns;
+- provenance and semantic standards: PROV, SKOS, RDF, OWL, SHACL;
+- JSON Schema and CloudEvents-style event-envelope patterns;
+- truth-maintenance and dependency/supersession ideas;
+- RAG, GraphRAG, HippoRAG, LightRAG and contextual retrieval;
+- context engineering and harness engineering;
+- MCP and Agent Skills/progressive disclosure;
+- long-context/attention work including Kimi Linear/MoBA;
+- lightweight/local retrieval systems including Model2Vec/Potion, FastEmbed, BGE-M3 and ColBERT;
+- agent memory systems;
+- production tenancy/boundary patterns;
+- migrations, rebuilds, backups, idempotency and disaster recovery.
+
+## Evidence rule
+
+Do not add a research claim merely because a model states it confidently.
+
+Prefer, in order appropriate to the question:
+
+- official specifications/documentation for what a protocol/product guarantees;
+- original papers for research claims;
+- primary repositories/release notes for implementation status;
+- mature production documentation for operational patterns;
+- independent empirical work for comparative performance claims.
+
+Secondary articles can help discovery but should not silently become the primary evidence when a better source exists.
+
+## Source quality
+
+Do not reduce every source to one universal tier. Follow `policies/source-quality-v1.md` and record dimensions such as authority for the particular question, directness, primary/secondary status, methodology, date/version, conflicts, replication/reproducibility, and current validity.
+
+## When to reopen research
+
+The architecture research freeze should be reopened only when at least one is true:
+
+1. an implementation test contradicts a frozen assumption;
+2. a dependency becomes abandoned, unsafe, or materially changes its contract;
+3. a new technology plausibly removes a major layer or failure mode;
+4. measured corpus workload makes the current design inappropriate;
+5. a security/legal requirement appears that the current contract cannot satisfy;
+6. a benchmark shows a competing architecture materially better.
+
+Interesting new papers alone are not enough to restart the architecture. They should first be evaluated as potential adapters/projections behind the existing contracts.
+
+## How to add new research
+
+For a meaningful new research pass:
+
+1. create a dated research note in this directory;
+2. state the question before searching;
+3. include competing theories, not only confirming evidence;
+4. cite primary/official sources where possible;
+5. distinguish fact, inference, recommendation, and unresolved uncertainty;
+6. state exactly which architecture decision is challenged or refined;
+7. update `docs/DECISION_LOG.md` if the conclusion changes;
+8. update `ARCHITECTURE.md` only if a durable invariant changes.
+
+## Current research conclusion
+
+Implementation should proceed. The next useful evidence is expected to come from durability, isolation, rebuild, lineage, retrieval, and migration benchmarks on the real corpus rather than from another broad technology survey.
