@@ -1,0 +1,11 @@
+{
+  "schema_version": "fossil.agent-skill.v1",
+  "skill_id": "skill_citation-audit",
+  "version": "1.0.0",
+  "name": "Citation audit",
+  "summary": "Verify that conclusions and lineage resolve to intended immutable source evidence and evidence status.",
+  "methodology_ref": "SKILL.md",
+  "capabilities": ["search", "read", "lineage", "manage"],
+  "triggers": ["citation", "provenance", "source audit", "verify source", "evidence span"],
+  "risk_notes": "A resolvable citation does not by itself establish source quality or truth."
+}
