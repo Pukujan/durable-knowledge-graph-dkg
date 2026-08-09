@@ -9,6 +9,7 @@ from typing import Any
 
 from dkg.contracts import ProjectionReceipt
 from dkg.projection.ledger import ProjectionLedger
+from dkg.projection.migration import ordered_events
 
 
 class GraphitiProjectionAdapter:
@@ -119,9 +120,19 @@ class GraphitiProjectionAdapter:
         return ProjectionReceipt(self.name, self.version, event_id, "applied")
 
     async def rebuild_async(self, *, events_root: Path) -> list[ProjectionReceipt]:
+        """Replay durable events sequentially in corpus commit order.
+
+        Graphiti recommends sequential episode ingestion. Filesystem hash paths are
+        not temporal order, so rebuild uses ``recorded_at`` with ``event_id`` as a
+        stable tie breaker.
+        """
+
+        events = [
+            json.loads(path.read_text(encoding="utf-8"))
+            for path in Path(events_root).glob("*/*.json")
+        ]
         receipts: list[ProjectionReceipt] = []
-        for path in sorted(Path(events_root).glob("*/*.json")):
-            event = json.loads(path.read_text(encoding="utf-8"))
+        for event in ordered_events(events):
             receipts.append(await self.apply_event_async(event))
         return receipts
 
