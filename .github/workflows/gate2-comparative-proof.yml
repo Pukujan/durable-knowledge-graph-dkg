@@ -35,5 +35,6 @@ jobs:
         with:
           name: gate2-comparative-results
           path: .gate2-comparison-output
+          include-hidden-files: true
           if-no-files-found: error
           retention-days: 7
