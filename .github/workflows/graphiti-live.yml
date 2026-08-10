@@ -1,3 +1,4 @@
+# Disposable PR-only trigger comment; do not merge this comment.
 name: Graphiti live integration
 
 on:
