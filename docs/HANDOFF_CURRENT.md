@@ -1,17 +1,18 @@
 # Current Handoff
 
-**Date:** 2026-08-09  
+**Date:** 2026-08-10  
 **Project:** **FOSSIL — Fault-tolerant Open Semantic Store for Intellectual Lineage**  
+**Durable substrate:** **DICS — Durable Intellectual Corpus System**  
 **Repository:** `Pukujan/fossil-core`  
-**Status:** durable core, pack boundaries, lifecycle, live Graphiti/Neo4j, destructive rebuild/blue-green, and conversation lineage are complete. Issue #8 safe agent-facing boundary is active.
+**Status:** **Gate 1 executable durability proof is complete (15/15). Issue #7 retrieval/model benchmark work is next.**
 
 ## Repository family
 
-- `fossil-core` — architecture/contracts/core/projections/control plane;
-- `fossil-common` — stable pack `pack_269099f7b2ba43b7a99b9427d64092de`;
-- `fossil-ai-systems` — stable pack `pack_f024177f89a5442db84171c3dd7f58e5`, depending on common.
+- `Pukujan/fossil-core` — architecture/contracts/core/projections/control plane;
+- `Pukujan/fossil-common` — stable pack `pack_269099f7b2ba43b7a99b9427d64092de`;
+- `Pukujan/fossil-ai-systems` — stable pack `pack_f024177f89a5442db84171c3dd7f58e5`, depending on common.
 
-Repository/database/graph placement is not pack identity.
+Repository, graph, and database placement are not knowledge identity. Never mint replacement pack IDs because placement changes.
 
 ## Fresh-session order
 
@@ -20,77 +21,111 @@ Repository/database/graph placement is not pack identity.
 3. `docs/PROJECT_STATE.md`
 4. this file
 5. `docs/DECISION_LOG.md`
-6. `docs/implementation/2026-08-09-gate1-live-graphiti-proof.md`
-7. `docs/implementation/2026-08-09-gate1-rebuild-blue-green-proof.md`
-8. `docs/implementation/2026-08-09-gate1-conversation-lineage-proof.md`
-9. Issue #1 and active Issue #8
+6. `docs/implementation/2026-08-09-gate1-core-proof.md`
+7. `docs/implementation/2026-08-09-gate1-live-graphiti-proof.md`
+8. `docs/implementation/2026-08-09-gate1-rebuild-blue-green-proof.md`
+9. `docs/implementation/2026-08-09-gate1-conversation-lineage-proof.md`
+10. `docs/implementation/2026-08-09-gate1-agent-boundary-proof.md`
+11. `docs/implementation/2026-08-10-gate1-source-provenance-redaction-proof.md`
+12. Issue #1 and active Issue #7
 
 The chat UI is source material, not the control plane.
 
-## Frozen architecture
+## Architecture that must not be casually changed
 
-Canonical truth is immutable evidence + stable corpus IDs + append-only validated knowledge events + versioned pack/ontology contracts + provenance/history. Graphiti/Neo4j, vector indexes, models, Skills, MCP, retrieval strategies, and future databases are replaceable projections/services.
+Canonical truth is immutable evidence + stable corpus IDs + append-only validated knowledge events + versioned pack/ontology contracts + provenance/history.
+
+Graphiti/Neo4j, vector/lexical indexes, models, Skills, MCP, retrieval strategies, and future databases are replaceable projections/services.
 
 A graph deletion must never delete irreplaceable intellectual history.
 
-## Completed gates
+## Gate 1 completion summary
 
-### #2 durable event/artifact store
-Atomic immutable publication, deterministic idempotency, content-addressed artifacts, integrity checks.
+### #2 durable event/artifact store — complete
+Atomic immutable publication, deterministic idempotency, content-addressed evidence, integrity/tamper checks, and exceptional audited artifact/event erasure paths.
 
-### #3 pack boundaries/promotion
-Explicit read/write boundaries and dependencies; promotion creates new provenance-preserving events.
+### #3 pack boundaries/promotion — complete
+Explicit read/write mounts and required dependencies. Cross-pack promotion is a new provenance-preserving target-pack event rather than source mutation.
 
-### #6 lifecycle
-Claims/relations preserve disagreement, disputed state, supersession, and stale dependency propagation.
+### #6 lifecycle — complete
+Replay preserves disagreement, disputed state, relation history, supersession, and stale dependent propagation.
 
-### #4 live Graphiti/Neo4j
-Trusted CI run #70 (`31338875226`, job `93309155019`) proved real Graphiti `0.29.3` + Neo4j `5.26.29`, stable pack/group namespace, durable-first materialization, build metadata, and idempotent replay. `json_schema` is the proven local structured-output mode. Evidence: `docs/implementation/2026-08-09-gate1-live-graphiti-proof.md`.
+### #4 real Graphiti/Neo4j — complete
+Run `31338875226` proved Graphiti `0.29.3` + Neo4j `5.26.29`, durable-first materialization, stable pack/group namespaces, build metadata, projection-failure preservation, and idempotent retry. `json_schema` is the proven local structured-output mode.
 
-### #5 destructive rebuild + blue/green
-Trusted live run #81 (`31339930551`, job `93311926075`) proved a candidate graph can be destroyed to zero nodes, rebuilt from the same durable event source using a fresh projection-build ledger, coexist beside the current projection, compare by stable semantic invariants, and become active only after checks pass. Final guardrails passed run #84. Evidence: `docs/implementation/2026-08-09-gate1-rebuild-blue-green-proof.md`.
+### #5 destructive rebuild + blue/green — complete
+Run `31339930551` proved a candidate graph can be destroyed and rebuilt from durable events with a fresh build-scoped ledger while current remains live; stable semantic digests drive comparison and activation, not graph UUID equality.
 
-Critical invariant: a physically new projection gets a fresh build identity/applied ledger; otherwise stale `already applied` records can suppress a rebuild.
+Critical invariant: **a physically new/rebuilt projection gets a fresh build identity/applied ledger**. Reusing an old applied ledger after deleting a graph can silently produce an empty rebuild because every event appears already applied.
 
-### #9 conversation ingestion + intellectual lineage
-Trusted CI run #97 (`31340924480`, job `93314435997`) passed 31 tests. The corpus now preserves immutable conversation source artifacts, byte spans, stable message/parent ordering, actor metadata, durable `verbatim` vs `reconstructed` status, derived lineage with exact source provenance, opposing positions, current conclusions, and historical paths.
+### #9 conversation lineage — complete
+Run `31340924480` / job `93314435997` proved immutable conversation source bytes/spans, stable message ordering/parentage, durable `verbatim` vs `reconstructed` status, derived lineage provenance, opposing-position retrieval, current conclusions, and historical path reconstruction.
 
-Recovered benchmark path:
+The recovered path remains explicitly reconstructed:
 
-`learning UX / parabola -> representation mismatch -> AI translation layer -> failure learning -> MAPE-K / KEDB -> truth maintenance -> temporal knowledge graph`
+`learning UX/parabola -> representation mismatch -> AI translation -> failure learning -> MAPE-K/KEDB -> truth maintenance -> temporal knowledge graph`
 
-The recovery source is explicitly **reconstructed, not a verbatim transcript**. Never silently upgrade it. If primary transcript evidence appears later, ingest it separately as verbatim evidence. Evidence: `docs/implementation/2026-08-09-gate1-conversation-lineage-proof.md`.
+Never silently promote the recovery artifact to a verbatim transcript.
 
-## Exact next task — Issue #8
+### #8 safe Agent Skills/API/MCP — complete
+Run `31341456769` / job `93315824532`: **39 passed in 0.51s**.
 
-Create the agent-facing layer without coupling durable knowledge to any one agent protocol.
+Six Skills use progressive disclosure. `CorpusService` is protocol-independent and exposes only `search/read/lineage/propose/validate/commit/manage`. Normal agent mutation is pack- and Skill-gated, preserves actor/model/harness/skill provenance, commits durable events first, and exposes no arbitrary Cypher/Graphiti mutation escape hatch. MCP remains an adapter.
 
-Issue #8 acceptance:
+### #10 source snapshots/citations/redaction — complete
+Final deterministic run `31345462801` / job `93326450028`: **51 passed in 1.40s**.
 
-- Skills for corpus search, research ingestion, citation audit, contradiction review, stale-assumption review, knowledge promotion;
-- progressive disclosure: methodology loaded only when relevant;
-- protocol-independent internal domain service;
-- thin external surface around search/read/lineage/propose/validate/commit/manage;
-- MCP is an adapter only; Graphiti experimental MCP is not foundational;
-- agents cannot perform arbitrary graph mutation through the normal interface;
-- proposals carry actor/model/harness/skill provenance.
+Real live redaction run `31346791333` / job `93330095684` used Graphiti `0.29.3`, Neo4j `5.26.29`, `qwen2.5:3b`, `nomic-embed-text`, and `json_schema`.
 
-Implementation rule: an agent-facing mutation must produce/validate/commit canonical durable data first. Projection work is downstream. Do not expose Cypher or graph-native mutation as a normal capability.
+Event `evt_416e5c516581c8dea8c5c54025361960` first materialized under AI-systems pack `pack_f024177f89a5442db84171c3dd7f58e5` as one Graphiti episode and one entity. Exceptional redaction then:
 
-## Recent durable decisions
+- wrote a minimal non-sensitive durable event tombstone;
+- physically removed canonical event bytes;
+- blocked republication of the same deterministic event identity;
+- used the projection applied ledger's episode UUID to remove the active Graphiti episode;
+- reduced pack-local episode/entity/fact counts to `0/0/0`;
+- survived a fresh projection rebuild without resurrection (`fresh_rebuild_receipts == []`).
 
-- D018: physical projection builds have separate operational identity and build-scoped ledgers; migration activation uses semantic comparison + append-only switch history.
-- D019: conversation evidence status (`verbatim` vs `reconstructed`) is durable provenance; exact verbatim text resolves to immutable byte spans.
+Proof artifact ID: `9047631921`.
 
-## Gate state
+Evidence: `docs/implementation/2026-08-10-gate1-source-provenance-redaction-proof.md`.
 
-13 of the 15 executable Gate 1 checklist items are complete. Remaining:
+## Redaction semantics now frozen
 
-1. general citation/source-snapshot quality + redaction integrity (#10);
-2. safe Agent Skill/API/MCP boundary (#8).
+Ordinary revision stays append-only. Privacy/legal deletion is an explicit exceptional operation.
 
-After #8: execute #7 retrieval/model benchmarks while continuing #10 cross-cutting provenance work.
+- artifact/event tombstone is persisted before sensitive bytes are physically removed;
+- tombstones intentionally avoid copying sensitive payload content;
+- erased content/event identities cannot be silently reintroduced;
+- exports and projection rebuilds respect redaction;
+- historical projection applied receipts remain audit history while a separate redaction receipt records purge;
+- event redaction tombstones plus build-scoped applied ledgers allow active projection cleanup after a crash/restart;
+- Graphiti episode UUID is an operational purge handle for one projection build, not canonical knowledge identity.
+
+## Workflow note
+
+During #10, the previously mysterious standalone live-workflow registration failure was traced to `${{ runner.temp }}` being used in job-level `env`. GitHub's runner context is not available there. The permanent `.github/workflows/graphiti-live.yml` now scopes runner-dependent proof paths to steps and includes both materialization and redaction/non-resurrection smoke scripts.
+
+Normal `.github/workflows/ci.yml` has been restored to the fast contract suite. Disposable proof PRs were closed unmerged.
+
+## Exact next task — Issue #7
+
+**Pluggable retrieval/model services + local specialist benchmark contract.**
+
+Do not build a model zoo. Make implementations compete behind existing interfaces.
+
+Acceptance:
+
+1. use/complete `ContextProvider`, `Retriever`, `EmbeddingProvider`, `Reranker`, `ModelService`, `VerificationService` interfaces;
+2. add one initial implementation per capability needed for benchmark execution;
+3. record model/provider/runtime versions in projection/review provenance;
+4. make risk/uncertainty escalation policy explicit and testable;
+5. define benchmark fixtures/metrics for retrieval quality, latency, cost/RAM, and domain-specific failure rates;
+6. local/small models may propose candidates but may not gain truth-changing authority without policy/evidence;
+7. compare long-context, lexical/vector/graph retrieval and specialist approaches by measured corpus behavior rather than architecture fashion.
+
+Research references already exist in the evidence ledger. New research should be triggered by benchmark uncertainty or implementation contradictions, not by novelty alone.
 
 ## End-of-session rule
 
-Update this file, `docs/PROJECT_STATE.md`, Issue #1, active child issues, durable benchmark/proof docs, and `docs/DECISION_LOG.md` after substantial changes.
+After substantial work, update this file, `docs/PROJECT_STATE.md`, Issue #1, the active child issue, durable benchmark/proof evidence, and `docs/DECISION_LOG.md` when a decision changes.
