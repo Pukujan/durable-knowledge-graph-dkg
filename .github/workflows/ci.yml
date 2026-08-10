@@ -39,8 +39,8 @@ jobs:
       NEO4J_PASSWORD: fossil-gate1-pass
       GRAPHITI_LLM_BASE_URL: http://127.0.0.1:11434/v1
       GRAPHITI_LLM_API_KEY: ollama
-      GRAPHITI_LLM_MODEL: deepseek-r1:7b
-      GRAPHITI_SMALL_MODEL: deepseek-r1:7b
+      GRAPHITI_LLM_MODEL: qwen2.5:3b
+      GRAPHITI_SMALL_MODEL: qwen2.5:3b
       GRAPHITI_EMBEDDING_MODEL: nomic-embed-text
       GRAPHITI_EMBEDDING_DIM: "768"
       GRAPHITI_STRUCTURED_OUTPUT_MODE: json_schema
@@ -74,7 +74,7 @@ jobs:
           exit 1
       - name: Pull local Graphiti models
         run: |
-          ollama pull deepseek-r1:7b
+          ollama pull qwen2.5:3b
           ollama pull nomic-embed-text
       - name: Run live redaction proof
         env:
