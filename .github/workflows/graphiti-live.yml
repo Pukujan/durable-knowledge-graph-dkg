@@ -7,6 +7,7 @@ on:
     paths:
       - ".github/workflows/graphiti-live.yml"
       - "scripts/live_graphiti_smoke.py"
+      - "scripts/live_redaction_smoke.py"
       - "src/dkg/event_store.py"
       - "src/dkg/projection/**"
       - "schemas/events/**"
@@ -15,6 +16,7 @@ on:
     paths:
       - ".github/workflows/graphiti-live.yml"
       - "scripts/live_graphiti_smoke.py"
+      - "scripts/live_redaction_smoke.py"
       - "src/dkg/event_store.py"
       - "src/dkg/projection/**"
       - "schemas/events/**"
@@ -26,7 +28,7 @@ permissions:
 jobs:
   live-graphiti-smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
     services:
       neo4j:
         image: neo4j:5.26
@@ -55,6 +57,7 @@ jobs:
       FOSSIL_ONTOLOGY_VERSION: "1.0.0"
       FOSSIL_SOFTWARE_COMMIT: ${{ github.sha }}
       FOSSIL_PROOF_PATH: ${{ runner.temp }}/fossil-live-graphiti-proof.json
+      FOSSIL_REDACTION_PROOF_PATH: ${{ runner.temp }}/fossil-live-redaction-proof.json
       OLLAMA_NUM_PARALLEL: "1"
       OLLAMA_MAX_LOADED_MODELS: "1"
 
@@ -92,12 +95,17 @@ jobs:
       - name: Run durable-to-Graphiti live smoke
         run: python scripts/live_graphiti_smoke.py
 
-      - name: Upload live proof
+      - name: Run live redaction and non-resurrection smoke
+        run: python scripts/live_redaction_smoke.py
+
+      - name: Upload live proofs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: fossil-live-graphiti-proof
-          path: ${{ runner.temp }}/fossil-live-graphiti-proof.json
+          name: fossil-live-graphiti-proofs
+          path: |
+            ${{ runner.temp }}/fossil-live-graphiti-proof.json
+            ${{ runner.temp }}/fossil-live-redaction-proof.json
           if-no-files-found: warn
 
       - name: Show Ollama log on failure
