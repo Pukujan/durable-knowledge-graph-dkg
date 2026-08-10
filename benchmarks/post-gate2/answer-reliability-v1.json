@@ -1,0 +1,86 @@
+{
+  "schema_version": "fossil.answer-reliability-plan.v1",
+  "benchmark_id": "post-gate2-answer-reliability-v1",
+  "description": "Provider-independent end-to-end answer/citation/unsupported-claim/abstention baseline over the landed FOSSIL packs.",
+  "pack_pins": {
+    "fossil-common": "d583005dce06dbb499c3c0de5c22b899655eb8d2",
+    "fossil-ai-systems": "84accd2ee895663990e82ca5b79b592cb503db24"
+  },
+  "authority_rule": "Durable evidence, lifecycle/lineage state, and exact citation identity outrank retrieval/model confidence.",
+  "cases": [
+    {
+      "case_id": "current-durable-core",
+      "category": "current-answer",
+      "query": "What is the current durable truth using immutable evidence and append-only knowledge events?",
+      "pack_ids": ["pack_f024177f89a5442db84171c3dd7f58e5"],
+      "expected_outcome": "answer",
+      "required_claim_ids": ["clm_7f5c691c564c30e1b61f8dc0"],
+      "allowed_claim_ids": ["clm_7f5c691c564c30e1b61f8dc0"],
+      "forbidden_claim_ids": [
+        "clm_643b698b7e9e6aee6a16c48c",
+        "clm_a047d79b8604fadbd44efdf4"
+      ],
+      "required_citation_ids": ["cite_94733f286d230834c9cf63ac"],
+      "limit": 8
+    },
+    {
+      "case_id": "historical-sqlite-premise",
+      "category": "historical-answer",
+      "query": "What was the former canonical corpus database SQLite premise?",
+      "pack_ids": ["pack_f024177f89a5442db84171c3dd7f58e5"],
+      "expected_outcome": "answer",
+      "required_claim_ids": ["clm_643b698b7e9e6aee6a16c48c"],
+      "allowed_claim_ids": ["clm_643b698b7e9e6aee6a16c48c"],
+      "required_citation_ids": ["cite_b4e13e4e1a809f76527311ba"],
+      "limit": 8
+    },
+    {
+      "case_id": "current-stale-sqlite-prototype",
+      "category": "current-unresolved",
+      "query": "Is the first SQLite prototype the current canonical architecture implementation?",
+      "pack_ids": ["pack_f024177f89a5442db84171c3dd7f58e5"],
+      "expected_outcome": "current_state_unresolved",
+      "required_claim_ids": ["clm_a047d79b8604fadbd44efdf4"],
+      "allowed_claim_ids": ["clm_a047d79b8604fadbd44efdf4"],
+      "required_citation_ids": ["cite_b4e13e4e1a809f76527311ba"],
+      "limit": 8
+    },
+    {
+      "case_id": "current-graph-projection-not-canonical",
+      "category": "resolved-contradiction",
+      "query": "What is the current truth about Graphiti Neo4j being the deepest source of truth?",
+      "pack_ids": ["pack_f024177f89a5442db84171c3dd7f58e5"],
+      "expected_outcome": "answer",
+      "required_claim_ids": ["clm_f69dd23d961d485db1c53f0b"],
+      "allowed_claim_ids": ["clm_f69dd23d961d485db1c53f0b"],
+      "forbidden_claim_ids": ["clm_bdf2ed41fb11e6b1808d3df4"],
+      "required_citation_ids": ["cite_5b49c675e5e0d086e7b5dd46"],
+      "limit": 8
+    },
+    {
+      "case_id": "historical-rejected-graph-canonical",
+      "category": "historical-rejected",
+      "query": "What was the rejected graph database canonical storage claim?",
+      "pack_ids": ["pack_f024177f89a5442db84171c3dd7f58e5"],
+      "expected_outcome": "answer",
+      "required_claim_ids": ["clm_bdf2ed41fb11e6b1808d3df4"],
+      "allowed_claim_ids": ["clm_bdf2ed41fb11e6b1808d3df4"],
+      "required_citation_ids": ["cite_a7a3bfd1996a33857e073335"],
+      "limit": 8
+    },
+    {
+      "case_id": "insufficient-evidence-control",
+      "category": "insufficient-evidence",
+      "query": "quasar zebrafish magnetotail authorization",
+      "pack_ids": [
+        "pack_269099f7b2ba43b7a99b9427d64092de",
+        "pack_f024177f89a5442db84171c3dd7f58e5"
+      ],
+      "expected_outcome": "insufficient_evidence",
+      "required_claim_ids": [],
+      "allowed_claim_ids": [],
+      "required_citation_ids": [],
+      "limit": 8
+    }
+  ]
+}
