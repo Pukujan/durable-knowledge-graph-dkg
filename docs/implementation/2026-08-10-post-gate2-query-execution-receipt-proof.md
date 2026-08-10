@@ -94,11 +94,17 @@ Credential-shaped fields are removed recursively from retained runtime/attempt d
 
 ## Normal CI proof
 
-Draft core PR #64 normal contract CI before the exact-pin execution proof:
+Initial draft PR #64 normal contract CI before the exact-pin execution proof:
 
 - workflow run: `31437380214`;
 - job: `93614423141`;
 - result: **104 passed in 2.49s**.
+
+Final feature-head normal CI after recording the replay proof:
+
+- workflow run: `31437679718`;
+- job: `93615371591`;
+- result: **104 passed in 1.23s**.
 
 ## Exact corpus pins
 
@@ -120,7 +126,7 @@ The proof's deterministic pack-fixture projection identity was:
 
 ## Real-corpus replay execution proof — PASS
 
-Execution-only PR #65 added only the temporary workflow step needed to clone the exact pack pins and run the unchanged receipt/replay proof. It is not implementation evidence and is intended to remain unmerged.
+Execution-only PR #65 added only the temporary workflow step needed to clone the exact pack pins and run the unchanged receipt/replay proof. It is not implementation evidence and was closed unmerged.
 
 Proof:
 
