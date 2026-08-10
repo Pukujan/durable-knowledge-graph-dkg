@@ -16,11 +16,11 @@ This repository is designed so another GPT/Codex/Claude session can continue the
 
 ## Current state
 
-**Milestone 0 is complete. Gate 1 is 15/15 complete. Gate 2 — Real Corpus + Retrieval/Model Bakeoff is complete once the final Gate 2D documentation PR lands and Issues #37/#33 are closed.**
+**Milestone 0 is complete. Gate 1 is 15/15 complete. Gate 2 — Real Corpus + Retrieval/Model Bakeoff is complete. Issues #33–#37 are closed/completed.**
 
 Gate 2 decision D021 selects revision-pinned BGE dense retrieval as the normal primary, with explicit BM25 degraded availability fallback and mandatory lifecycle/lineage/citation safeguards. Do not treat this replaceable policy as canonical truth.
 
-After Gate 2 closes, do not invent a new Gate 3 from old chat context. Open a new explicit issue/campaign for new work.
+There is no active post-Gate-2 campaign. Do not invent a new Gate 3 from old chat context. Open a new explicit issue/campaign for new work.
 
 ## Non-negotiable rules
 
@@ -74,20 +74,22 @@ An issue can close, but an architectural decision must not exist only in an issu
 
 ## Completed campaign — Gate 2
 
-Control issue: **#33 — Gate 2: Real Corpus + Retrieval/Model Bakeoff**.
+Control issue: **#33 — Gate 2: Real Corpus + Retrieval/Model Bakeoff** — closed/completed.
 
 Children:
 
-1. **#34** representative real corpus fixtures + versioned gold/adversarial benchmark set;
-2. **#35** real retrieval/context adapters behind existing interfaces;
-3. **#36** reproducible comparative `fossil.benchmark.v1` runs and failure taxonomy;
-4. **#37** evidence-based default retrieval/routing policy.
+1. **#34** representative real corpus fixtures + versioned gold/adversarial benchmark set — closed/completed;
+2. **#35** real retrieval/context adapters behind existing interfaces — closed/completed;
+3. **#36** reproducible comparative `fossil.benchmark.v1` runs and failure taxonomy — closed/completed;
+4. **#37** evidence-based default retrieval/routing policy — closed/completed.
 
 Gate 2 established a 21-case history-rich real corpus and compared four strategies in one semantic-capable environment. Exact-head proof run `31364039745`, artifact `9053475462`, digest `sha256:23c95b46f47cec5a16e0a8c0926a4f13532f283d8f4fbcc0de12ceb63db63c41`.
 
 BGE dense was the only compared strategy with zero full retrieval misses and had the best mean recall@5 (`0.98413`). It still exhibited current-state ranking leakage and incomplete multi-target lineage recall. The hybrid had the best MRR but fully missed the key current-architecture case.
 
 D021 therefore selects pinned BGE dense as the normal primary and BM25 as an explicit degraded availability fallback. Current/history and lineage-sensitive tasks must resolve durable lifecycle/lineage rather than treating retrieval rank or top-k absence as truth. Exact citation/source semantics and model-authority boundaries remain unchanged.
+
+Gate 2D landed in PR #45 / squash commit `2d22dee9e6b176956d30005f4d7877baf68b0a3c`; final branch-independent CI was run `31366800697`, job `93386832166`, **86 passed in 1.02s**.
 
 Evidence:
 
