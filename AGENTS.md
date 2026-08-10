@@ -5,26 +5,48 @@ This repository is designed so another GPT/Codex/Claude session can continue the
 ## Start here, in this order
 
 1. `ARCHITECTURE.md` — frozen durable invariants.
-2. `docs/PROJECT_STATE.md` — current gate and work state.
-3. `docs/HANDOFF_CURRENT.md` — exact continuation point and next actions.
-4. `docs/research/2026-08-09-final-research-synthesis.md` — why the architecture was chosen.
-5. `docs/research/2026-08-09-evidence-ledger.md` — source ledger for the research freeze.
-6. `docs/DECISION_LOG.md` — accepted decisions, alternatives, and reconsideration triggers.
-7. GitHub Issue #1 and child issues #2–#10 — executable work tracking.
+2. `docs/HANDOFF_CURRENT.md` — exact continuation point.
+3. `docs/PROJECT_STATE.md` — completed gate/work state.
+4. `docs/handoffs/2026-08-10-chatgpt-session-handoff.md` — detailed fresh-session transfer record, proof runs, operational notes, and proposed next campaign.
+5. `docs/DECISION_LOG.md` — accepted decisions, alternatives, and reconsideration triggers.
+6. Gate/proof documents under `docs/implementation/`.
+7. `docs/research/2026-08-09-final-research-synthesis.md` and `docs/research/2026-08-09-evidence-ledger.md` when research rationale is needed.
+8. Closed GitHub Issue #1 and child Issues #2–#10 only when detailed implementation history is useful.
+
+## Current state
+
+**Milestone 0 is complete. Gate 1 is 15/15 complete. Issues #1–#10 are closed completed. There are no open pull requests or issues at the current checkpoint.**
+
+Do not reopen the completed milestone merely to continue development. A materially new campaign should get a new tracked gate/control issue.
 
 ## Non-negotiable rules
 
 - Do not treat Neo4j, Graphiti, an embedding index, MCP, a specific model, or a chat transcript as the durable source of truth.
 - Original evidence is preserved; summaries never replace source evidence.
-- Knowledge-changing history is append-only and versioned.
+- Normal knowledge-changing history is append-only and versioned.
+- Privacy/legal erasure is an exceptional explicit tombstone-before-delete path; erased identities must not silently resurrect.
 - Stable IDs belong to the corpus, not to a storage engine.
+- Stable knowledge-pack identity is logical and independent of repository path, graph namespace, or physical database placement.
 - Graph/search/vector structures are rebuildable projections.
+- A new/rebuilt physical projection gets a fresh build-scoped applied ledger.
+- Rebuild replay order is `(recorded_at, event_id)`.
+- Migration compares stable FOSSIL semantics, not graph-native UUID equality.
 - `DISPUTED` and unresolved disagreement are valid durable states.
 - Model agreement is metadata, not external evidence.
+- Small/local model output remains candidate-only unless independent evidence/risk policy permits downstream authority.
 - Agents normally propose; deterministic validation/policy gates commit durable changes.
-- Knowledge-pack identity is logical and must not depend on repository path or physical database placement.
+- Skills contain methodology, not canonical truth.
+- Protocol adapters remain thin and must not become the durable knowledge model.
 - Operational telemetry stays outside canonical knowledge; durable knowledge-changing provenance stays inside.
+- Reconstructed evidence can never silently become verbatim evidence.
 - Do not add infrastructure because it is fashionable. New technology must beat the existing adapter/benchmark contract.
+- Do not casually rename the internal `src/dkg` module/API namespace.
+
+## Repository family invariants
+
+- `Pukujan/fossil-common` keeps stable pack ID `pack_269099f7b2ba43b7a99b9427d64092de`.
+- `Pukujan/fossil-ai-systems` keeps stable pack ID `pack_f024177f89a5442db84171c3dd7f58e5` and its required dependency on common.
+- Do not call pack repositories "database shards"; physical sharding/placement is a separate concern.
 
 ## Frozen does not mean unchangeable
 
@@ -32,7 +54,7 @@ This repository is designed so another GPT/Codex/Claude session can continue the
 
 When changing one:
 
-1. open/update the relevant issue;
+1. open/update the relevant new active issue;
 2. record the competing theory or failure;
 3. cite evidence/benchmark results;
 4. update `docs/DECISION_LOG.md`;
@@ -47,21 +69,24 @@ GitHub issues track implementation state. Repository docs track durable decision
 
 An issue can close, but an architectural decision must not exist only in an issue comment. Conversely, durable docs should point back to the issue/benchmark that caused the change when useful.
 
-## Current implementation order
+## Next campaign rule
 
-Unless a failing test changes the order:
+There is **no active next issue yet**.
 
-1. #2 durable event/artifact store
-2. #3 knowledge-pack boundaries/mounts/promotion
-3. #6 claim/relation lifecycle + staleness
-4. #4 Graphiti + Neo4j projection adapter
-5. #5 destructive rebuild + blue/green migration harness
-6. #9 conversation lineage benchmark
-7. #8 Agent Skills + thin API/MCP adapter
-8. #7 pluggable retrieval/model-service benchmarking
-9. #10 source snapshot/redaction hardening as required across the above work
+The natural next campaign is described in `docs/handoffs/2026-08-10-chatgpt-session-handoff.md` as:
 
-External knowledge-pack repositories are created only after #3 proves the pack contract and namespace isolation. That gate has passed; preserve the existing stable pack IDs and read/write boundaries when maintaining those repositories.
+**Gate 2 — Real Corpus + Retrieval/Model Bakeoff**
+
+A fresh session should verify GitHub state first, confirm the user still wants to proceed, then open a new tracked control issue before materially expanding work.
+
+Recommended focus:
+
+1. representative `fossil-common` + `fossil-ai-systems` corpus fixtures and gold/adversarial cases;
+2. a small number of real semantic/vector/graph/long-context competitors behind existing interfaces;
+3. reproducible `fossil.benchmark.v1` comparison of quality, latency, memory, estimated cost, and failure categories;
+4. evidence-based default retrieval/routing policy selection.
+
+Current BM25/hash-embedding/token-overlap implementations are **controls**, not production winners.
 
 ## Session continuity protocol
 
@@ -69,9 +94,10 @@ At the end of any substantial work session:
 
 - update `docs/HANDOFF_CURRENT.md`;
 - update `docs/PROJECT_STATE.md` if the gate changed;
-- update the relevant GitHub issue checklist/status;
+- update the relevant active GitHub issue checklist/status;
 - commit benchmark/test results that materially justify a decision;
 - record architectural changes in `docs/DECISION_LOG.md`;
+- add/update a dated handoff when a long session is being retired;
 - never rely on the chat UI as the only record of a decision.
 
 If a chat history is missing or ambiguous, label reconstructed material as reconstructed rather than presenting it as verbatim evidence.
