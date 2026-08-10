@@ -7,20 +7,20 @@ This repository is designed so another GPT/Codex/Claude session can continue the
 1. `ARCHITECTURE.md` — frozen durable invariants.
 2. `docs/HANDOFF_CURRENT.md` — exact continuation point.
 3. `docs/PROJECT_STATE.md` — completed gate/work state.
-4. `docs/handoffs/2026-08-10-chatgpt-session-handoff.md` — detailed transfer record for the completed Milestone 0 / Gate 1 checkpoint and the rationale for Gate 2.
+4. `docs/handoffs/2026-08-10-chatgpt-session-handoff-gate2-complete.md` — detailed Gate 2 completion transfer.
 5. `docs/DECISION_LOG.md` — accepted decisions, alternatives, and reconsideration triggers.
 6. Gate/proof documents under `docs/implementation/`.
 7. `docs/research/2026-08-09-final-research-synthesis.md` and `docs/research/2026-08-09-evidence-ledger.md` when research rationale is needed.
-8. GitHub Gate 2 control Issue #33 and active child issues #34–#37 for current implementation state.
+8. Closed Gate 2 control Issue #33 and child Issues #34–#37 when detailed Gate 2 history is useful.
 9. Closed GitHub Issue #1 and child Issues #2–#10 only when detailed Gate 1 history is useful.
 
 ## Current state
 
-**Milestone 0 is complete. Gate 1 is 15/15 complete. Issues #1–#10 are closed completed. Gate 2 — Real Corpus + Retrieval/Model Bakeoff is now active under control Issue #33 with child Issues #34–#37.**
+**Milestone 0 is complete. Gate 1 is 15/15 complete. Gate 2 — Real Corpus + Retrieval/Model Bakeoff is complete once the final Gate 2D documentation PR lands and Issues #37/#33 are closed.**
 
-Current first implementation slice: Issue #34, with draft PR #38 adding a persistent/versioned benchmark case-set contract before representative pack data is seeded.
+Gate 2 decision D021 selects revision-pinned BGE dense retrieval as the normal primary, with explicit BM25 degraded availability fallback and mandatory lifecycle/lineage/citation safeguards. Do not treat this replaceable policy as canonical truth.
 
-Do not reopen the completed milestone merely to continue development.
+After Gate 2 closes, do not invent a new Gate 3 from old chat context. Open a new explicit issue/campaign for new work.
 
 ## Non-negotiable rules
 
@@ -72,22 +72,29 @@ GitHub issues track implementation state. Repository docs track durable decision
 
 An issue can close, but an architectural decision must not exist only in an issue comment. Conversely, durable docs should point back to the issue/benchmark that caused the change when useful.
 
-## Active campaign — Gate 2
+## Completed campaign — Gate 2
 
 Control issue: **#33 — Gate 2: Real Corpus + Retrieval/Model Bakeoff**.
 
 Children:
 
 1. **#34** representative real corpus fixtures + versioned gold/adversarial benchmark set;
-2. **#35** a small number of materially different real retrieval/context adapters behind existing interfaces;
+2. **#35** real retrieval/context adapters behind existing interfaces;
 3. **#36** reproducible comparative `fossil.benchmark.v1` runs and failure taxonomy;
 4. **#37** evidence-based default retrieval/routing policy.
 
-Initial Gate 2 inspection established that `fossil-common` and `fossil-ai-systems` are currently pack scaffolds with empty event/artifact payloads. Issue #34 therefore includes seeding representative canonical evidence/events into those existing stable packs before calling the benchmark corpus "real".
+Gate 2 established a 21-case history-rich real corpus and compared four strategies in one semantic-capable environment. Exact-head proof run `31364039745`, artifact `9053475462`, digest `sha256:23c95b46f47cec5a16e0a8c0926a4f13532f283d8f4fbcc0de12ceb63db63c41`.
 
-Draft PR #38 adds the missing persistent case-set layer. Its first trusted CI run `31356440481`, job `93356916077`, passed **60 tests in 0.69s**. Exact citation gold is being stored as full immutable citation span/hash metadata rather than citation IDs alone.
+BGE dense was the only compared strategy with zero full retrieval misses and had the best mean recall@5 (`0.98413`). It still exhibited current-state ranking leakage and incomplete multi-target lineage recall. The hybrid had the best MRR but fully missed the key current-architecture case.
 
-Current BM25/hash-embedding/token-overlap implementations remain **controls, not production winners**. Gate 2 provider/routing choices must be earned by measured corpus performance.
+D021 therefore selects pinned BGE dense as the normal primary and BM25 as an explicit degraded availability fallback. Current/history and lineage-sensitive tasks must resolve durable lifecycle/lineage rather than treating retrieval rank or top-k absence as truth. Exact citation/source semantics and model-authority boundaries remain unchanged.
+
+Evidence:
+
+- `benchmarks/gate2/results/2026-08-10-comparative/comparison-summary.json`;
+- `docs/implementation/2026-08-10-gate2-comparative-bakeoff-proof.md`;
+- `docs/implementation/2026-08-10-gate2-default-retrieval-policy.md`;
+- D021 in `docs/DECISION_LOG.md`.
 
 ## Session continuity protocol
 
