@@ -14,7 +14,62 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-      - name: Install
-        run: python -m pip install -e '.[test]'
+      - name: Install semantic runtime
+        run: python -m pip install -e '.[test,semantic]'
       - name: Test
         run: pytest -q
+      - name: Workstream D matched retrieval/reranker proof
+        run: |
+          git clone --quiet https://github.com/Pukujan/fossil-common.git .retrieval-bakeoff-packs/common
+          git -C .retrieval-bakeoff-packs/common checkout --quiet d583005dce06dbb499c3c0de5c22b899655eb8d2
+          git clone --quiet https://github.com/Pukujan/fossil-ai-systems.git .retrieval-bakeoff-packs/ai-systems
+          git -C .retrieval-bakeoff-packs/ai-systems checkout --quiet 84accd2ee895663990e82ca5b79b592cb503db24
+          mkdir -p .retrieval-bakeoff-proof
+          python scripts/run_post_gate2_retrieval_bakeoff.py \
+            --common-root .retrieval-bakeoff-packs/common \
+            --ai-root .retrieval-bakeoff-packs/ai-systems \
+            --run-ref "github-actions:${GITHUB_RUN_ID}:${GITHUB_JOB}" \
+            --output .retrieval-bakeoff-proof/report.json \
+            > .retrieval-bakeoff-proof/stdout.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          report = json.loads(Path('.retrieval-bakeoff-proof/report.json').read_text())
+          print('passed=', report['passed'])
+          print('corpus_document_count=', report['corpus_document_count'])
+          print('retrieval_case_count=', report['retrieval_case_count'])
+          print('answer_case_count=', report['answer_case_count'])
+          print('route_count=', report['route_count'])
+          print('receipt_count=', report['receipt_count'])
+          print('process_max_rss_kib=', report['environment']['process_max_rss_kib'])
+          print('stage_gate=', json.dumps(report['stage_gate'], sort_keys=True))
+          for name, route in report['routes'].items():
+              retrieval = route['retrieval']['metrics']
+              answer = route['answer_reliability']['metrics']
+              audit = route['safety_audit']
+              service = route['retrieval']['service']
+              print(name, json.dumps({
+                  'implementation': service['implementation'],
+                  'model_id': service.get('model_id'),
+                  'hit_rate': retrieval['hit_rate'],
+                  'recall_at_k': retrieval['recall_at_k'],
+                  'mrr': retrieval['mrr'],
+                  'full_misses': retrieval['full_misses'],
+                  'mean_latency_ms': retrieval['mean_latency_ms'],
+                  'p95_latency_ms': retrieval['p95_latency_ms'],
+                  'peak_python_alloc_bytes': retrieval['peak_memory_bytes'],
+                  'answer_correctness': answer['final_answer_correctness_rate'],
+                  'citation_correctness': answer['citation_correctness_rate'],
+                  'unsupported_claim_rate': answer['mean_unsupported_claim_rate'],
+                  'top1_superseded_leakage': audit['current_query_top1_superseded_leakage_count'],
+                  'pack_isolation': audit['pack_isolation_preserved'],
+              }, sort_keys=True))
+          PY
+      - name: Upload Workstream D proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: post-gate2-retrieval-bakeoff-proof
+          path: .retrieval-bakeoff-proof/
+          if-no-files-found: warn
