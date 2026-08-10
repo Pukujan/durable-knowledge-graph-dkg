@@ -161,6 +161,9 @@ def canonicalize_untrusted_context(
         "allowed_pack_ids": sorted(allowed_packs),
         "input_item_count": len(raw_items),
         "forwarded_item_count": len(secured),
+        "forwarded_item_ids": [
+            str(item.get("id", "")) for item in secured if item.get("id")
+        ],
         "forwarded_pack_ids": sorted(
             {str(item.get("pack_id", "")) for item in secured if item.get("pack_id")}
         ),
