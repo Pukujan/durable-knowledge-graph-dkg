@@ -1,97 +1,69 @@
 # Durable Decision Log
 
-This file records accepted architectural decisions, serious alternatives, and the conditions that would justify revisiting them. It is intentionally concise; detailed evidence lives in the research synthesis/ledger and implementation issues.
+This file records accepted architectural decisions, serious alternatives, and the conditions that would justify revisiting them. Detailed evidence lives in research/proof documents and implementation issues.
 
 ## D001 — Preserve meaning, not one database implementation
 
 **State:** accepted / frozen invariant  
-**Decision:** canonical durability is immutable evidence + stable IDs + append-only knowledge events + versioned schemas/ontology + provenance/history. Databases and indexes are projections.
-
-**Why:** database technology will change; intellectual history must survive migrations.
-
-**Reconsider only if:** a future system can provide stronger portability while preserving equivalent source evidence, history, identity, and rebuildability.
+**Decision:** canonical durability is immutable evidence + stable IDs + append-only knowledge events + versioned schemas/ontology + provenance/history. Databases/indexes are projections.
 
 ## D002 — Graphiti + Neo4j is the first living graph projection
 
 **State:** accepted, replaceable implementation choice  
-**Decision:** use Graphiti + local Neo4j first because temporal episodes/facts, provenance, custom graph types, namespaces, and hybrid retrieval reduce the amount of temporal graph machinery we must build ourselves.
+**Decision:** use Graphiti + local Neo4j first for temporal episodes/facts, provenance, namespaces, and hybrid retrieval. It is not the permanent source of truth.
 
-**Rejected interpretation:** Graphiti/Neo4j is not the permanent source of truth.
-
-**Competing theory:** PostgreSQL + pgvector as the canonical operational store with Neo4j as an optional graph projection.
-
-**Reconsider when:** Graphiti projection reliability, ontology evolution, namespace behavior, performance, or operational complexity fails our benchmarks; or PostgreSQL projection proves simpler/better while retaining the durable event contract.
+**Reconsider when:** projection reliability, ontology evolution, namespace behavior, performance, operational complexity, or a competing projection wins measured benchmarks.
 
 ## D003 — Knowledge packs are logical boundaries; shards are physical placement
 
 **State:** accepted / frozen invariant  
-**Decision:** common/domain/project knowledge is separated by portable knowledge-pack identity. A pack may later move repositories, databases, partitions, shards, or servers without changing stable IDs.
-
-**Why:** mature multi-tenant systems repeatedly separate logical ownership/tenancy from physical placement.
-
-**Reconsider only if:** a demonstrated storage technology requires physical identity coupling and provides a stronger migration story than stable logical pack identity.
+**Decision:** common/domain/project knowledge is separated by stable portable `pack_id`. Repository/database/partition/shard placement may change without redefining identity.
 
 ## D004 — First authoring format is one immutable event per file
 
 **State:** accepted, implementation-level  
-**Decision:** immutable JSON event files validated by JSON Schema. JSONL is import/export, not the hot concurrent authoring file.
+**Decision:** immutable JSON event files validated by JSON Schema. JSONL is import/export, not the concurrent authoring hot path.
 
-**Why:** multiple agents appending one Git-tracked JSONL file creates merge/conflict/corruption pressure; independent event files make idempotency and validation simpler.
-
-**Reconsider when:** event volume makes filesystem authoring measurably impractical. A future event database may become the authoring implementation, but export/rebuild compatibility must remain.
+**Reconsider when:** event volume makes filesystem authoring measurably impractical; replacement storage must retain export/rebuild compatibility.
 
 ## D005 — Accepted durable event and successful graph projection are separate states
 
 **State:** accepted / frozen invariant  
-**Decision:** durable event commit occurs before asynchronous graph projection. Projection failures retry/dead-letter; they cannot erase accepted knowledge.
-
-**Why:** model/API/database outages should not lose intellectual history.
+**Decision:** durable event commit occurs before projection. Projection failure/retry state cannot erase accepted knowledge.
 
 ## D006 — Disagreement and relation history are first-class data
 
 **State:** accepted / frozen invariant  
-**Decision:** claims and relations have lifecycle/history. `DISPUTED` may remain unresolved. Supersession does not delete earlier states.
-
-**Why:** the corpus must answer how/why a conclusion changed, not only what the latest summary says.
+**Decision:** claims/relations preserve lifecycle and history. `DISPUTED` may remain unresolved. Supersession does not delete earlier states.
 
 ## D007 — Model agreement is not evidence
 
 **State:** accepted / frozen invariant  
-**Decision:** multiple models may provide independent criticism, candidate conflicts, or review metadata. External sources, tests, experiments, and other truth signals determine evidentiary support.
-
-**Why:** correlated model errors can create false consensus.
+**Decision:** models may provide criticism/candidates/review metadata. External sources, tests, experiments, and other truth signals determine evidentiary support.
 
 ## D008 — Agent Skills and MCP/API have different jobs
 
 **State:** accepted  
-**Decision:** Agent Skills hold lazily loaded methodology/workflows. Corpus API/MCP exposes a small capability surface. Internal domain service is protocol-independent.
+**Decision:** Skills contain lazily loaded methodology/workflows. The corpus domain service owns a small capability surface; MCP/API is a replaceable adapter. Canonical knowledge does not depend on the protocol.
 
-**Why:** this reduces context/tool surface and keeps knowledge independent of a fast-changing protocol.
+**Gate 1 result:** `CorpusService` exposes `search/read/lineage/propose/validate/commit/manage`; normal agent access has no arbitrary Cypher/Graphiti mutation path, and agent proposals preserve actor/model/harness/skill provenance.
 
-**Reconsider when:** a later protocol cleanly subsumes methodology + capability without forcing the corpus format to depend on it.
+**Evidence:** `docs/implementation/2026-08-09-gate1-agent-boundary-proof.md`, Issue #8.
 
 ## D009 — Retrieval/model infrastructure is pluggable
 
 **State:** accepted / frozen invariant  
-**Decision:** storage, retrieval, context construction, and reasoning are separate interfaces. Do not couple canonical knowledge to one embedding model, one vector DB, one chunking strategy, or one context-window assumption.
-
-**Why:** Kimi-style long context, graph retrieval, BM25, local/static embeddings, rerankers, and future models can change retrieval economics rapidly.
+**Decision:** storage, retrieval, context construction, and reasoning are separate interfaces. Canonical knowledge cannot depend on one embedding model, vector DB, chunking strategy, or context-window assumption.
 
 ## D010 — Specialized/local models earn authority by benchmarks
 
 **State:** accepted  
-**Decision:** cheap/local models may handle routing, embeddings, tagging, deduplication candidates, citation matching, contradiction screening, and other bounded tasks. High-risk truth-state changes escalate according to evidence/risk policy.
-
-**Why:** specialization can save cost/latency but also creates orchestration and error surfaces.
-
-**Reconsider when:** corpus-specific benchmarks demonstrate a local/specialized model is reliable enough for a broader authority class.
+**Decision:** small/local models may perform bounded tasks and propose candidates. They do not receive truth-changing authority unless corpus-specific benchmark evidence and risk policy justify it.
 
 ## D011 — Migration is a normal feature
 
 **State:** accepted / frozen invariant  
-**Decision:** dangerous structural migrations use rebuild/blue-green projections whenever practical. Preserve history and switch active projection rather than destructively editing the only copy.
-
-**Why:** prior knowledge projects became throwaway when schema changes were tightly coupled to graph/storage structure.
+**Decision:** dangerous structural migrations use rebuild/blue-green projections where practical. Preserve history and switch active projection rather than destructively editing the only copy.
 
 ## D012 — GitHub is the project/control plane, not the live graph database
 
@@ -101,75 +73,84 @@ This file records accepted architectural decisions, serious alternatives, and th
 ## D013 — Delay physical pack repositories until boundary contract passes
 
 **State:** accepted / sequencing condition satisfied  
-**Decision:** first prove Issue #3 knowledge-pack validation/isolation locally; then create the initial common/shared and AI-systems/plugin-harness pack repos.
+**Decision:** prove pack validation/isolation before splitting physical repositories.
 
-**Why:** avoid freezing an untested cross-repository contract twice.
-
-**Current result:** Issue #3 has passed, so external pack repositories are now authorized without changing their stable pack identities.
+**Result:** the repository family now exists as `fossil-core`, `fossil-common`, and `fossil-ai-systems` without changing the stable pack identities.
 
 ## D014 — Security is deliberately minimal for the first local build
 
 **State:** accepted / provisional  
-**Decision:** localhost-only runtime with normal database credentials and optionally one local bearer token. Do not build custom OAuth/RBAC now.
+**Decision:** localhost-first runtime with ordinary database credentials and optionally one local bearer token. Do not build custom OAuth/RBAC yet.
 
-**Why:** current boundaries are primarily correctness/context boundaries, not hostile multi-user security boundaries.
-
-**Reconsider when:** remote access, multiple users, sensitive legal/finance/private packs, or an exposed service becomes real. Prefer mature identity such as Supabase/OAuth/JWT rather than custom auth.
+**Reconsider when:** remote access, multiple users, sensitive packs, or exposed services become real. Prefer mature identity systems rather than custom auth.
 
 ## D015 — Telemetry is not canonical knowledge
 
 **State:** accepted / frozen invariant  
-**Decision:** traces, token/tool events, timing, stack traces, and system metrics live in observability systems. The corpus stores durable run/trace references and knowledge-changing provenance.
+**Decision:** token/tool traces, timing, stack traces, and metrics live in observability systems. The corpus stores durable run/trace references and knowledge-changing provenance.
 
-## D016 — Append-only needs an explicit redaction path
+## D016 — Append-only history has an exceptional tombstone-before-delete redaction path
 
-**State:** accepted  
-**Decision:** append-only intellectual history must not make future sensitive-data deletion impossible. Redaction/tombstone behavior is modeled separately from ordinary claim revision.
+**State:** accepted / frozen redaction invariant  
+**Decision:** normal intellectual revision remains append-only, but privacy/legal erasure is a separate exceptional operation. FOSSIL must persist a minimal non-sensitive tombstone before physically deleting sensitive artifact or durable-event bytes.
 
-**Reconsider/refine when:** real sensitive/legal requirements exist; then define exact retention/removal policy.
+For content-addressed artifacts, the tombstone preserves identity/hash and audit metadata but not the erased bytes; the same redacted content identity cannot silently be rehydrated.
+
+For a durable event whose payload itself contains sensitive text, the tombstone preserves only stable event ID, pack ID, event type, recorded time, canonical hash, and redaction authority/reason/request reference. It deliberately excludes payload, subject refs, evidence refs, and provenance that could repeat sensitive content. The same deterministic event identity cannot be republished after redaction.
+
+Active projections and exports must respect redaction. Projection-applied history remains immutable operational audit history; redaction is recorded separately. A projection may retain a build-local graph object UUID solely as an operational purge handle, never as canonical knowledge identity.
+
+Event-redaction tombstones plus build-scoped applied ledgers must support cleanup after a crash between canonical erasure and projection purge. A fresh rebuild must not resurrect intentionally erased canonical knowledge.
+
+**Why:** append-only intellectual history must not trap future sensitive/legal/private data forever, while deletion itself must remain explainable and auditable without preserving the sensitive payload.
+
+**Evidence:** `docs/implementation/2026-08-10-gate1-source-provenance-redaction-proof.md`, Issue #10. Real Graphiti/Neo4j proof run `31346791333` showed active episode/entity removal and zero-state fresh rebuild after canonical event erasure.
+
+**Reconsider only if:** a stronger deletion/cryptographic-erasure mechanism preserves equivalent auditability, non-resurrection, projection cleanup, and privacy semantics.
 
 ## D017 — FOSSIL is the project name; DICS is the durable substrate name
 
 **State:** accepted  
-**Decision:** the project is named **FOSSIL — Fault-tolerant Open Semantic Store for Intellectual Lineage**. The durable corpus substrate is **DICS — Durable Intellectual Corpus System**.
+**Decision:** project name: **FOSSIL — Fault-tolerant Open Semantic Store for Intellectual Lineage**. Durable corpus substrate: **DICS — Durable Intellectual Corpus System**.
 
-**Repository family:**
+Repository family:
 - `fossil-core` — architecture/contracts/core/projections/control plane;
-- `fossil-common` — common research and engineering methods, preserving `pack_269099f7b2ba43b7a99b9427d64092de`;
-- `fossil-ai-systems` — AI systems/plugin-harness knowledge, preserving `pack_f024177f89a5442db84171c3dd7f58e5` and depending on the common pack.
+- `fossil-common` — stable `pack_269099f7b2ba43b7a99b9427d64092de`;
+- `fossil-ai-systems` — stable `pack_f024177f89a5442db84171c3dd7f58e5`, depending on common.
 
-**Invariant:** repository names do not define knowledge identity. The existing stable `pack_id` values remain authoritative through renames, moves, or future physical sharding.
-
-**Why:** FOSSIL reflects the core rebuild-from-preserved-history property while giving the repository family a durable, memorable public name. DICS names the durable corpus substrate without changing the architectural semantics.
+**Invariant:** repository names do not define knowledge identity.
 
 ## D018 — Physical projection builds have separate operational identity
 
 **State:** accepted / frozen migration invariant  
-**Decision:** every destructive rebuild or blue/green candidate receives a fresh projection build identity and build-scoped applied ledger. Migration comparison uses projection-independent semantic snapshots, and active projection changes are append-only switch records written only after checks pass.
+**Decision:** every destructive rebuild/blue-green candidate receives a fresh projection build identity and build-scoped applied ledger. Migration comparison uses projection-independent semantic snapshots; active changes are append-only switch records only after checks pass.
 
-**Why:** deleting a graph while reusing an old applied ledger can cause every event to look already materialized and silently rebuild an empty projection. Graph-native node/edge UUID equality is also the wrong migration contract because those identifiers may legitimately change on rebuild.
+**Why:** deleting a graph while reusing an old applied ledger can make every event appear already materialized and silently produce an empty rebuild. Graph-native UUID equality is also not a valid migration contract.
 
 **Evidence:** `docs/implementation/2026-08-09-gate1-rebuild-blue-green-proof.md`, Issue #5.
-
-**Reconsider only if:** a future projection system provides a stronger atomic build/version identity while preserving equivalent replay, comparison, rollback, and audit semantics.
 
 ## D019 — Conversation evidence status is durable provenance
 
 **State:** accepted / frozen evidence invariant  
-**Decision:** conversation source artifacts, byte spans, messages, and derived lineage explicitly distinguish `verbatim` from `reconstructed` evidence. A reconstructed recovery artifact cannot be silently upgraded to verbatim evidence. Verbatim messages must resolve exactly to immutable source bytes/spans.
-
-**Why:** a polished recovery summary and a primary transcript have fundamentally different evidentiary weight. Losing that distinction would corrupt intellectual lineage and make citations misleading.
+**Decision:** conversation source artifacts, byte spans, messages, and derived lineage explicitly distinguish `verbatim` from `reconstructed`. A reconstructed recovery artifact cannot silently become verbatim evidence; verbatim messages resolve exactly to immutable source bytes/spans.
 
 **Evidence:** `docs/implementation/2026-08-09-gate1-conversation-lineage-proof.md`, Issue #9.
 
-**Reconsider only if:** a stronger provenance representation preserves at least the same primary-vs-reconstructed distinction and exact source resolution.
+## D020 — Source role and quality remain explicit instead of collapsing into one score
+
+**State:** accepted / frozen evidence invariant  
+**Decision:** source snapshots preserve source role (`primary`, `secondary`, `local`, `derived`, `reconstructed` as applicable), derivation parents, immutable observed version, and independent quality dimensions. A derived/reconstructed source cannot satisfy a primary-source requirement merely because its prose is confident or cites another source.
+
+**Why:** a universal source tier or opaque confidence score encourages citation laundering and hides which quality dimension is weak.
+
+**Evidence:** `docs/implementation/2026-08-10-gate1-source-provenance-redaction-proof.md`, Issue #10.
 
 ## How to add a decision
 
-When implementation or research changes an architectural conclusion:
+When implementation or evidence changes an architectural conclusion:
 
-1. add a new decision entry rather than deleting the old reasoning;
-2. state which earlier decision it supersedes/refines/challenges;
-3. link the relevant issue/benchmark/research artifact;
-4. record whether the change affects a frozen invariant or only an adapter choice;
-5. update `ARCHITECTURE.md` only when the contract itself changes.
+1. add/refine a durable decision rather than deleting old reasoning;
+2. state which prior decision it refines/challenges/supersedes;
+3. link the issue/benchmark/proof;
+4. distinguish frozen invariant from replaceable adapter choice;
+5. update `ARCHITECTURE.md` when the architectural contract itself changes.
