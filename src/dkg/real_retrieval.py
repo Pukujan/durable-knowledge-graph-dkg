@@ -427,3 +427,4 @@ class RerankedRetriever:
                 "service": service,
             }
             results.append(result)
+        return results
