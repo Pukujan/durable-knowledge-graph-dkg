@@ -28,6 +28,21 @@ def schema() -> Path:
     return root() / "schemas" / "benchmark" / "case-set-v1.schema.json"
 
 
+def fixture_citation() -> dict:
+    return {
+        "schema_version": "fossil.citation.v1",
+        "citation_id": "cite_fixture_source_quality_001",
+        "snapshot_id": "snap_fixture_source_quality_001",
+        "artifact_id": "art_fixture_source_quality_00000001",
+        "byte_start": 12,
+        "byte_end": 36,
+        "passage_hash": {
+            "algorithm": "sha256",
+            "digest": "a" * 64,
+        },
+    }
+
+
 def fixture() -> dict:
     return {
         "schema_version": "fossil.benchmark-case-set.v1",
@@ -58,7 +73,7 @@ def fixture() -> dict:
                 "gold": {
                     "answerable": True,
                     "expected_answer": "Source usefulness is claim-specific and dimensions remain canonical.",
-                    "citation_ids": ["cite_fixture_source_quality_001"],
+                    "citations": [fixture_citation()],
                     "source_snapshot_ids": ["snap_fixture_source_quality_001"],
                     "notes": "IDs are fixture-shaped here; Gate 2 corpus seeding will replace them with generated stable IDs.",
                 },
@@ -76,7 +91,7 @@ def fixture() -> dict:
                 "gold": {
                     "answerable": False,
                     "expected_answer": None,
-                    "citation_ids": [],
+                    "citations": [],
                     "source_snapshot_ids": [],
                     "notes": "The benchmark baseline explicitly does not select a production winner.",
                 },
@@ -97,9 +112,10 @@ def test_case_set_pins_corpus_and_loads_existing_benchmark_case_types(tmp_path):
 
     assert loaded["corpus"][0]["pack_id"] == COMMON
     assert loaded["corpus"][1]["pack_id"] == AI
-    assert loaded["cases"][0]["gold"]["citation_ids"] == [
-        "cite_fixture_source_quality_001"
-    ]
+    citation = loaded["cases"][0]["gold"]["citations"][0]
+    assert citation["citation_id"] == "cite_fixture_source_quality_001"
+    assert citation["byte_start"] == 12
+    assert citation["passage_hash"]["digest"] == "a" * 64
 
     retrieval = retrieval_cases_from_case_set(loaded)
     assert len(retrieval) == 1
@@ -127,6 +143,16 @@ def test_case_set_rejects_retrieval_pack_not_pinned_by_corpus(tmp_path):
     payload["cases"][0]["pack_ids"] = [OTHER]
 
     with pytest.raises(BenchmarkCaseSetError, match="not pinned by the case-set corpus"):
+        load_benchmark_case_set(write_case_set(tmp_path, payload), schema())
+
+
+def test_case_set_rejects_citation_snapshot_not_declared_by_gold(tmp_path):
+    payload = fixture()
+    payload["cases"][0]["gold"]["source_snapshot_ids"] = [
+        "snap_different_source_snapshot_001"
+    ]
+
+    with pytest.raises(BenchmarkCaseSetError, match="undeclared source snapshots"):
         load_benchmark_case_set(write_case_set(tmp_path, payload), schema())
 
 
