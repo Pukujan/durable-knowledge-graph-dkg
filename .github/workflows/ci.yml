@@ -18,3 +18,32 @@ jobs:
         run: python -m pip install -e '.[test]'
       - name: Test
         run: pytest -q
+      - name: Gate 2 history/conversation pack audit
+        run: |
+          git clone --quiet https://github.com/Pukujan/fossil-common.git .gate2-packs/common
+          git -C .gate2-packs/common checkout --quiet d583005dce06dbb499c3c0de5c22b899655eb8d2
+          git clone --quiet https://github.com/Pukujan/fossil-ai-systems.git .gate2-packs/ai-systems
+          git -C .gate2-packs/ai-systems checkout --quiet 83090560a2078709277d3491a3aff8727bb25d0e
+          python - <<'PY'
+          from pathlib import Path
+          from dkg.pack_fixture import validate_pack_fixtures
+          from dkg.pack_corpus import retrieval_documents_from_pack_fixtures
+
+          roots = [Path('.gate2-packs/common'), Path('.gate2-packs/ai-systems')]
+          report = validate_pack_fixtures(roots, schemas_root=Path('schemas'))
+          print(report)
+
+          documents = retrieval_documents_from_pack_fixtures(roots, schemas_root=Path('schemas'))
+          by_id = {document['id']: document for document in documents}
+
+          assert by_id['clm_643b698b7e9e6aee6a16c48c']['current_state'] == 'superseded'
+          assert by_id['clm_a047d79b8604fadbd44efdf4']['current_state'] == 'stale_pending_review'
+          assert by_id['clm_7f5c691c564c30e1b61f8dc0']['current_state'] == 'supported'
+          assert by_id['clm_bdf2ed41fb11e6b1808d3df4']['current_state'] == 'rejected'
+          assert by_id['clm_f69dd23d961d485db1c53f0b']['current_state'] == 'supported'
+          assert by_id['rel_e0102ade0b5fad5cc2668ccd']['current_state'] == 'active'
+          assert by_id['rel_c0e74317e7ff1ee59461b036']['current_state'] == 'active'
+          assert by_id['clm_fabdddf47e97cdd1876329fe']['current_state'] == 'supported'
+          assert by_id['clm_1f4c5f053bd7dccac79c301c']['current_state'] == 'supported'
+          print('history replay assertions: PASS')
+          PY
