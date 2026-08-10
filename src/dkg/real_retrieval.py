@@ -13,6 +13,13 @@ DEFAULT_BGE_MODEL = "BAAI/bge-small-en-v1.5"
 DEFAULT_BGE_REVISION = "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a"
 
 
+def _installed_version(package: str) -> str:
+    try:
+        return importlib.metadata.version(package)
+    except importlib.metadata.PackageNotFoundError:
+        return "unavailable"
+
+
 class OptionalRetrievalDependencyUnavailable(RuntimeError):
     """Raised when an explicitly requested real retrieval runtime is unavailable."""
 
@@ -88,6 +95,8 @@ class SentenceTransformerEmbeddingProvider:
                 "device": self.device,
                 "model_revision": self.revision,
                 "normalize_embeddings": str(self.normalize_embeddings).lower(),
+                "torch_version": _installed_version("torch"),
+                "transformers_version": _installed_version("transformers"),
             },
         ).as_dict()
 
@@ -418,4 +427,3 @@ class RerankedRetriever:
                 "service": service,
             }
             results.append(result)
-        return results
