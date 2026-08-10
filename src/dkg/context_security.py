@@ -81,6 +81,7 @@ def canonicalize_untrusted_context(
     reduce trivial ranking/context flooding without claiming a universal poisoning defense.
     """
 
+    raw_items = [copy.deepcopy(dict(item)) for item in context_items]
     allowed_packs = {str(pack_id) for pack_id in pack_ids}
     durable_by_id = {
         str(document["id"]): copy.deepcopy(dict(document))
@@ -97,8 +98,7 @@ def canonicalize_untrusted_context(
     dropped_ids: list[str] = []
     deduplicated_ids: list[str] = []
 
-    for raw_value in context_items:
-        raw = copy.deepcopy(dict(raw_value))
+    for raw in raw_items:
         identifier = str(raw.get("id", ""))
         claimed_pack_id = str(raw.get("pack_id", ""))
         durable = durable_by_id.get(identifier) if identifier else None
@@ -159,8 +159,11 @@ def canonicalize_untrusted_context(
         "resolver": CONTEXT_SECURITY_RESOLVER,
         "source_text_trust": UNTRUSTED_SOURCE_DATA,
         "allowed_pack_ids": sorted(allowed_packs),
-        "input_item_count": sum(1 for _ in context_items) if isinstance(context_items, list) else None,
+        "input_item_count": len(raw_items),
         "forwarded_item_count": len(secured),
+        "forwarded_pack_ids": sorted(
+            {str(item.get("pack_id", "")) for item in secured if item.get("pack_id")}
+        ),
         "canonicalized_ids": canonicalized_ids,
         "retrieved_payload_mismatch_ids": mismatched_ids,
         "demoted_untrusted_ids": demoted_ids,
