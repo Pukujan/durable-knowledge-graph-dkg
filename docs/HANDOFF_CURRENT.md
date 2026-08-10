@@ -3,52 +3,56 @@
 **Date:** 2026-08-10  
 **Project:** **FOSSIL — Fault-tolerant Open Semantic Store for Intellectual Lineage**  
 **Repository:** `Pukujan/fossil-core`  
-**Status:** **Gate 1 complete. Gate 2 active: #34 and #35 complete; #36 is current; #37 follows.**
+**Status:** **Gate 1 complete. Gate 2 complete once the Gate 2D docs PR lands and #37/#33 close.**
 
 ## Fresh-session transfer
 
-Read this detailed checkpoint next:
+Read this detailed completion checkpoint next:
 
-`docs/handoffs/2026-08-10-chatgpt-session-handoff-gate2-midpoint.md`
+`docs/handoffs/2026-08-10-chatgpt-session-handoff-gate2-complete.md`
 
-For completed Gate 1 history and original frozen architecture context, retain:
+For the Gate 2 midpoint and completed Gate 1 history, retain:
 
-`docs/handoffs/2026-08-10-chatgpt-session-handoff.md`
+- `docs/handoffs/2026-08-10-chatgpt-session-handoff-gate2-midpoint.md`
+- `docs/handoffs/2026-08-10-chatgpt-session-handoff.md`
 
-## Current GitHub checkpoint
+## Gate 2 result
 
-At the time this pointer was updated:
+Gate 2A–2C are complete and landed. Gate 2D selects an evidence-based retrieval/routing policy in D021:
 
-- Gate 2 control **#33** — open;
-- **#34** — closed/completed;
-- **#35** — closed/completed;
-- **#36** — open/current;
-- **#37** — open/next;
-- draft PR **#44** — open and mergeable;
-- PR branch: `agent/gate2-comparative-bakeoff`;
-- PR head: `1f71b981feb9ff10636901c61bfb16e677a9f258`;
-- exact-head normal CI: run `31364039714`, job `93378520755`, **86 passed in 0.97s**;
-- exact-head comparative proof: run `31364039745`, success.
+- normal primary: revision-pinned BGE dense retrieval;
+- semantic-runtime availability fallback: BM25, explicitly degraded;
+- current/latest/accepted queries must resolve durable lifecycle/provenance rather than treating rank as truth;
+- decision-lineage, supersession, disagreement, and multi-target historical/current questions use durable `lineage`/read resolution in addition to retrieval;
+- citation/source identity and model-authority invariants are unchanged.
 
-Verify GitHub before relying on these values.
+Policy proof:
 
-## Current technical conclusion
+`docs/implementation/2026-08-10-gate2-default-retrieval-policy.md`
 
-The 21-case real history-rich corpus and real retrieval adapters are already landed. A same-environment four-strategy bakeoff has been run and raw result JSONs are committed on PR #44.
+Comparative proof:
 
-Dense BGE is the leading **candidate** because it is the only compared strategy with zero full retrieval misses and has the best mean recall, but it still has temporal/ranking and multi-target-lineage weaknesses. The hybrid has higher MRR but completely misses the key current-architecture case. Therefore **no default has been selected yet**; Issue #37 owns that policy decision.
+- PR #44 squash commit `38aac6325cdb5b738c8a6ac5e55959affb3acfb5`;
+- final normal CI run `31366259213`, job `93385174741`, **86 passed in 1.25s**;
+- semantic proof run `31364039745`;
+- artifact `9053475462`;
+- digest `sha256:23c95b46f47cec5a16e0a8c0926a4f13532f283d8f4fbcc0de12ceb63db63c41`.
 
-## Immediate next work
+BGE dense was selected because it was the only compared strategy with zero full retrieval misses and had the best mean recall@5 (`0.98413`). It still requires explicit temporal/current-state and multi-target-lineage safeguards. The hybrid had better MRR but fully missed the key current-architecture case.
 
-Finish #36 / PR #44 before starting #37:
+## Repository control state
 
-1. persist/verify compact comparison + provenance/proof evidence;
-2. keep `selection.selected = null` in #36 artifacts;
-3. remove the temporary `.github/workflows/gate2-comparative-proof.yml` workflow;
-4. run final branch-independent CI;
-5. merge PR #44 and close #36 with exact proof references.
+At the moment this handoff was prepared:
 
-Then complete #37 by selecting and documenting the default retrieval/routing policy, fallback/rollback behavior, temporal safeguards, and reconsideration triggers from committed evidence. Update `docs/DECISION_LOG.md`, `docs/PROJECT_STATE.md`, and this handoff before closing #37 and #33.
+- #34 — closed/completed;
+- #35 — closed/completed;
+- #36 — closed/completed;
+- #37 — being completed by the Gate 2D documentation PR;
+- #33 — closes after #37 and Gate 2 exit criteria are reconciled.
+
+After that PR lands, close #37 and #33 and verify there are no open Gate 2 issues before considering the campaign finished on GitHub.
+
+Do not invent or start a new Gate 3 merely from this handoff. New work should start with an explicit issue/campaign.
 
 ## Frozen invariants
 
@@ -59,8 +63,8 @@ Preserve stable pack IDs:
 
 Canonical truth remains durable evidence + stable identity + append-only validated events + provenance/history. Graphiti/Neo4j, lexical/vector retrieval, context builders, models, Skills, MCP, and future databases remain replaceable services/projections. Model consensus is not external evidence. Reconstructed evidence cannot silently become verbatim. Do not casually rename `src/dkg`.
 
-Do not reopen Issues #1–#10 for Gate 2 work.
+Do not reopen Issues #1–#10 or Gate 2 children merely to continue development.
 
 ## Suggested next-session prompt
 
-> Continue my FOSSIL project from `Pukujan/fossil-core`. Read `AGENTS.md`, `ARCHITECTURE.md`, `docs/HANDOFF_CURRENT.md`, and `docs/handoffs/2026-08-10-chatgpt-session-handoff-gate2-midpoint.md` first. Verify GitHub state, especially #33, #36, #37, and PR #44. Finish #36 cleanly, then complete #37’s evidence-based retrieval/routing/fallback/rollback policy. Do not reopen Gate 1 or change stable pack IDs/invariants.
+> Continue my FOSSIL project from `Pukujan/fossil-core`. Read `AGENTS.md`, `ARCHITECTURE.md`, `docs/HANDOFF_CURRENT.md`, and `docs/handoffs/2026-08-10-chatgpt-session-handoff-gate2-complete.md` first. Verify GitHub state before changing anything. Gate 1 and Gate 2 are completed campaigns; preserve stable pack IDs and D021's evidence-based retrieval policy unless new committed benchmark evidence justifies reconsideration. Start new work through a new explicit issue/campaign rather than reopening old Gate 1 or Gate 2 issues.
