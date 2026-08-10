@@ -4,6 +4,9 @@ import copy
 from typing import Any, Iterable, Mapping
 
 
+LINEAGE_CONTEXT_RESOLVER = "fossil-lineage-context-v1"
+
+
 def expand_context_with_lineage(
     context_items: Iterable[Mapping[str, Any]],
     *,
@@ -18,6 +21,24 @@ def expand_context_with_lineage(
     cannot erase lineage needed for a current/history answer.
     """
 
+    expanded, _ = expand_context_with_lineage_diagnostics(
+        context_items,
+        documents=documents,
+        pack_ids=pack_ids,
+        max_expansions=max_expansions,
+    )
+    return expanded
+
+
+def expand_context_with_lineage_diagnostics(
+    context_items: Iterable[Mapping[str, Any]],
+    *,
+    documents: Iterable[Mapping[str, Any]],
+    pack_ids: Iterable[str],
+    max_expansions: int = 24,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Expand relation endpoints and return compact replay/receipt diagnostics."""
+
     if max_expansions < 0:
         raise ValueError("max_expansions must be non-negative")
     allowed = {str(pack_id) for pack_id in pack_ids}
@@ -27,7 +48,8 @@ def expand_context_with_lineage(
         if str(document.get("pack_id", "")) in allowed
     }
     selected = [copy.deepcopy(dict(item)) for item in context_items]
-    selected_ids = {str(item.get("id", "")) for item in selected}
+    input_ids = [str(item.get("id", "")) for item in selected if item.get("id")]
+    selected_ids = set(input_ids)
     expansion_ids: list[str] = []
 
     for item in selected:
@@ -47,10 +69,21 @@ def expand_context_with_lineage(
         item = document_by_id[identifier]
         item["context_expansion"] = {
             "reason": "durable_relation_endpoint",
-            "resolver": "fossil-lineage-context-v1",
+            "resolver": LINEAGE_CONTEXT_RESOLVER,
         }
         selected.append(item)
-    return selected
+
+    diagnostics = {
+        "resolver": LINEAGE_CONTEXT_RESOLVER,
+        "allowed_pack_ids": sorted(allowed),
+        "input_context_ids": input_ids,
+        "expanded_ids": expansion_ids,
+        "final_context_ids": [
+            str(item.get("id", "")) for item in selected if item.get("id")
+        ],
+        "max_expansions": max_expansions,
+    }
+    return selected, diagnostics
 
 
 class LineageResolvedModelService:
@@ -72,19 +105,21 @@ class LineageResolvedModelService:
     def metadata(self) -> dict[str, Any]:
         metadata = copy.deepcopy(dict(self.service.metadata()))
         runtime = dict(metadata.get("runtime", {}))
-        runtime["lineage_context_resolver"] = "fossil-lineage-context-v1"
+        runtime["lineage_context_resolver"] = LINEAGE_CONTEXT_RESOLVER
         runtime["lineage_max_expansions"] = str(self.max_expansions)
         metadata["runtime"] = runtime
         return metadata
 
     def run(self, task: dict[str, Any]) -> dict[str, Any]:
         request = copy.deepcopy(task)
-        request["context_items"] = expand_context_with_lineage(
+        expanded, diagnostics = expand_context_with_lineage_diagnostics(
             request.get("context_items", []),
             documents=self.documents,
             pack_ids=request.get("pack_ids", []),
             max_expansions=self.max_expansions,
         )
+        request["context_items"] = expanded
         response = copy.deepcopy(dict(self.service.run(request)))
         response["service"] = self.metadata()
+        response["lineage_resolution"] = diagnostics
         return response
