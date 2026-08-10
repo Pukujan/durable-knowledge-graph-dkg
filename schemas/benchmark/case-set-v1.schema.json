@@ -55,19 +55,76 @@
     }
   },
   "$defs": {
+    "hash": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "digest"],
+      "properties": {
+        "algorithm": {"const": "sha256"},
+        "digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      }
+    },
+    "citation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "citation_id",
+        "snapshot_id",
+        "artifact_id",
+        "byte_start",
+        "byte_end",
+        "passage_hash"
+      ],
+      "properties": {
+        "schema_version": {"const": "fossil.citation.v1"},
+        "citation_id": {
+          "type": "string",
+          "pattern": "^cite_[A-Za-z0-9_-]{12,}$"
+        },
+        "snapshot_id": {
+          "type": "string",
+          "pattern": "^snap_[A-Za-z0-9_-]{12,}$"
+        },
+        "artifact_id": {
+          "type": "string",
+          "pattern": "^art_[A-Za-z0-9_-]{16,}$"
+        },
+        "byte_start": {"type": ["integer", "null"], "minimum": 0},
+        "byte_end": {"type": ["integer", "null"], "minimum": 1},
+        "passage_hash": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/hash"}
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"byte_start": {"type": "integer"}}},
+          "then": {
+            "properties": {
+              "byte_end": {"type": "integer"},
+              "passage_hash": {"$ref": "#/$defs/hash"}
+            }
+          }
+        },
+        {
+          "if": {"properties": {"byte_end": {"type": "integer"}}},
+          "then": {"properties": {"byte_start": {"type": "integer"}}}
+        }
+      ]
+    },
     "gold": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
         "answerable": {"type": "boolean"},
         "expected_answer": {"type": ["string", "null"]},
-        "citation_ids": {
+        "citations": {
           "type": "array",
           "uniqueItems": true,
-          "items": {
-            "type": "string",
-            "pattern": "^cite_[A-Za-z0-9_-]{12,}$"
-          }
+          "items": {"$ref": "#/$defs/citation"}
         },
         "source_snapshot_ids": {
           "type": "array",
