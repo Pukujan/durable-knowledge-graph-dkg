@@ -7,17 +7,20 @@ This repository is designed so another GPT/Codex/Claude session can continue the
 1. `ARCHITECTURE.md` — frozen durable invariants.
 2. `docs/HANDOFF_CURRENT.md` — exact continuation point.
 3. `docs/PROJECT_STATE.md` — completed gate/work state.
-4. `docs/handoffs/2026-08-10-chatgpt-session-handoff.md` — detailed fresh-session transfer record, proof runs, operational notes, and proposed next campaign.
+4. `docs/handoffs/2026-08-10-chatgpt-session-handoff.md` — detailed transfer record for the completed Milestone 0 / Gate 1 checkpoint and the rationale for Gate 2.
 5. `docs/DECISION_LOG.md` — accepted decisions, alternatives, and reconsideration triggers.
 6. Gate/proof documents under `docs/implementation/`.
 7. `docs/research/2026-08-09-final-research-synthesis.md` and `docs/research/2026-08-09-evidence-ledger.md` when research rationale is needed.
-8. Closed GitHub Issue #1 and child Issues #2–#10 only when detailed implementation history is useful.
+8. GitHub Gate 2 control Issue #33 and active child issues #34–#37 for current implementation state.
+9. Closed GitHub Issue #1 and child Issues #2–#10 only when detailed Gate 1 history is useful.
 
 ## Current state
 
-**Milestone 0 is complete. Gate 1 is 15/15 complete. Issues #1–#10 are closed completed. There are no open pull requests or issues at the current checkpoint.**
+**Milestone 0 is complete. Gate 1 is 15/15 complete. Issues #1–#10 are closed completed. Gate 2 — Real Corpus + Retrieval/Model Bakeoff is now active under control Issue #33 with child Issues #34–#37.**
 
-Do not reopen the completed milestone merely to continue development. A materially new campaign should get a new tracked gate/control issue.
+Current first implementation slice: Issue #34, with draft PR #38 adding a persistent/versioned benchmark case-set contract before representative pack data is seeded.
+
+Do not reopen the completed milestone merely to continue development.
 
 ## Non-negotiable rules
 
@@ -54,7 +57,7 @@ Do not reopen the completed milestone merely to continue development. A material
 
 When changing one:
 
-1. open/update the relevant new active issue;
+1. open/update the relevant active issue;
 2. record the competing theory or failure;
 3. cite evidence/benchmark results;
 4. update `docs/DECISION_LOG.md`;
@@ -69,24 +72,22 @@ GitHub issues track implementation state. Repository docs track durable decision
 
 An issue can close, but an architectural decision must not exist only in an issue comment. Conversely, durable docs should point back to the issue/benchmark that caused the change when useful.
 
-## Next campaign rule
+## Active campaign — Gate 2
 
-There is **no active next issue yet**.
+Control issue: **#33 — Gate 2: Real Corpus + Retrieval/Model Bakeoff**.
 
-The natural next campaign is described in `docs/handoffs/2026-08-10-chatgpt-session-handoff.md` as:
+Children:
 
-**Gate 2 — Real Corpus + Retrieval/Model Bakeoff**
+1. **#34** representative real corpus fixtures + versioned gold/adversarial benchmark set;
+2. **#35** a small number of materially different real retrieval/context adapters behind existing interfaces;
+3. **#36** reproducible comparative `fossil.benchmark.v1` runs and failure taxonomy;
+4. **#37** evidence-based default retrieval/routing policy.
 
-A fresh session should verify GitHub state first, confirm the user still wants to proceed, then open a new tracked control issue before materially expanding work.
+Initial Gate 2 inspection established that `fossil-common` and `fossil-ai-systems` are currently pack scaffolds with empty event/artifact payloads. Issue #34 therefore includes seeding representative canonical evidence/events into those existing stable packs before calling the benchmark corpus "real".
 
-Recommended focus:
+Draft PR #38 adds the missing persistent case-set layer. Its first trusted CI run `31356440481`, job `93356916077`, passed **60 tests in 0.69s**. Exact citation gold is being stored as full immutable citation span/hash metadata rather than citation IDs alone.
 
-1. representative `fossil-common` + `fossil-ai-systems` corpus fixtures and gold/adversarial cases;
-2. a small number of real semantic/vector/graph/long-context competitors behind existing interfaces;
-3. reproducible `fossil.benchmark.v1` comparison of quality, latency, memory, estimated cost, and failure categories;
-4. evidence-based default retrieval/routing policy selection.
-
-Current BM25/hash-embedding/token-overlap implementations are **controls**, not production winners.
+Current BM25/hash-embedding/token-overlap implementations remain **controls, not production winners**. Gate 2 provider/routing choices must be earned by measured corpus performance.
 
 ## Session continuity protocol
 

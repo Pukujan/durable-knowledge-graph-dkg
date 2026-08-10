@@ -2,8 +2,8 @@
 
 **Project:** **FOSSIL — Fault-tolerant Open Semantic Store for Intellectual Lineage**  
 **Durable substrate:** **DICS — Durable Intellectual Corpus System**  
-**Current phase:** **Milestone 0 complete; Gate 1 = 15/15; Issues #1–#10 closed completed**  
-**Next phase:** not yet opened; natural next campaign is corpus-scale comparison of real retrieval/model providers behind the benchmark interfaces  
+**Current phase:** **Milestone 0 / Gate 1 complete; Gate 2 active under Issue #33**  
+**Active work:** **#34 representative real corpus + versioned gold/adversarial benchmark set; draft PR #38**  
 **Control plane:** GitHub issues + durable repository docs  
 **Last updated:** 2026-08-10
 
@@ -21,9 +21,10 @@ Repository/database/graph placement is physical placement, not knowledge identit
 2. `ARCHITECTURE.md`
 3. `docs/HANDOFF_CURRENT.md`
 4. this file
-5. `docs/DECISION_LOG.md`
-6. proof docs under `docs/implementation/`
-7. closed Milestone #1 and child Issues #2–#10
+5. Gate 2 control Issue #33 and active children #34–#37
+6. `docs/DECISION_LOG.md`
+7. proof docs under `docs/implementation/`
+8. closed Milestone 0 Issue #1 and child Issues #2–#10 when detailed history is useful
 
 The chat UI is source material, not the control plane.
 
@@ -62,14 +63,49 @@ Final cleaned Gate 1 run `31347457485`, job `93331933728`: **51 passed in 0.82s*
 - **#9 conversation lineage:** run `31340924480`, job `93314435997` — exact source spans, durable `verbatim` vs `reconstructed`, opposing/current/historical lineage queries.
 - **#8 agent boundary:** run `31341456769`, job `93315824532` — progressive-disclosure Skills, protocol-independent corpus service, no arbitrary graph mutation.
 - **#10 provenance/redaction:** deterministic run `31345462801`, job `93326450028`; live run `31346791333`, job `93330095684` — tombstone-before-delete, active Graphiti purge, zero-state fresh rebuild/non-resurrection.
+- **#7 cognitive-service contract:** run `31347744797`, job `93332738616` — **56 passed in 0.70s**; versioned replaceable cognitive-service interfaces and `fossil.benchmark.v1` result contract.
 
-## #7 cognitive-service benchmark contract — complete
+## Gate 2 — active
 
-Trusted run `31347744797`, job `93332738616`: **56 passed in 0.70s**.
+Control issue: **#33 — Real Corpus + Retrieval/Model Bakeoff**.
 
-Versioned interfaces: `Retriever`, `EmbeddingProvider`, `Reranker`, `ContextProvider`, `ModelService`, `VerificationService`.
+Children:
 
-Initial inspectable controls:
+- [ ] #34 representative corpus fixtures + gold/adversarial benchmark set
+- [ ] #35 real retrieval/context adapters behind existing interfaces
+- [ ] #36 reproducible comparative bakeoff + failure taxonomy
+- [ ] #37 evidence-based default retrieval/routing policy
+
+### Current #34 checkpoint
+
+Initial repository inspection found both physical pack repositories are still scaffolds:
+
+- `fossil-common` initial commit `94fd576286ee359f1929b31bbba99e0ca54d4b41` contains the stable manifest/policy pointers plus empty event/artifact payloads;
+- `fossil-ai-systems` initial commit `cfd03e08c36f00a5eb25c8de4c1463d06877e015` likewise contains only the stable pack scaffold.
+
+Therefore Gate 2A must seed representative canonical evidence/events into the existing stable packs before deriving a benchmark and calling it a real corpus.
+
+Draft PR **#38 — `Gate 2: persist benchmark case sets`** adds the missing portable case-set layer:
+
+- `fossil.benchmark-case-set.v1`;
+- exact repository commit pins for each participating pack;
+- persistent retrieval/model cases converted into the existing Gate 1 benchmark case types;
+- exact citation span/hash gold metadata plus source snapshot references;
+- semantic rejection of duplicate case IDs, unpinned retrieval pack scopes, and citation gold that references undeclared source snapshots.
+
+First trusted PR run `31356440481`, job `93356916077`: **60 passed in 0.69s**. The branch received follow-up exact-citation validation changes after that run; re-check current PR CI before merging.
+
+### Gate 2 exit target
+
+- representative real corpus fixtures from both stable packs;
+- versioned gold/adversarial benchmark set;
+- at least two materially different real retrieval strategies compared against controls;
+- reproducible benchmark evidence for quality, latency, memory, estimated cost, and failure categories;
+- documented failure taxonomy;
+- one evidence-based default retrieval/routing policy;
+- no canonical identity/durability change merely to suit a benchmark winner.
+
+## Current cognitive-service controls
 
 - `BM25Retriever`
 - `HashEmbeddingProvider`
@@ -80,26 +116,7 @@ Initial inspectable controls:
 - `RiskEscalationPolicy`
 - `PolicyVerificationService`
 
-`schemas/benchmark/v1.schema.json` + `src/dkg/benchmark.py` measure retrieval/model quality, mean/p95 latency, peak Python allocation bytes, estimated provider cost, and failures by domain category. Provider/model/runtime/benchmark identity can be persisted in review event provenance.
-
-These implementations are **baselines/controls, not chosen production winners**. Future semantic/vector/graph/long-context/model candidates must compete behind the interfaces.
-
-Small/local model output is `candidate_only`. Truth-changing commit eligibility comes from a separate evidence/risk policy, not model consensus.
-
-Evidence: `docs/implementation/2026-08-10-retrieval-model-benchmark-contract-proof.md`.
-
-## Closed issue map
-
-- #1 Milestone 0 control — **complete**
-- #2 durable event + artifact store — **complete**
-- #3 pack boundaries/mounts/promotion — **complete**
-- #4 Graphiti + Neo4j projection — **complete**
-- #5 destructive rebuild + blue/green — **complete**
-- #6 lifecycle/disagreement/supersession/staleness — **complete**
-- #7 pluggable retrieval/model services + benchmark contract — **complete**
-- #8 Agent Skills + thin corpus API/MCP — **complete**
-- #9 conversation ingestion + intellectual lineage — **complete**
-- #10 source snapshots/citation/redaction — **complete**
+These remain **baselines/controls, not chosen production winners**. Small/local model output remains `candidate_only`; truth-changing eligibility comes from the separate evidence/risk policy.
 
 ## Frozen invariants from Milestone 0
 
@@ -125,8 +142,4 @@ Evidence: `docs/implementation/2026-08-10-retrieval-model-benchmark-contract-pro
 
 `.github/workflows/graphiti-live.yml` contains reusable live materialization plus redaction/non-resurrection smoke coverage. Runner-dependent proof paths are step-scoped; the invalid job-level `runner.temp` usage found during Gate 1 is fixed.
 
-There are no open Issues or pull requests in `Pukujan/fossil-core` at this checkpoint.
-
-## Natural next phase — not yet opened
-
-Use representative `fossil-common` and `fossil-ai-systems` material to compare the current controls against selected real semantic/vector/graph/long-context providers under the existing benchmark contract. Open a new tracked gate before materially expanding that campaign.
+GitHub currently has active Gate 2 Issues #33–#37 and draft PR #38. Do not use the old "zero open issues/PRs" Milestone 0 checkpoint as current state.
