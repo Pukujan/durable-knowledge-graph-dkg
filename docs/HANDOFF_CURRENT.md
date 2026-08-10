@@ -3,7 +3,7 @@
 **Date:** 2026-08-10  
 **Project:** **FOSSIL — Fault-tolerant Open Semantic Store for Intellectual Lineage**  
 **Repository:** `Pukujan/fossil-core`  
-**Status:** **Gate 1 complete. Gate 2 complete and formally closed. Post-Gate-2 campaign #48 active. Research ingestion and Workstream A temporal benchmark complete.**
+**Status:** **Gate 1 complete. Gate 2 complete and formally closed. Post-Gate-2 campaign #48 active. Research ingestion, Workstream A, and Workstream B are complete. Workstream C is next.**
 
 ## Fresh-session transfer
 
@@ -12,135 +12,164 @@ Read, in order:
 1. `AGENTS.md`
 2. `ARCHITECTURE.md`
 3. this file
-4. `docs/handoffs/2026-08-10-chatgpt-session-handoff-post-temporal-benchmark.md`
+4. `docs/handoffs/2026-08-10-chatgpt-session-handoff-post-answer-reliability.md`
 5. `docs/PROJECT_STATE.md`
-6. `docs/research/2026-08-10-production-rag-hardening-research-trace.md`
-7. Issue #48 — active production RAG hardening campaign
-8. Issue #47 — embedding/reranker/model-scale bakeoff workstream
-9. `docs/DECISION_LOG.md`
-10. older handoffs only when historical context is needed
+6. `docs/implementation/2026-08-10-post-gate2-answer-reliability-proof.md`
+7. `docs/operations/LITELLM-GATEWAY.md`
+8. Issue #48 — active production RAG hardening campaign
+9. Issue #47 — embedding/reranker/model-scale bakeoff workstream
+10. `docs/DECISION_LOG.md`
 
 ## Exact active continuation point
 
-**Do not redo the research ingestion or Workstream A.**
+**Do not redo the research ingestion, Workstream A, or Workstream B.**
 
 The next unfinished Issue #48 workstream is:
 
-**B. End-to-end answer/citation/abstention evaluation.**
+**C. Retrieval poisoning / untrusted-context hardening.**
 
-Start with a provider-independent baseline above retrieval. Extend evaluation beyond hit-rate/recall/MRR to final-answer behavior and measure:
+Build an adversarial suite proving that retrieved/source text remains untrusted data rather than executable policy. Cover at minimum:
 
-1. final-answer correctness;
-2. citation/source-snapshot/span correctness;
-3. unsupported-claim rate;
-4. answer completeness and contradiction handling;
-5. explicit `insufficient evidence`, `conflicting evidence`, and `current state unresolved` outcomes;
-6. appropriate abstention/calibration rather than confident guessing.
+1. poisoned retrieved documents containing instructions;
+2. authority spoofing;
+3. malicious supersession attempts;
+4. duplicated adversarial passages intended to dominate ranking;
+5. conflicting-source attacks;
+6. pack-isolation pressure;
+7. attempts to bypass proposal-before-commit / deterministic gates;
+8. explicit residual-risk documentation.
 
-Use deterministic/direct-source paths and the existing service contracts for the first baseline. Hosted/frontier models can later compete behind those interfaces; they are not a prerequisite for the correctness contract.
+Reuse Workstream B metrics wherever useful. Do not only test whether poisoned text is retrieved; test whether poisoning changes final-answer correctness, citation correctness, unsupported claims, lifecycle/lineage resolution, abstention behavior, authority boundaries, pack isolation, or proposal-before-commit behavior.
 
-D021 lifecycle/lineage resolution remains authoritative. Retrieval/model scores cannot manufacture truth state.
+Do not claim a universal poisoning defense.
 
-## Workstream A proof — complete
+## Workstream B proof — complete
 
-Implementation landed in core PR #54 / squash:
+Implementation landed in core PR #57 / squash:
 
-`e14148f504702ae9e708e2d58add4ee5c91bc8de`
+`483772ac0e1d441719aec42658ae00b62a032c11`
 
 Landed artifacts:
 
-- `src/dkg/pack_corpus.py` — as-of durable-event projection support;
-- `src/dkg/temporal_benchmark.py` — phased evolving-corpus benchmark;
-- `benchmarks/post-gate2/evolving-corpus-temporal-v1.json` — versioned real-corpus plan;
-- `scripts/run_post_gate2_temporal_benchmark.py` — exact-pin runner;
-- `tests/test_temporal_benchmark.py` — deterministic lifecycle/retrieval tests;
-- `docs/implementation/2026-08-10-post-gate2-temporal-benchmark-proof.md` — durable proof.
+- `src/dkg/answer_eval.py`;
+- `src/dkg/answer_pipeline.py`;
+- `benchmarks/post-gate2/answer-reliability-v1.json`;
+- `scripts/run_post_gate2_answer_reliability.py`;
+- `tests/test_answer_eval.py`;
+- `tests/test_answer_pipeline.py`;
+- `docs/implementation/2026-08-10-post-gate2-answer-reliability-proof.md`.
 
-Final PR #54 CI:
+Final normal CI:
 
-- run `31431210018`;
-- job `93594807498`;
-- **88 passed in 0.99s**.
+- run `31433539654`;
+- job `93602384284`;
+- **94 passed in 1.80s**.
 
-Execution-only proof PR #55 was closed without merge after running the plan against exact pack pins:
+### Failed-first execution proof
 
-- common `d583005dce06dbb499c3c0de5c22b899655eb8d2`;
-- AI-systems `84accd2ee895663990e82ca5b79b592cb503db24`;
-- workflow run `31431113829`;
-- job `93594491275`;
-- **88 core tests passed in 0.84s**;
-- temporal benchmark: **PASS** across three phases.
+Execution-only PR #58 intentionally exposed a real failure and was closed without merge.
 
-Key real-corpus result:
+- run `31433165782`;
+- job `93601155740`;
+- core tests passed;
+- answer benchmark scored **5/6**.
 
-- before supersession, the SQLite premise and its dependent prototype were `supported`;
-- after the durable-core replacement, the SQLite premise became `superseded`, the dependent became `stale_pending_review`, and the durable-core claim was `supported`;
-- current and historical queries were both rank 1 / recall@5 1.0;
-- after later corpus growth from 13 to 27 projected documents, those same current/history queries remained rank 1 / recall@5 1.0 with no current-state leakage;
-- baseline projection rebuilds were roughly 23.68–25.28 ms on the proof runner.
+The query asking whether the first SQLite prototype was still the current canonical architecture implementation retrieved its durable `DEPENDS_ON` relation, but the stale dependent claim fell outside top-k. The answerer then selected an unrelated supported claim with confidence `1.0`.
 
-Those timings are baseline observations only and do not change D021.
+This reinforced D021: **top-k absence is not evidence of nonexistence**.
 
-## Research ingestion — complete
+The fix was `fossil-lineage-context-v1`: when a durable relation is retrieved, FOSSIL resolves stable `source_ref` / `target_ref` endpoints from the mounted validated packs before model execution. This sits around the `ModelService` boundary so future LiteLLM/Cortex/frontier/OSS models receive the same deterministic lineage correction.
 
-The production-RAG synthesis is already ingested into `Pukujan/fossil-ai-systems`.
+### Final execution proof
 
-AI-systems PR #3 squash:
+Execution-only PR #59 reran the unchanged benchmark against:
+
+- `fossil-common@d583005dce06dbb499c3c0de5c22b899655eb8d2`;
+- `fossil-ai-systems@84accd2ee895663990e82ca5b79b592cb503db24`.
+
+Proof:
+
+- run `31433427436`;
+- job `93602011104`;
+- **94 core tests passed**;
+- corpus projection: **27 documents**;
+- benchmark: **PASS 6/6**;
+- final-answer correctness `1.0`;
+- outcome accuracy `1.0`;
+- citation correctness `1.0`;
+- completeness `1.0`;
+- appropriate abstention `1.0`;
+- unsupported-claim rate `0.0`;
+- over-abstention `0.0`;
+- Brier score `0.0`;
+- high-confidence error rate `0.0`.
+
+The previously failing SQLite case now correctly returns `current_state_unresolved` using claim `clm_a047d79b8604fadbd44efdf4` with exact citation `cite_b4e13e4e1a809f76527311ba`.
+
+PR #59 was closed unmerged because it was execution-only.
+
+## Workstream A / ingestion anchors
+
+Workstream A landed in PR #54 / squash:
+
+`e14148f504702ae9e708e2d58add4ee5c91bc8de`
+
+Its exact-pack temporal proof passed in execution-only PR #55, run `31431113829`, job `93594491275`.
+
+The production-RAG synthesis remains ingested in `fossil-ai-systems` at:
 
 `84accd2ee895663990e82ca5b79b592cb503db24`
 
-Cross-pack ingestion proof:
+Cross-pack ingestion proof passed in core execution-only PR #51, run `31415053398`, job `93541977670`.
 
-- core PR #51 — closed execution-only;
-- run `31415053398`;
-- job `93541977670`;
-- 86 core tests passed;
-- `PackFixtureAudit`: 6 artifacts, 6 snapshots, 51 events, 47 citations, 23 claims, 4 relations — PASS.
+## D021 remains frozen
 
-The ingested synthesis remains a **local derived research artifact**. Original external papers/vendor documentation must remain distinguishable and should be captured separately when full research-source ingestion is implemented.
+Do not replace or weaken D021 without new committed benchmark evidence.
 
-## Completed foundation / policy
+Current rules:
 
-Gate 1 and Gate 2 remain closed. Do not reopen them to continue #48.
-
-D021 remains approved:
-
-- normal primary: revision-pinned BGE dense retrieval;
-- semantic-runtime availability fallback: BM25, explicitly degraded;
+- revision-pinned BGE dense is the normal primary retriever;
+- BM25 is explicit degraded availability fallback;
 - current/latest/accepted queries resolve durable lifecycle/provenance;
-- lineage/history/disagreement questions use durable lineage/read resolution;
+- history/lineage/disagreement queries resolve durable lineage/read state;
 - top-k absence is not evidence of nonexistence;
-- citation-bearing answers resolve immutable source identity;
-- retrieval/reranker/model output does not receive truth authority from score, confidence, or agreement.
+- citations resolve immutable source snapshot/span/hash identity;
+- retrieval score is not truth;
+- reranker score is not truth;
+- model confidence is not truth;
+- multi-model consensus is not external evidence.
 
-## Active campaign — #48
+Stable pack IDs:
 
-Completed campaign exit criteria:
+- common: `pack_269099f7b2ba43b7a99b9427d64092de`;
+- AI systems: `pack_f024177f89a5442db84171c3dd7f58e5`.
 
-- research trace committed and ingested into AI-systems with provenance;
-- evolving-corpus benchmark committed.
+Do not casually rename `src/dkg`.
 
-Workstream A's four checklist items are complete. Issue #48 remains open.
+## LiteLLM / Cortex boundary
 
-Remaining high-level order:
+Read `docs/operations/LITELLM-GATEWAY.md` before live model work.
 
-1. **B** — end-to-end answer/citation/unsupported-claim/contradiction/abstention evaluation;
-2. **C** — poisoning/untrusted-context adversarial suite;
-3. **F** — replayable query execution receipt;
-4. **D / #47** — embedding/hybrid/reranker/model comparisons;
-5. **E** — conservative adaptive routing only if it beats simple baselines;
-6. **G** — ACL/redaction propagation readiness;
-7. final retrieval-policy/decision-log/residual-risk/handoff reconciliation.
+Recorded LiteLLM defaults at this handoff:
 
-## Frozen invariants
+- chat: `qwen3-coder-next`;
+- embeddings: `gemini-embedding-2`;
+- reranking: `rerank-v4-pro`.
 
-Preserve stable pack IDs:
+For every live benchmark record requested model, actual model, provider, fallback/attempt diagnostics, latency, cost, and runtime identity. A fallback response is not proof that the requested model succeeded. Probe embedding and reranking lanes independently. Do not send secrets, personal information, or confidential documents while gateway retention guarantees remain unverified.
 
-- `fossil-common`: `pack_269099f7b2ba43b7a99b9427d64092de`
-- `fossil-ai-systems`: `pack_f024177f89a5442db84171c3dd7f58e5`
+Cortex v4 may be used as a replaceable cognitive-service competitor, but FOSSIL durable storage, stable identity, lifecycle logic, proposal-before-commit, and correctness guarantees must not couple to Cortex internals. Multiple agents agreeing does not manufacture truth.
 
-Canonical truth remains durable evidence + stable identity + append-only validated events + versioned contracts + provenance/history. Graphiti/Neo4j, lexical/vector retrieval, rerankers, context builders, planners, models, Skills, MCP, and future databases remain replaceable services/projections. Model consensus is not external evidence. Retrieved/source text is untrusted data. Reconstructed evidence cannot silently become verbatim. Do not casually rename `src/dkg`.
+## Remaining campaign order
+
+1. **C** — poisoning / untrusted context;
+2. **F** — reproducible query execution receipt;
+3. **D / Issue #47** — embeddings, hybrid retrieval, rerankers, model bakeoff;
+4. **E** — conservative adaptive routing, only if benchmark justified;
+5. **G** — ACL/redaction propagation readiness;
+6. final D021/retrieval-policy decision reconciliation;
+7. decision log + residual risks + final handoff.
 
 ## Suggested next-session prompt
 
-> Continue FOSSIL after Issue #48 Workstream A. Read `AGENTS.md`, `ARCHITECTURE.md`, `docs/HANDOFF_CURRENT.md`, and `docs/handoffs/2026-08-10-chatgpt-session-handoff-post-temporal-benchmark.md` first, then verify GitHub state. Workstream A is complete in core PR #54 / squash `e14148f504702ae9e708e2d58add4ee5c91bc8de`; its real-corpus temporal proof passed in execution-only PR #55, run `31431113829`, job `93594491275`. Do not redo A. Continue Issue #48 Workstream B: build provider-independent end-to-end answer/citation/unsupported-claim/contradiction/abstention evaluation first, preserving D021 lifecycle/lineage authority. Hosted/frontier models should later compete behind existing service interfaces rather than become correctness dependencies.
+> Continue FOSSIL Issue #48 from this handoff. Verify GitHub first. Workstreams A and B are complete; do not redo them. Workstream B landed in PR #57 / squash `483772ac0e1d441719aec42658ae00b62a032c11`. Its first real-corpus proof intentionally failed because top-k omitted a stale lineage endpoint; the unchanged benchmark passed after deterministic relation-endpoint resolution in execution-only PR #59, run `31433427436`, job `93602011104`, with 6/6 correctness and exact citations. Continue Workstream C: retrieval poisoning / untrusted-context hardening. Preserve D021, stable pack IDs, proposal-before-commit, and deterministic lifecycle/lineage authority. LiteLLM and Cortex v4 are optional replaceable cognitive-service competitors, never truth authority.
