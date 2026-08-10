@@ -25,13 +25,17 @@ jobs:
           git clone --quiet https://github.com/Pukujan/fossil-ai-systems.git .retrieval-bakeoff-packs/ai-systems
           git -C .retrieval-bakeoff-packs/ai-systems checkout --quiet 84accd2ee895663990e82ca5b79b592cb503db24
           mkdir -p .retrieval-bakeoff-proof
+          set +e
           python scripts/run_post_gate2_retrieval_bakeoff.py \
             --common-root .retrieval-bakeoff-packs/common \
             --ai-root .retrieval-bakeoff-packs/ai-systems \
             --run-ref "github-actions:${GITHUB_RUN_ID}:${GITHUB_JOB}" \
             --output .retrieval-bakeoff-proof/report.json \
             > .retrieval-bakeoff-proof/stdout.json
-          python - <<'PY'
+          status=$?
+          set -e
+          if [ -f .retrieval-bakeoff-proof/report.json ]; then
+            python - <<'PY'
           import json
           from pathlib import Path
 
@@ -65,6 +69,14 @@ jobs:
                   'pack_isolation': audit['pack_isolation_preserved'],
               }, sort_keys=True))
           PY
+          else
+            echo 'No report.json was produced; runner failed before completing the benchmark.'
+            if [ -s .retrieval-bakeoff-proof/stdout.json ]; then
+              echo 'Captured stdout:'
+              cat .retrieval-bakeoff-proof/stdout.json
+            fi
+          fi
+          exit "$status"
       - name: Upload Workstream D proof
         if: always()
         uses: actions/upload-artifact@v4
