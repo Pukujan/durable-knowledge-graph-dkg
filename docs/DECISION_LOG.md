@@ -145,6 +145,23 @@ Repository family:
 
 **Evidence:** `docs/implementation/2026-08-10-gate1-source-provenance-redaction-proof.md`, Issue #10.
 
+## D021 — Gate 2 default retrieval is pinned BGE dense with explicit BM25 degraded fallback
+
+**State:** accepted, replaceable evidence-based implementation policy  
+**Decision:** use revision-pinned BGE dense retrieval (`BAAI/bge-small-en-v1.5@5c38ec7c405ec4b44b94cc5a9bb96e735b38267a`) as the normal primary retriever. If the optional semantic runtime is unavailable, use BM25 as an explicitly degraded availability fallback; do not silently substitute the hash control or claim semantic retrieval remains active.
+
+Current/latest/accepted queries must resolve durable lifecycle/provenance before presenting a current conclusion; retrieval rank is candidate ordering, not truth. Decision-lineage, supersession, disagreement, and multi-target historical/current queries must use durable `lineage`/read resolution in addition to retrieval. Citation-bearing answers must still resolve immutable source snapshots/spans/hashes. None of this changes model authority: model agreement remains non-evidence and small/local model output remains candidate-only unless separate evidence/risk policy permits more.
+
+**Why:** on the 21-case history-rich Gate 2 corpus, BGE dense is the only compared strategy with zero full retrieval misses and has the best mean recall@5 (`0.98413`). The hybrid has better MRR (`0.86667`) but fully misses the key current-architecture case, so aggregate ranking does not outweigh a decision-critical miss. BGE still ranks the correct current architecture only fifth behind rejected/history material and retrieves only 2/3 targets in the multi-target supersession bundle, which is why lifecycle and lineage safeguards are mandatory rather than optional tuning.
+
+**Fallback distinction:** BM25 is an availability fallback, not a quality-equivalent replacement. Quality/configuration rollback returns to the last known benchmark-passing BGE profile; an operational semantic outage temporarily activates explicit BM25 degraded mode.
+
+**Hard rollback conditions:** pack isolation violation; unaudited provider/model/runtime substitution; weakened citation/source semantics; current-state safeguards allowing stale/rejected/superseded material to become current without durable lifecycle resolution; a full miss on the frozen Gate 2 reference set where the approved BGE profile had none; or changing canonical identity/provenance/authority merely to improve retrieval scores.
+
+**Reconsider when:** the corpus/case set materially changes; BGE/runtime identity changes; a competitor eliminates the observed current-state and multi-target-lineage weaknesses without decision-critical misses; deployment latency/memory/cost becomes unacceptable; a new recurring failure class appears; degraded BM25 mode becomes frequent; or new committed benchmarks remove BGE's zero-full-miss/best-quality advantage.
+
+**Evidence:** Issue #36 / PR #44 / squash commit `38aac6325cdb5b738c8a6ac5e55959affb3acfb5`; exact-head semantic proof run `31364039745`, artifact `9053475462`, digest `sha256:23c95b46f47cec5a16e0a8c0926a4f13532f283d8f4fbcc0de12ceb63db63c41`; `benchmarks/gate2/results/2026-08-10-comparative/comparison-summary.json`; `docs/implementation/2026-08-10-gate2-comparative-bakeoff-proof.md`; `docs/implementation/2026-08-10-gate2-default-retrieval-policy.md`; Issue #37.
+
 ## How to add a decision
 
 When implementation or evidence changes an architectural conclusion:
