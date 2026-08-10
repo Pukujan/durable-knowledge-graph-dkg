@@ -1,0 +1,212 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pukujan.github.io/fossil-core/schemas/query-execution-receipt/v1.schema.json",
+  "title": "FOSSIL Query Execution Receipt v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "receipt_id",
+    "recorded_at",
+    "authority",
+    "query",
+    "packs",
+    "projection",
+    "policy",
+    "services",
+    "retrieval",
+    "resolvers",
+    "context",
+    "result",
+    "telemetry",
+    "execution_identity_sha256",
+    "result_sha256"
+  ],
+  "properties": {
+    "schema_version": {"const": "fossil.query-execution-receipt.v1"},
+    "receipt_id": {"type": "string", "pattern": "^qrx_[0-9a-f]{24}$"},
+    "recorded_at": {"type": "string", "format": "date-time"},
+    "authority": {"const": "execution_observability_only"},
+    "query": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["query_id", "text", "normalized", "sha256"],
+      "properties": {
+        "query_id": {"type": "string", "minLength": 1},
+        "text": {"type": "string", "minLength": 1},
+        "normalized": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "packs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["pack_id", "revision"],
+        "properties": {
+          "pack_id": {"type": "string", "minLength": 1},
+          "revision": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "projection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "build_id"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "version": {"type": "string", "minLength": 1},
+        "build_id": {"type": "string", "minLength": 1}
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["route_id", "retrieval_policy_id", "mode"],
+      "properties": {
+        "route_id": {"type": "string", "minLength": 1},
+        "retrieval_policy_id": {"type": "string", "minLength": 1},
+        "mode": {"type": "string", "minLength": 1}
+      }
+    },
+    "services": {
+      "type": "array",
+      "minItems": 2,
+      "items": {"$ref": "#/$defs/serviceInvocation"}
+    },
+    "retrieval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["candidates", "candidate_count"],
+      "properties": {
+        "candidate_count": {"type": "integer", "minimum": 0},
+        "candidates": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/candidate"}
+        }
+      }
+    },
+    "resolvers": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/resolver"}
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["item_ids", "citation_ids"],
+      "properties": {
+        "item_ids": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "citation_ids": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["outcome", "abstained", "claim_ids", "citation_ids", "confidence", "authority"],
+      "properties": {
+        "outcome": {"type": "string", "minLength": 1},
+        "abstained": {"type": "boolean"},
+        "claim_ids": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "citation_ids": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "confidence": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "authority": {"type": "string", "minLength": 1}
+      }
+    },
+    "telemetry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["latency_ms", "cost_usd", "trace_ref", "run_ref"],
+      "properties": {
+        "latency_ms": {"type": "number", "minimum": 0},
+        "cost_usd": {"type": "number", "minimum": 0},
+        "trace_ref": {"type": "string", "minLength": 1},
+        "run_ref": {"type": ["string", "null"]}
+      }
+    },
+    "execution_identity_sha256": {"$ref": "#/$defs/sha256"},
+    "result_sha256": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "serviceIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "provider", "provider_version", "implementation", "implementation_version", "model_id", "local", "runtime"],
+      "properties": {
+        "kind": {"type": "string", "minLength": 1},
+        "provider": {"type": "string", "minLength": 1},
+        "provider_version": {"type": "string", "minLength": 1},
+        "implementation": {"type": "string", "minLength": 1},
+        "implementation_version": {"type": "string", "minLength": 1},
+        "model_id": {"type": ["string", "null"]},
+        "local": {"type": "boolean"},
+        "runtime": {"type": "object", "additionalProperties": true}
+      }
+    },
+    "requestedService": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "model_id", "implementation"],
+      "properties": {
+        "provider": {"type": "string", "minLength": 1},
+        "model_id": {"type": ["string", "null"]},
+        "implementation": {"type": "string", "minLength": 1}
+      }
+    },
+    "attempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "provider": {"type": "string"},
+        "model_id": {"type": ["string", "null"]},
+        "implementation": {"type": "string"},
+        "outcome": {"type": "string"},
+        "error_type": {"type": "string"},
+        "fallback_reason": {"type": "string"}
+      }
+    },
+    "serviceInvocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "requested", "actual", "fallback_used", "attempts", "latency_ms", "cost_usd"],
+      "properties": {
+        "role": {"type": "string", "minLength": 1},
+        "requested": {"$ref": "#/$defs/requestedService"},
+        "actual": {"$ref": "#/$defs/serviceIdentity"},
+        "fallback_used": {"type": "boolean"},
+        "attempts": {"type": "array", "items": {"$ref": "#/$defs/attempt"}},
+        "latency_ms": {"type": ["number", "null"], "minimum": 0},
+        "cost_usd": {"type": ["number", "null"], "minimum": 0}
+      }
+    },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "pack_id", "rank", "score"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "pack_id": {"type": "string", "minLength": 1},
+        "rank": {"type": "integer", "minimum": 1},
+        "score": {"type": ["number", "null"]},
+        "base_rank": {"type": "integer", "minimum": 1},
+        "base_score": {"type": ["number", "null"]},
+        "rerank_score": {"type": ["number", "null"]}
+      }
+    },
+    "resolver": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resolver", "resolved_ids", "added_ids", "removed_ids", "final_context_ids", "diagnostics"],
+      "properties": {
+        "resolver": {"type": "string", "minLength": 1},
+        "resolved_ids": {"type": "array", "items": {"type": "string"}},
+        "added_ids": {"type": "array", "items": {"type": "string"}},
+        "removed_ids": {"type": "array", "items": {"type": "string"}},
+        "final_context_ids": {"type": "array", "items": {"type": "string"}},
+        "diagnostics": {"type": "object", "additionalProperties": true}
+      }
+    }
+  }
+}
