@@ -21,5 +21,17 @@ jobs:
 
   live-redaction:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      neo4j:
+        image: neo4j:5.26
+        env:
+          NEO4J_AUTH: neo4j/fossil-gate1-pass
+          NEO4J_server_memory_heap_initial__size: 256m
+          NEO4J_server_memory_heap_max__size: 512m
+          NEO4J_server_memory_pagecache_size: 256m
+        ports:
+          - 7474:7474
+          - 7687:7687
     steps:
-      - run: echo "temporary issue 10 workflow validation probe"
+      - run: echo "neo4j service validation probe"
