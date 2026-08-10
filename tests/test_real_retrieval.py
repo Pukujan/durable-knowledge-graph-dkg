@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.metadata
+import json
 
 import pytest
 
@@ -13,6 +14,7 @@ from dkg.real_retrieval import (
     RerankedRetriever,
     SentenceTransformerEmbeddingProvider,
 )
+from dkg.semantic_retriever import SemanticEmbeddingRetriever
 
 
 PACK = "pack_f024177f89a5442db84171c3dd7f58e5"
@@ -103,12 +105,35 @@ def test_sentence_transformer_provider_preserves_exact_runtime_identity_and_enco
     ]
 
 
+def test_semantic_retriever_carries_embedding_provider_and_runtime_into_benchmark_metadata():
+    provider = SentenceTransformerEmbeddingProvider(
+        model=FakeEncoder(),
+        provider_version="5.2.2",
+        device="cpu",
+    )
+    retriever = SemanticEmbeddingRetriever(
+        [{"id": "doc_a", "pack_id": PACK, "text": "alpha"}],
+        provider,
+        version="gate2",
+    )
+
+    metadata = retriever.metadata()
+    runtime = json.loads(metadata["runtime"]["embedding_runtime"])
+
+    assert metadata["provider"] == "sentence-transformers"
+    assert metadata["provider_version"] == "5.2.2"
+    assert metadata["implementation"] == "semantic-in-memory-cosine"
+    assert metadata["model_id"] == f"{DEFAULT_BGE_MODEL}@{DEFAULT_BGE_REVISION}"
+    assert runtime["model_revision"] == DEFAULT_BGE_REVISION
+    assert runtime["device"] == "cpu"
+
+
 def test_sentence_transformer_provider_fails_cleanly_when_optional_runtime_is_unavailable(monkeypatch):
     def missing(_name: str):
         raise importlib.metadata.PackageNotFoundError
 
     monkeypatch.setattr(importlib.metadata, "version", missing)
-    with pytest.raises(OptionalRetrievalDependencyUnavailable, match="fossil-core\[semantic\]"):
+    with pytest.raises(OptionalRetrievalDependencyUnavailable, match=r"fossil-core\[semantic\]"):
         SentenceTransformerEmbeddingProvider(model=None)
 
 
