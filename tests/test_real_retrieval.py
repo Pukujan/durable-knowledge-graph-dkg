@@ -137,7 +137,7 @@ def test_sentence_transformer_provider_fails_cleanly_when_optional_runtime_is_un
         SentenceTransformerEmbeddingProvider(model=None)
 
 
-def test_rrf_fuses_distinct_retrievers_and_preserves_pack_filtering():
+def test_rrf_fuses_distinct_retrievers_and_preserves_pack_filtering_and_component_provenance():
     lexical = FakeRetriever(
         "lexical",
         [
@@ -159,14 +159,39 @@ def test_rrf_fuses_distinct_retrievers_and_preserves_pack_filtering():
     )
 
     results = hybrid.search("query", pack_ids=[PACK], limit=3)
+    service = results[0]["retrieval"]["service"]
+    components = json.loads(service["runtime"]["components"])
 
     assert [item["id"] for item in results] == ["beta", "alpha", "gamma"]
     assert all(item["pack_id"] == PACK for item in results)
     assert lexical.requested_limits == [9]
     assert semantic.requested_limits == [9]
-    assert results[0]["retrieval"]["service"]["implementation"] == "reciprocal-rank-fusion"
-    assert results[0]["retrieval"]["service"]["model_id"] == "semantic-model@revision"
+    assert service["implementation"] == "reciprocal-rank-fusion"
+    assert service["model_id"] == "semantic-model@revision"
     assert len(results[0]["retrieval"]["components"]) == 2
+    assert {component["implementation"] for component in components} == {"lexical", "semantic"}
+    assert any(component["model_id"] == "semantic-model@revision" for component in components)
+
+
+def test_lifecycle_intent_uses_explicit_temporal_cues_instead_of_ambiguous_words():
+    assert (
+        LifecycleIntentReranker.intent_for_query(
+            "Was graph database canonical storage retained as the accepted conclusion?"
+        )
+        == "neutral"
+    )
+    assert (
+        LifecycleIntentReranker.intent_for_query(
+            "What happens after the premise is superseded?"
+        )
+        == "historical"
+    )
+    assert (
+        LifecycleIntentReranker.intent_for_query(
+            "What is the current accepted architecture after reconsideration?"
+        )
+        == "current"
+    )
 
 
 def test_lifecycle_reranker_promotes_supported_current_state_over_stale_and_rejected_history():
@@ -189,6 +214,35 @@ def test_lifecycle_reranker_promotes_supported_current_state_over_stale_and_reje
     assert reranked[-1]["rerank"]["lifecycle_adjustment"] < 0
 
 
+def test_lifecycle_reranker_uses_text_fit_to_break_same_state_current_candidates():
+    reranker = LifecycleIntentReranker(lexical_weight=0.75)
+    candidates = [
+        {
+            "id": "unrelated_supported",
+            "pack_id": PACK,
+            "text": "fresh projection replay order",
+            "current_state": "supported",
+            "retrieval": {"rank": 1},
+        },
+        {
+            "id": "current_architecture",
+            "pack_id": PACK,
+            "text": "current accepted durable architecture",
+            "current_state": "supported",
+            "retrieval": {"rank": 2},
+        },
+    ]
+
+    reranked = reranker.rerank(
+        "current accepted durable architecture",
+        candidates,
+        limit=2,
+    )
+
+    assert [item["id"] for item in reranked] == ["current_architecture", "unrelated_supported"]
+    assert reranked[0]["rerank"]["lexical_bonus"] > reranked[1]["rerank"]["lexical_bonus"]
+
+
 def test_lifecycle_reranker_preserves_historical_access_when_query_requests_former_state():
     reranker = LifecycleIntentReranker()
     candidates = [
@@ -206,7 +260,7 @@ def test_lifecycle_reranker_preserves_historical_access_when_query_requests_form
     assert reranked[0]["rerank"]["intent"] == "historical"
 
 
-def test_reranked_retriever_exposes_same_retriever_contract_and_uses_deeper_candidate_pool():
+def test_reranked_retriever_exposes_same_retriever_contract_and_full_base_provenance():
     base = FakeRetriever(
         "base",
         [
@@ -228,11 +282,16 @@ def test_reranked_retriever_exposes_same_retriever_contract_and_uses_deeper_cand
         pack_ids=[PACK],
         limit=2,
     )
+    service = results[0]["retrieval"]["service"]
+    base_service = json.loads(service["runtime"]["base_service"])
+    reranker_service = json.loads(service["runtime"]["reranker_service"])
 
     assert base.requested_limits == [8]
     assert [item["id"] for item in results][0] == "current"
     assert results[0]["retrieval"]["rank"] == 1
-    assert results[0]["retrieval"]["service"]["implementation"] == "reranked-retriever"
-    assert results[0]["retrieval"]["service"]["model_id"] == "dense@revision"
+    assert service["implementation"] == "reranked-retriever"
+    assert service["model_id"] == "dense@revision"
+    assert base_service["implementation"] == "base"
+    assert reranker_service["implementation"] == "lifecycle-intent-reranker"
     assert results[0]["base_retrieval"]["service"]["implementation"] == "base"
     assert results[0]["rerank"]["service"]["implementation"] == "lifecycle-intent-reranker"
