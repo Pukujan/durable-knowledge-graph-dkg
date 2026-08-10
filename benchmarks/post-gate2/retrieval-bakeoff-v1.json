@@ -22,7 +22,10 @@
     },
     "cross_encoder": {
       "model": "cross-encoder/ms-marco-MiniLM-L6-v2",
-      "revision": "ce0834f22110de6d9222af7a7a03628121708969"
+      "revision": "ce0834f22110de6d9222af7a7a03628121708969",
+      "device": "cpu",
+      "batch_size": 16,
+      "max_length": 512
     }
   },
   "routes": [
