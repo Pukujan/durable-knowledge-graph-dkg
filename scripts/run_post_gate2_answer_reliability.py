@@ -10,6 +10,7 @@ from dkg.answer_eval import (
     DeterministicEvidenceAnswerService,
     run_answer_reliability_benchmark,
 )
+from dkg.answer_pipeline import LineageResolvedModelService
 from dkg.pack_corpus import retrieval_documents_from_pack_fixtures
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -57,8 +58,12 @@ def main() -> int:
         schemas_root=ROOT / "schemas",
     )
     cases = [AnswerReliabilityCase.from_mapping(item) for item in plan["cases"]]
-    report = run_answer_reliability_benchmark(
+    service = LineageResolvedModelService(
         DeterministicEvidenceAnswerService(),
+        documents=documents,
+    )
+    report = run_answer_reliability_benchmark(
+        service,
         documents=documents,
         cases=cases,
         benchmark_id=str(plan["benchmark_id"]),
@@ -67,7 +72,8 @@ def main() -> int:
     report["pack_pins"] = observed_pins
     report["corpus_document_count"] = len(documents)
     report["baseline"] = (
-        "provider-independent BM25+lifecycle context -> deterministic durable-evidence answerer"
+        "provider-independent BM25+lifecycle retrieval -> durable relation-endpoint "
+        "resolution -> deterministic durable-evidence answerer"
     )
 
     rendered = json.dumps(report, indent=2, sort_keys=True)
