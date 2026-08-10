@@ -1,0 +1,2 @@
+Disposable CI marker for Issue #7 baseline service/benchmark verification.
+Do not merge.
