@@ -3,7 +3,7 @@ from __future__ import annotations
 import copy
 import importlib.metadata
 import json
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Sequence
 from typing import Any
 
 from .services import ServiceMetadata, tokenize
@@ -154,14 +154,7 @@ class ReciprocalRankFusionRetriever:
             runtime={
                 "candidate_multiplier": str(self.candidate_multiplier),
                 "components": json.dumps(
-                    [
-                        {
-                            "implementation": component.get("implementation"),
-                            "model_id": component.get("model_id"),
-                            "provider": component.get("provider"),
-                        }
-                        for component in components
-                    ],
+                    components,
                     sort_keys=True,
                     separators=(",", ":"),
                 ),
@@ -222,13 +215,10 @@ class ReciprocalRankFusionRetriever:
 
 
 class LifecycleIntentReranker:
-    """Use durable lifecycle metadata to distinguish current from historical intent."""
+    """Use durable lifecycle metadata plus query/text fit for temporal ranking."""
 
     CURRENT_CUES = frozenset(
         {
-            "accepted",
-            "active",
-            "after",
             "current",
             "currently",
             "latest",
@@ -256,7 +246,10 @@ class LifecycleIntentReranker:
     HISTORICAL_STATES = frozenset({"superseded", "rejected", "retracted", "invalidated"})
     STALE_STATES = frozenset({"stale_pending_review", "disputed"})
 
-    def __init__(self, *, version: str = "1") -> None:
+    def __init__(self, *, lexical_weight: float = 0.75, version: str = "1") -> None:
+        if lexical_weight < 0:
+            raise ValueError("lexical weight must be non-negative")
+        self.lexical_weight = float(lexical_weight)
         self.version = version
 
     def metadata(self) -> dict[str, Any]:
@@ -268,7 +261,10 @@ class LifecycleIntentReranker:
             implementation_version=self.version,
             local=True,
             estimated_cost_per_call_usd=0.0,
-            runtime={"policy": "query-intent+durable-current-state"},
+            runtime={
+                "lexical_weight": str(self.lexical_weight),
+                "policy": "query-intent+durable-current-state+token-overlap",
+            },
         ).as_dict()
 
     @classmethod
@@ -294,18 +290,25 @@ class LifecycleIntentReranker:
             if state in cls.HISTORICAL_STATES or state in cls.STALE_STATES:
                 return -1.0
         elif intent == "historical":
-            if state in cls.HISTORICAL_STATES:
-                return 1.25
-            if state in cls.STALE_STATES:
-                return 0.9
+            if state in cls.HISTORICAL_STATES or state in cls.STALE_STATES:
+                return 1.0
             if state in cls.CURRENT_STATES:
                 return 0.0
         elif intent == "mixed":
-            if state in cls.CURRENT_STATES or state in cls.HISTORICAL_STATES:
-                return 0.55
-            if state in cls.STALE_STATES:
-                return 0.2
+            if (
+                state in cls.CURRENT_STATES
+                or state in cls.HISTORICAL_STATES
+                or state in cls.STALE_STATES
+            ):
+                return 0.45
         return 0.0
+
+    @staticmethod
+    def _lexical_overlap(query_terms: set[str], candidate: dict[str, Any]) -> float:
+        if not query_terms:
+            return 0.0
+        candidate_terms = set(tokenize(str(candidate.get("text", ""))))
+        return len(query_terms & candidate_terms) / len(query_terms)
 
     def rerank(
         self,
@@ -317,6 +320,7 @@ class LifecycleIntentReranker:
         if limit < 1:
             raise ValueError("limit must be positive")
         intent = self.intent_for_query(query)
+        query_terms = set(tokenize(query))
         scored: list[tuple[float, str, dict[str, Any]]] = []
         for fallback_rank, candidate in enumerate(candidates, start=1):
             retrieval = dict(candidate.get("retrieval", {}))
@@ -325,11 +329,15 @@ class LifecycleIntentReranker:
             state_value = candidate.get("current_state")
             state = str(state_value) if state_value is not None else None
             lifecycle_adjustment = self._lifecycle_adjustment(intent, state)
-            score = base_score + lifecycle_adjustment
+            lexical_overlap = self._lexical_overlap(query_terms, candidate)
+            lexical_bonus = self.lexical_weight * lexical_overlap
+            score = base_score + lifecycle_adjustment + lexical_bonus
             result = copy.deepcopy(candidate)
             result["rerank"] = {
                 "base_rank": base_rank,
                 "intent": intent,
+                "lexical_bonus": lexical_bonus,
+                "lexical_overlap": lexical_overlap,
                 "lifecycle_adjustment": lifecycle_adjustment,
                 "score": score,
                 "state": state,
@@ -372,9 +380,13 @@ class RerankedRetriever:
             estimated_cost_per_call_usd=float(base.get("estimated_cost_per_call_usd", 0.0))
             + float(reranker.get("estimated_cost_per_call_usd", 0.0)),
             runtime={
-                "base_implementation": str(base.get("implementation")),
+                "base_service": json.dumps(base, sort_keys=True, separators=(",", ":")),
                 "candidate_multiplier": str(self.candidate_multiplier),
-                "reranker": str(reranker.get("implementation")),
+                "reranker_service": json.dumps(
+                    reranker,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ),
             },
         ).as_dict()
 
