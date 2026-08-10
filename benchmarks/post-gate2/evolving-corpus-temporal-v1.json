@@ -1,0 +1,85 @@
+{
+  "schema_version": "fossil.temporal-benchmark-plan.v1",
+  "benchmark_id": "post-gate2-evolving-corpus-v1",
+  "purpose": "Rebuild the real FOSSIL corpus at successive durable-event cutoffs and verify current-state correctness, historical reconstruction, dependent staleness propagation, and stability after unrelated corpus growth.",
+  "pack_pins": {
+    "fossil-common": "d583005dce06dbb499c3c0de5c22b899655eb8d2",
+    "fossil-ai-systems": "84accd2ee895663990e82ca5b79b592cb503db24"
+  },
+  "authority_rule": "durable lifecycle/lineage state outranks retrieval score",
+  "phases": [
+    {
+      "phase_id": "sqlite-premise-current",
+      "as_of_recorded_at": "2026-08-10T05:26:04Z",
+      "expected_states": {
+        "clm_643b698b7e9e6aee6a16c48c": "supported",
+        "clm_a047d79b8604fadbd44efdf4": "supported",
+        "rel_0996c7d4b845cf3a3fc6bdf8": "active"
+      },
+      "queries": [
+        {
+          "case_id": "current-sqlite-before-supersession",
+          "query": "What is the current canonical corpus database SQLite premise?",
+          "pack_ids": ["pack_f024177f89a5442db84171c3dd7f58e5"],
+          "relevant_ids": ["clm_643b698b7e9e6aee6a16c48c"],
+          "limit": 5
+        }
+      ]
+    },
+    {
+      "phase_id": "durable-core-after-supersession",
+      "as_of_recorded_at": "2026-08-10T05:26:08Z",
+      "expected_states": {
+        "clm_643b698b7e9e6aee6a16c48c": "superseded",
+        "clm_a047d79b8604fadbd44efdf4": "stale_pending_review",
+        "clm_7f5c691c564c30e1b61f8dc0": "supported",
+        "rel_0996c7d4b845cf3a3fc6bdf8": "active",
+        "rel_e0102ade0b5fad5cc2668ccd": "active"
+      },
+      "queries": [
+        {
+          "case_id": "current-durable-core",
+          "query": "What is the current durable truth using immutable evidence and append-only knowledge events?",
+          "pack_ids": ["pack_f024177f89a5442db84171c3dd7f58e5"],
+          "relevant_ids": ["clm_7f5c691c564c30e1b61f8dc0"],
+          "limit": 5
+        },
+        {
+          "case_id": "historical-sqlite",
+          "query": "What was the former canonical corpus database SQLite premise?",
+          "pack_ids": ["pack_f024177f89a5442db84171c3dd7f58e5"],
+          "relevant_ids": ["clm_643b698b7e9e6aee6a16c48c"],
+          "limit": 5
+        }
+      ]
+    },
+    {
+      "phase_id": "latest-after-rag-research-growth",
+      "as_of_recorded_at": null,
+      "expected_states": {
+        "clm_643b698b7e9e6aee6a16c48c": "superseded",
+        "clm_a047d79b8604fadbd44efdf4": "stale_pending_review",
+        "clm_7f5c691c564c30e1b61f8dc0": "supported",
+        "rel_0996c7d4b845cf3a3fc6bdf8": "active",
+        "rel_e0102ade0b5fad5cc2668ccd": "active",
+        "clm_b9cec2a2d1753db24f59ff1309d31656": "supported"
+      },
+      "queries": [
+        {
+          "case_id": "current-durable-core",
+          "query": "What is the current durable truth using immutable evidence and append-only knowledge events?",
+          "pack_ids": ["pack_f024177f89a5442db84171c3dd7f58e5"],
+          "relevant_ids": ["clm_7f5c691c564c30e1b61f8dc0"],
+          "limit": 5
+        },
+        {
+          "case_id": "historical-sqlite",
+          "query": "What was the former canonical corpus database SQLite premise?",
+          "pack_ids": ["pack_f024177f89a5442db84171c3dd7f58e5"],
+          "relevant_ids": ["clm_643b698b7e9e6aee6a16c48c"],
+          "limit": 5
+        }
+      ]
+    }
+  ]
+}

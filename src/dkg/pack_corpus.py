@@ -16,12 +16,20 @@ def _load_json(path: Path) -> dict[str, Any]:
     return value
 
 
-def _events_for_pack(root: Path, manifest: dict[str, Any]) -> list[dict[str, Any]]:
+def _events_for_pack(
+    root: Path,
+    manifest: dict[str, Any],
+    *,
+    as_of_recorded_at: str | None = None,
+) -> list[dict[str, Any]]:
     events: list[dict[str, Any]] = []
     for relative in manifest["event_roots"]:
         event_root = root / str(relative)
         for path in sorted(event_root.glob("*/*.json")):
-            events.append(_load_json(path))
+            event = _load_json(path)
+            if as_of_recorded_at is not None and str(event["recorded_at"]) > as_of_recorded_at:
+                continue
+            events.append(event)
     return sorted(events, key=lambda event: (str(event["recorded_at"]), str(event["event_id"])))
 
 
@@ -29,11 +37,16 @@ def retrieval_documents_from_pack_fixtures(
     pack_roots: Iterable[Path],
     *,
     schemas_root: Path,
+    as_of_recorded_at: str | None = None,
 ) -> list[dict[str, Any]]:
     """Build deterministic retrieval documents from validated durable packs.
 
     This is a rebuildable benchmark/search projection. Claim and relation IDs remain
     the durable corpus identities; generated document text is never canonical truth.
+
+    When ``as_of_recorded_at`` is supplied, the projection replays only events whose
+    durable ``recorded_at`` timestamp is at or before that cutoff. The complete pack is
+    still validated first, so historical reconstruction never bypasses fixture integrity.
     """
 
     roots = [Path(root) for root in pack_roots]
@@ -50,7 +63,11 @@ def retrieval_documents_from_pack_fixtures(
         manifest = _load_json(root / "manifest.json")
         pack_id = str(manifest["pack_id"])
         manifests[pack_id] = manifest
-        events = _events_for_pack(root, manifest)
+        events = _events_for_pack(
+            root,
+            manifest,
+            as_of_recorded_at=as_of_recorded_at,
+        )
         events_by_pack[pack_id] = events
         state_by_pack[pack_id] = KnowledgeState.replay(events)
         for event in events:
