@@ -273,7 +273,7 @@ class GraphitiProjectionAdapter:
         )
 
     async def purge_redacted_async(self, *, events_root: Path) -> list[ProjectionReceipt]:
-        """Remove already-applied events that are now hidden by redaction policy."""
+        """Remove already-applied events that are now hidden by source redaction policy."""
 
         if self.visibility_policy is None:
             return []
@@ -297,13 +297,37 @@ class GraphitiProjectionAdapter:
                 )
         return receipts
 
+    async def purge_event_redactions_async(self, *, event_store: Any) -> list[ProjectionReceipt]:
+        """Recoverably purge active episodes whose durable event bytes were erased.
+
+        Event redaction removes the canonical event file after publishing a minimal
+        tombstone. This scan uses only those tombstones plus the build-scoped applied
+        ledger, so cleanup remains possible after a crash between canonical erasure
+        and projection purge. Fresh rebuilds cannot resurrect these events because
+        their canonical event files no longer exist.
+        """
+
+        receipts: list[ProjectionReceipt] = []
+        for tombstone in event_store.iter_redactions():
+            event_id = str(tombstone["event_id"])
+            if self.ledger.is_redacted(event_id):
+                continue
+            receipts.append(
+                await self.remove_event_async(
+                    event_id,
+                    reason="durable event redaction tombstone",
+                )
+            )
+        return receipts
+
     async def rebuild_async(self, *, events_root: Path) -> list[ProjectionReceipt]:
         """Replay durable events sequentially in corpus commit order.
 
         Graphiti recommends sequential episode ingestion. Filesystem hash paths are
         not temporal order, so rebuild uses ``recorded_at`` with ``event_id`` as a
         stable tie breaker. A configured visibility policy prevents redacted source
-        material from being re-materialized during rebuild.
+        material from being re-materialized during rebuild. Event-redacted records
+        are absent from the canonical event source and therefore cannot resurrect.
         """
 
         events = [
@@ -323,6 +347,9 @@ class GraphitiProjectionAdapter:
 
     def purge_redacted(self, *, events_root: Path) -> list[ProjectionReceipt]:
         return self._run(self.purge_redacted_async(events_root=events_root))
+
+    def purge_event_redactions(self, *, event_store: Any) -> list[ProjectionReceipt]:
+        return self._run(self.purge_event_redactions_async(event_store=event_store))
 
     def rebuild(self, *, events_root: Path) -> list[ProjectionReceipt]:
         return self._run(self.rebuild_async(events_root=events_root))
