@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pukujan.github.io/fossil-core/schemas/benchmark/v1.schema.json",
+  "title": "FOSSIL Benchmark Result v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "benchmark_id",
+    "kind",
+    "recorded_at",
+    "service",
+    "environment",
+    "case_count",
+    "metrics",
+    "observations"
+  ],
+  "properties": {
+    "schema_version": {"const": "fossil.benchmark.v1"},
+    "benchmark_id": {
+      "type": "string",
+      "pattern": "^bench_[A-Za-z0-9_-]{16,}$"
+    },
+    "kind": {"enum": ["retrieval", "model", "policy"]},
+    "recorded_at": {"type": "string", "format": "date-time"},
+    "service": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "provider",
+        "provider_version",
+        "implementation",
+        "implementation_version",
+        "model_id",
+        "local",
+        "estimated_cost_per_call_usd",
+        "runtime"
+      ],
+      "properties": {
+        "kind": {"type": "string", "minLength": 1},
+        "provider": {"type": "string", "minLength": 1},
+        "provider_version": {"type": "string", "minLength": 1},
+        "implementation": {"type": "string", "minLength": 1},
+        "implementation_version": {"type": "string", "minLength": 1},
+        "model_id": {"type": ["string", "null"]},
+        "local": {"type": "boolean"},
+        "estimated_cost_per_call_usd": {"type": "number", "minimum": 0},
+        "runtime": {
+          "type": "object",
+          "additionalProperties": {"type": "string"}
+        }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["python", "platform"],
+      "properties": {
+        "python": {"type": "string", "minLength": 1},
+        "platform": {"type": "string", "minLength": 1}
+      }
+    },
+    "case_count": {"type": "integer", "minimum": 1},
+    "metrics": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": true
+    },
+    "observations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["case_id", "category", "latency_ms", "failed"],
+        "properties": {
+          "case_id": {"type": "string", "minLength": 1},
+          "category": {"type": "string", "minLength": 1},
+          "latency_ms": {"type": "number", "minimum": 0},
+          "failed": {"type": "boolean"}
+        },
+        "additionalProperties": true
+      }
+    }
+  }
+}
