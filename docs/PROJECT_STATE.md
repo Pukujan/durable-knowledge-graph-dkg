@@ -108,9 +108,22 @@ These are campaign hypotheses/requirements, not silent changes to `ARCHITECTURE.
 
 ## Research-to-corpus state
 
-The 2026-08-10 production-RAG research trace is designed to be ingested into `fossil-ai-systems` as a **local derived research artifact** with stable artifact/source identity and claim provenance.
+The 2026-08-10 production-RAG research synthesis has been ingested into `fossil-ai-systems` as a **local derived research artifact** with stable artifact/source identity, exact citations, deterministic event identity, and claim provenance.
 
-Original external papers and production documentation must later be captured as distinct source snapshots. The synthesis or chat transcript must not be presented as verbatim external evidence.
+Exact landed pack state:
+
+- `fossil-common@d583005dce06dbb499c3c0de5c22b899655eb8d2`;
+- `fossil-ai-systems@84accd2ee895663990e82ca5b79b592cb503db24` via PR #3;
+- research artifact `art_b030642ff65f883ff467529c73cbb6e5`;
+- SHA-256 `b030642ff65f883ff467529c73cbb6e502deca28f4c3dece0c2879bf690d3b15`;
+- source snapshot `snap_9c0e088ab2d7d8e1b21db563`;
+- source core commit `6799b2db743d91b004b1e16b5129285a582f8847`.
+
+Cross-pack validation proof ran in execution-only core PR #51, workflow `31415053398`, job `93541977670`: **86 core tests passed** and `PackFixtureAudit` reported **6 artifacts, 6 snapshots, 51 events, 47 citations, 23 claims, 4 relations — PASS**.
+
+The first Issue #48 research-trace/corpus-ingestion milestone is complete. The active continuation is the evolving-corpus / temporal benchmark.
+
+Original external papers and production documentation must still be captured as distinct source snapshots when full research-source ingestion is implemented. The synthesis or chat transcript must not be presented as verbatim external evidence.
 
 ## Cognitive-service posture
 
@@ -151,4 +164,4 @@ This allows #48/#47 to test new embeddings, rerankers, routing/context strategie
 
 `.github/workflows/graphiti-live.yml` contains reusable live materialization plus redaction/non-resurrection smoke coverage.
 
-Gate 2 temporary proof workflows were removed before landing. Issue #48 is now the active campaign; do not extend closed Gate 2 issues to implement it.
+Gate 2 temporary proof workflows were removed before landing. Issue #48 is the active campaign; do not extend closed Gate 2 issues to implement it. Execution-only PR #51 was closed without merge after proving the current research corpus seed.
