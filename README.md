@@ -18,7 +18,7 @@ Repository names, graph namespaces, and physical database placement are operatio
 
 ## Status
 
-**Gate 1 executable durability proof is complete: 15/15.**
+**Milestone 0 is complete. Gate 1 executable durability proof is 15/15, and child Issues #2–#10 are complete.**
 
 FOSSIL has executable proof for:
 
@@ -30,12 +30,13 @@ FOSSIL has executable proof for:
 - destructive rebuild and guarded blue/green migration;
 - conversation ingestion with explicit verbatim-vs-reconstructed provenance and intellectual-lineage reconstruction;
 - a protocol-independent safe Agent Skill/API/MCP boundary;
-- immutable source snapshots, exact byte-span citations, anti-laundering source roles, source quality dimensions, source lifecycle, and exceptional privacy/legal redaction;
-- real active Graphiti redaction plus fresh-rebuild non-resurrection.
+- immutable source snapshots, exact byte-span citations, anti-laundering source roles, source quality dimensions, lifecycle, and exceptional privacy/legal redaction;
+- real active Graphiti redaction plus fresh-rebuild non-resurrection;
+- versioned pluggable retrieval/context/model/verification interfaces and a benchmark contract covering quality, latency, memory, estimated cost, and domain-specific failure rates.
 
 The current operational graph implementation is **Graphiti + Neo4j**, but neither is the deepest source of truth. Graphs, embeddings, retrieval indexes, dashboards, models, Skills, and protocol adapters remain rebuildable/replaceable around the durable corpus.
 
-**Next:** Issue #7 — pluggable retrieval/model services and a specialist benchmark contract. The goal is measured replaceability, not a model zoo.
+The included BM25/hash-embedding/token-overlap/model fixtures are **benchmark controls, not production winners**. A future provider must win a corpus-specific benchmark behind the interfaces rather than become architecture by default.
 
 ## Core layers
 
@@ -44,7 +45,7 @@ The current operational graph implementation is **Graphiti + Neo4j**, but neithe
 3. **Knowledge packs** — portable logical boundaries for common, domain, and project knowledge.
 4. **Ontology + provenance** — versioned semantics independent of graph/model vendors.
 5. **Projection adapters** — Graphiti/Neo4j first; other storage/search systems remain replaceable.
-6. **Cognitive services** — pluggable retrievers, embedders, rerankers, context providers, local/frontier models, and verification services.
+6. **Cognitive services** — versioned pluggable retrievers, embedders, rerankers, context providers, local/frontier models, and verification services.
 7. **Agent boundary** — lazily loaded Skills plus a thin protocol-independent corpus capability surface; no arbitrary graph mutation.
 8. **Observability** — external traces/metrics/logs; only durable knowledge-changing provenance belongs in the corpus.
 
@@ -52,13 +53,15 @@ The current operational graph implementation is **Graphiti + Neo4j**, but neithe
 
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — architectural contract and non-goals.
 - [`docs/HANDOFF_CURRENT.md`](docs/HANDOFF_CURRENT.md) — exact continuation point.
-- [`docs/PROJECT_STATE.md`](docs/PROJECT_STATE.md) — Gate state and issue map.
+- [`docs/PROJECT_STATE.md`](docs/PROJECT_STATE.md) — milestone/gate state.
 - [`docs/DECISION_LOG.md`](docs/DECISION_LOG.md) — durable architectural decisions.
-- [`docs/implementation/2026-08-10-gate1-source-provenance-redaction-proof.md`](docs/implementation/2026-08-10-gate1-source-provenance-redaction-proof.md) — final Gate 1 source/redaction proof.
+- [`docs/implementation/2026-08-10-gate1-source-provenance-redaction-proof.md`](docs/implementation/2026-08-10-gate1-source-provenance-redaction-proof.md) — source/citation/redaction proof.
+- [`docs/implementation/2026-08-10-retrieval-model-benchmark-contract-proof.md`](docs/implementation/2026-08-10-retrieval-model-benchmark-contract-proof.md) — cognitive-service/benchmark proof.
 - [`docs/research/2026-08-09-final-research-synthesis.md`](docs/research/2026-08-09-final-research-synthesis.md) — frozen research synthesis.
 - [`docs/research/2026-08-09-evidence-ledger.md`](docs/research/2026-08-09-evidence-ledger.md) — primary/official source ledger.
 - [`schemas/knowledge-pack/v1.schema.json`](schemas/knowledge-pack/v1.schema.json) — portable pack contract.
 - [`schemas/events/v1.schema.json`](schemas/events/v1.schema.json) — durable event envelope.
+- [`schemas/benchmark/v1.schema.json`](schemas/benchmark/v1.schema.json) — retrieval/model benchmark result contract.
 
 ## Important terminology
 
@@ -68,6 +71,8 @@ A **projection** is a rebuildable representation optimized for a workload. Neo4j
 
 **Redaction** is not ordinary revision. Normal intellectual history is append-only. Privacy/legal erasure is an explicit exceptional tombstone-before-delete operation whose active projections and future rebuilds must respect the erasure.
 
-## Current implementation direction
+**Model output is not evidence merely because models agree.** Small/local models may propose bounded candidates; downstream truth-changing authority requires the separate evidence/risk policy.
 
-Gate 1 deliberately proved the durable contracts before optimizing retrieval. The next work compares retrieval/context/model choices behind interfaces and benchmarks them on corpus-specific quality, latency, resource cost, and failure behavior. Small/local models may propose bounded candidates; they do not gain truth-changing authority merely by agreeing with each other.
+## Natural next campaign
+
+The next useful phase is corpus-scale provider comparison using representative `fossil-common` and `fossil-ai-systems` material: compare the current controls against selected real semantic/vector/graph/long-context providers under the existing benchmark contract. Open a new tracked gate before expanding that campaign.
