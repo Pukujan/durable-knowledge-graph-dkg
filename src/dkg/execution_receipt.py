@@ -175,6 +175,16 @@ def normalize_pack_mounts(
     ]
 
 
+def _normalize_pack_scope(
+    mounts: Sequence[Mapping[str, str]], pack_scope_ids: Sequence[str] | None
+) -> list[str]:
+    mounted_ids = {str(item["pack_id"]) for item in mounts}
+    scope = sorted({str(item) for item in (pack_scope_ids or sorted(mounted_ids))})
+    if not scope or not set(scope) <= mounted_ids:
+        raise ValueError("query receipt pack scope must be a non-empty subset of mounted packs")
+    return scope
+
+
 def _retrieval_candidate(candidate: Mapping[str, Any], fallback_rank: int) -> dict[str, Any]:
     retrieval = dict(candidate.get("retrieval", {}))
     result: dict[str, Any] = {
@@ -297,6 +307,7 @@ def _execution_identity_payload(receipt: Mapping[str, Any]) -> dict[str, Any]:
     return {
         "query_sha256": receipt["query"]["sha256"],
         "packs": receipt["packs"],
+        "pack_scope_ids": receipt["pack_scope_ids"],
         "projection": receipt["projection"],
         "policy": receipt["policy"],
         "services": [
@@ -326,6 +337,7 @@ def build_query_execution_receipt(
     *,
     query: str,
     pack_mounts: Mapping[str, str] | Iterable[Mapping[str, Any]],
+    pack_scope_ids: Sequence[str] | None = None,
     projection: Mapping[str, Any],
     policy: Mapping[str, Any],
     services: Sequence[Mapping[str, Any]],
@@ -343,6 +355,7 @@ def build_query_execution_receipt(
         raise ValueError("query receipt requires a non-empty query")
     query_hash = _sha256_text(normalized)
     mounts = normalize_pack_mounts(pack_mounts)
+    scope = _normalize_pack_scope(mounts, pack_scope_ids)
     projection_value = sanitize_diagnostics(dict(projection))
     if not all(str(projection_value.get(key, "")) for key in ("name", "version", "build_id")):
         raise ValueError("query receipt requires projection name, version, and build_id")
@@ -385,6 +398,7 @@ def build_query_execution_receipt(
             "sha256": query_hash,
         },
         "packs": mounts,
+        "pack_scope_ids": scope,
         "projection": {
             "name": str(projection_value["name"]),
             "version": str(projection_value["version"]),
@@ -432,6 +446,7 @@ def compare_query_execution_receipts(
     dimensions = {
         "query": before.get("query", {}).get("sha256") != after.get("query", {}).get("sha256"),
         "corpus": before.get("packs") != after.get("packs"),
+        "pack_scope": before.get("pack_scope_ids") != after.get("pack_scope_ids"),
         "projection": before.get("projection") != after.get("projection"),
         "policy": before.get("policy") != after.get("policy"),
         "services": [
@@ -469,6 +484,7 @@ def compare_query_execution_receipts(
         "after_receipt_id": str(after.get("receipt_id", "")),
         "same_logical_query": not dimensions["query"],
         "same_pack_ids": same_pack_ids,
+        "same_pack_scope": not dimensions["pack_scope"],
         "same_corpus_revision": not dimensions["corpus"],
         "corpus_revision_changed": same_pack_ids and dimensions["corpus"],
         "execution_identity_match": (
@@ -505,8 +521,8 @@ def execute_query_with_receipt(
     mounts = normalize_pack_mounts(pack_mounts)
     mounted_ids = {item["pack_id"] for item in mounts}
     requested_pack_ids = [str(item) for item in query_pack_ids]
-    if not set(requested_pack_ids) <= mounted_ids:
-        raise ValueError("query_pack_ids must be mounted at exact revisions")
+    if not requested_pack_ids or not set(requested_pack_ids) <= mounted_ids:
+        raise ValueError("query_pack_ids must be a non-empty subset of mounted exact revisions")
 
     started = time.perf_counter()
     retrieval_started = time.perf_counter()
@@ -573,6 +589,7 @@ def execute_query_with_receipt(
     receipt = build_query_execution_receipt(
         query=query,
         pack_mounts=mounts,
+        pack_scope_ids=requested_pack_ids,
         projection=projection,
         policy=policy,
         services=services,
