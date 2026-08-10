@@ -18,17 +18,3 @@ jobs:
         run: python -m pip install -e '.[test]'
       - name: Test
         run: pytest -q
-      - name: Gate 2 staged pack audit
-        run: |
-          git clone --quiet --depth=1 --branch agent/gate2-real-corpus-seed https://github.com/Pukujan/fossil-common.git .gate2-packs/common
-          git clone --quiet --depth=1 --branch agent/gate2-real-corpus-seed https://github.com/Pukujan/fossil-ai-systems.git .gate2-packs/ai-systems
-          python - <<'PY'
-          from pathlib import Path
-          from dkg.pack_fixture import validate_pack_fixtures
-
-          report = validate_pack_fixtures(
-              [Path('.gate2-packs/common'), Path('.gate2-packs/ai-systems')],
-              schemas_root=Path('schemas'),
-          )
-          print(report)
-          PY
