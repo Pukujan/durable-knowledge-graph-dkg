@@ -1,0 +1,2 @@
+Disposable CI marker for the finalized Issue #10 contract.
+Do not merge this file.
