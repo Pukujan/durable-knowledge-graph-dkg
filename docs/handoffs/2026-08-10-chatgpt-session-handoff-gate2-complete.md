@@ -6,7 +6,7 @@
 
 ## Status
 
-Gate 1 remains complete. Gate 2 is complete once #37's documentation PR is merged and Issues #37 and #33 are closed.
+Gate 1 remains complete. Gate 2 is fully complete and formally closed. Control Issue #33 and children #34–#37 are all closed/completed.
 
 Do not reopen Gate 1 / Issues #1–#10 or Gate 2 children #34–#37 merely to continue development. Open a new issue/campaign for new work.
 
@@ -91,6 +91,16 @@ Stable qualitative conclusions:
 
 ## Gate 2D — default policy
 
+Issue #37 is closed completed. PR #45 merged as squash commit:
+
+`2d22dee9e6b176956d30005f4d7877baf68b0a3c`
+
+Final branch-independent CI:
+
+- run `31366800697`
+- job `93386832166`
+- **86 passed in 1.02s**
+
 Durable decision: D021 in `docs/DECISION_LOG.md`.
 
 Policy proof: `docs/implementation/2026-08-10-gate2-default-retrieval-policy.md`.
@@ -112,9 +122,18 @@ Reconsider D021 when the corpus changes materially, BGE/runtime identity changes
 
 ## Current repository control state
 
-After the Gate 2D documentation PR lands and #37/#33 close, there should be **zero open Gate 2 issues**. At the start of a future session, verify GitHub rather than assuming this handoff is still current.
+Verified after formal Gate 2 closure on 2026-08-10:
 
-Do not invent a Gate 3 from chat context alone. New work should begin with an explicit issue/campaign and should cite D021/Gate 2 evidence when changing retrieval policy.
+- #33 — closed/completed;
+- #34 — closed/completed;
+- #35 — closed/completed;
+- #36 — closed/completed;
+- #37 — closed/completed;
+- open GitHub issues: **0**.
+
+At the start of a future session, verify GitHub rather than assuming this handoff is still current.
+
+There is no active post-Gate-2 campaign. Do not invent a Gate 3 from chat context alone. New work should begin with an explicit issue/campaign and should cite D021/Gate 2 evidence when changing retrieval policy.
 
 ## Start order for the next session
 
