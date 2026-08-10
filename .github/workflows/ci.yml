@@ -18,3 +18,13 @@ jobs:
         run: python -m pip install -e '.[test]'
       - name: Test
         run: pytest -q
+      - name: Post-Gate-2 evolving-corpus temporal benchmark proof
+        run: |
+          git clone --quiet https://github.com/Pukujan/fossil-common.git .temporal-packs/common
+          git -C .temporal-packs/common checkout --quiet d583005dce06dbb499c3c0de5c22b899655eb8d2
+          git clone --quiet https://github.com/Pukujan/fossil-ai-systems.git .temporal-packs/ai-systems
+          git -C .temporal-packs/ai-systems checkout --quiet 84accd2ee895663990e82ca5b79b592cb503db24
+          python scripts/run_post_gate2_temporal_benchmark.py \
+            --common-root .temporal-packs/common \
+            --ai-root .temporal-packs/ai-systems \
+            --output .temporal-proof/report.json
