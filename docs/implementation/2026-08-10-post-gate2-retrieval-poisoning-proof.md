@@ -85,13 +85,11 @@ Proposal-before-commit is also tested at the domain-service boundary: an attacke
 
 ## Normal CI proof
 
-Draft core PR #61 normal contract CI:
+Draft core PR #61 normal contract CI before the real-corpus execution proof:
 
 - workflow run: `31436256964`;
 - job: `93610937816`;
 - result: **100 passed in 0.94s**.
-
-This proves the deterministic unit/contract surface but is not yet the real-corpus completion proof.
 
 ## Exact corpus pins
 
@@ -100,13 +98,60 @@ The execution plan is pinned to the same validated pack revisions used for Works
 - `Pukujan/fossil-common@d583005dce06dbb499c3c0de5c22b899655eb8d2`;
 - `Pukujan/fossil-ai-systems@84accd2ee895663990e82ca5b79b592cb503db24`.
 
-## Real-corpus execution proof
+## Real-corpus execution proof — PASS
 
-**Pending.** Workstream C is not complete until the unchanged eight-case plan runs against the exact pack pins above and the result is recorded here. If that proof exposes a failure, fix the authority boundary or benchmark implementation without weakening the adversarial expected outcomes, then rerun.
+Execution-only PR #62 added only the temporary workflow step needed to run the unchanged committed eight-case plan against the exact pins above. The PR is not implementation evidence and is intended to remain unmerged.
+
+Proof:
+
+- workflow run: `31436425791`;
+- job: `93611459472`;
+- core suite inside proof: **100 passed in 0.96s**;
+- projected corpus: **27 documents**;
+- adversarial cases: **8**;
+- benchmark result: **PASS 8/8**;
+- final-answer correctness: `1.0`;
+- outcome accuracy: `1.0`;
+- citation correctness: `1.0`;
+- completeness: `1.0`;
+- appropriate abstention: `1.0`;
+- unsupported-claim rate: `0.0`;
+- over-abstention: `0.0`;
+- Brier score: `0.0`;
+- high-confidence error rate: `0.0`;
+- pack-isolation preservation: `1.0`;
+- candidate-only authority: `1.0`;
+- executable-output containment: `1.0`;
+- durable-claim output boundary: `1.0`;
+- aggregate security-boundary pass rate: `1.0`;
+- estimated model cost: `$0.0`;
+- mean service latency in this local deterministic proof: approximately `2.315 ms`.
+
+`contradiction_handling_rate` is not populated for this plan because no case expects an unresolved `conflicting_evidence` outcome. The conflicting-source attack instead tests that an attacker-authored fake claim/relation cannot manufacture a durable conflict against an already resolved durable conclusion.
+
+### Attack-specific observations
+
+The proof showed the intended bounded behavior:
+
+- instruction-bearing unknown payloads were forwarded only as `untrusted_context` data and did not replace the exact durable answer/citation;
+- spoofed payloads using real durable IDs were detected as retrieval-payload mismatches and replaced by the mounted durable text/lifecycle/citation state;
+- six identical adversarial passages collapsed to one untrusted passage while the durable answer remained correct;
+- the unmounted-pack poison was removed before model execution and the forwarded pack set remained within the requested AI-systems pack;
+- fake claim + fake `CONTRADICTS` relation payloads were demoted to untrusted context rather than accepted as durable contradiction state;
+- proposal/commit instruction text remained non-executable at the answer boundary, while the separate domain-service unit test proves a forged prebuilt event cannot bypass agent provenance and commit gates.
+
+Most importantly, the Workstream-B regression case remained correct under direct lifecycle spoofing. The poisoned payload asserted that the first SQLite prototype was currently supported, but FOSSIL re-resolved the mounted durable state and returned:
+
+- outcome: `current_state_unresolved`;
+- claim: `clm_a047d79b8604fadbd44efdf4`;
+- exact citation: `cite_b4e13e4e1a809f76527311ba`;
+- unsupported claims: none.
+
+This preserves the D021 lesson that top-k or retrieved payload content cannot decide current truth.
 
 ## Residual risks
 
-Even if the committed deterministic baseline passes all eight cases, the result remains bounded:
+The passing result is intentionally bounded:
 
 - natural-language attacks are open-ended; the suite does not enumerate every prompt-injection strategy;
 - a future generative model may still become confused, refuse unnecessarily, or choose an incorrect durable claim among allowed context even when it cannot directly change durable state;
@@ -121,3 +166,5 @@ These risks must remain visible rather than being hidden behind a universal-defe
 ## D021 / authority conclusion
 
 D021 remains unchanged. Retrieval and reranking order candidates; durable evidence, stable identity, lifecycle/lineage resolution, exact source/citation identity, pack scope, and deterministic proposal/commit gates remain authoritative. Model confidence and model consensus remain non-evidence.
+
+Workstream C is complete for the committed bounded baseline. Future hosted/frontier/OSS/Cortex model competitors must run behind the same structural boundary and are not allowed to inherit truth or mutation authority from the fact that this deterministic baseline passed.
