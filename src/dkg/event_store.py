@@ -89,6 +89,12 @@ class DurableEventStore:
         path = self._redaction_path(event_id)
         return json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
 
+    def iter_redactions(self) -> Iterator[dict[str, Any]]:
+        """Iterate minimal event-erasure tombstones without exposing deleted payloads."""
+
+        for path in sorted(self.redactions.glob("*/*.json")):
+            yield json.loads(path.read_text(encoding="utf-8"))
+
     def commit(self, event: dict[str, Any]) -> dict[str, Any]:
         candidate = self.prepare(event)
         event_id = candidate["event_id"]
