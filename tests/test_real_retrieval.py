@@ -8,10 +8,13 @@ import pytest
 from dkg.real_retrieval import (
     DEFAULT_BGE_MODEL,
     DEFAULT_BGE_REVISION,
+    DEFAULT_CROSS_ENCODER_MODEL,
+    DEFAULT_CROSS_ENCODER_REVISION,
     LifecycleIntentReranker,
     OptionalRetrievalDependencyUnavailable,
     ReciprocalRankFusionRetriever,
     RerankedRetriever,
+    SentenceTransformerCrossEncoderReranker,
     SentenceTransformerEmbeddingProvider,
 )
 from dkg.semantic_retriever import SemanticEmbeddingRetriever
@@ -28,6 +31,16 @@ class FakeEncoder:
     def encode(self, texts, **kwargs):
         self.calls.append((list(texts), dict(kwargs)))
         return [[float(index + 1), 0.5] for index, _ in enumerate(texts)]
+
+
+class FakeCrossEncoder:
+    def __init__(self, scores: list[float]) -> None:
+        self.scores = list(scores)
+        self.calls = []
+
+    def predict(self, pairs, **kwargs):
+        self.calls.append((list(pairs), dict(kwargs)))
+        return list(self.scores)
 
 
 class FakeRetriever:
@@ -105,6 +118,70 @@ def test_sentence_transformer_provider_preserves_exact_runtime_identity_and_enco
     ]
 
 
+def test_cross_encoder_reranker_preserves_exact_identity_and_pairwise_predict_options():
+    model = FakeCrossEncoder([0.25, 1.75, 1.75])
+    reranker = SentenceTransformerCrossEncoderReranker(
+        model=model,
+        provider_version="5.2.2",
+        device="cpu",
+        batch_size=8,
+        max_length=256,
+    )
+    candidates = [
+        {**doc("alpha", rank=1), "retrieval": {"rank": 1, "score": 3.0}},
+        {**doc("beta", rank=2), "retrieval": {"rank": 2, "score": 2.0}},
+        {**doc("gamma", rank=3), "retrieval": {"rank": 3, "score": 1.0}},
+    ]
+
+    results = reranker.rerank("which candidate", candidates, limit=3)
+    metadata = reranker.metadata()
+
+    assert [item["id"] for item in results] == ["beta", "gamma", "alpha"]
+    assert results[0]["rerank"]["score"] == 1.75
+    assert results[0]["rerank"]["base_rank"] == 2
+    assert results[0]["rerank"]["service"]["model_id"] == (
+        f"{DEFAULT_CROSS_ENCODER_MODEL}@{DEFAULT_CROSS_ENCODER_REVISION}"
+    )
+    assert "rerank" not in candidates[0]
+    assert metadata["kind"] == "reranker"
+    assert metadata["provider"] == "sentence-transformers"
+    assert metadata["provider_version"] == "5.2.2"
+    assert metadata["implementation"] == "cross-encoder-pairwise-reranker"
+    assert metadata["model_id"] == (
+        f"{DEFAULT_CROSS_ENCODER_MODEL}@{DEFAULT_CROSS_ENCODER_REVISION}"
+    )
+    assert metadata["runtime"]["model_revision"] == DEFAULT_CROSS_ENCODER_REVISION
+    assert metadata["runtime"]["score_authority"] == "candidate-ordering-only"
+    assert model.calls == [
+        (
+            [
+                ("which candidate", "alpha"),
+                ("which candidate", "beta"),
+                ("which candidate", "gamma"),
+            ],
+            {
+                "batch_size": 8,
+                "show_progress_bar": False,
+                "convert_to_numpy": True,
+            },
+        )
+    ]
+
+
+def test_cross_encoder_reranker_fails_on_invalid_score_count():
+    reranker = SentenceTransformerCrossEncoderReranker(
+        model=FakeCrossEncoder([1.0]),
+        provider_version="5.2.2",
+    )
+    candidates = [
+        {**doc("alpha", rank=1), "retrieval": {"rank": 1}},
+        {**doc("beta", rank=2), "retrieval": {"rank": 2}},
+    ]
+
+    with pytest.raises(ValueError, match="score count"):
+        reranker.rerank("query", candidates, limit=2)
+
+
 def test_semantic_retriever_carries_embedding_provider_and_runtime_into_benchmark_metadata():
     provider = SentenceTransformerEmbeddingProvider(
         model=FakeEncoder(),
@@ -135,6 +212,15 @@ def test_sentence_transformer_provider_fails_cleanly_when_optional_runtime_is_un
     monkeypatch.setattr(importlib.metadata, "version", missing)
     with pytest.raises(OptionalRetrievalDependencyUnavailable, match=r"fossil-core\[semantic\]"):
         SentenceTransformerEmbeddingProvider(model=None)
+
+
+def test_cross_encoder_reranker_fails_cleanly_when_optional_runtime_is_unavailable(monkeypatch):
+    def missing(_name: str):
+        raise importlib.metadata.PackageNotFoundError
+
+    monkeypatch.setattr(importlib.metadata, "version", missing)
+    with pytest.raises(OptionalRetrievalDependencyUnavailable, match=r"fossil-core\[semantic\]"):
+        SentenceTransformerCrossEncoderReranker(model=None)
 
 
 def test_rrf_fuses_distinct_retrievers_and_preserves_pack_filtering_and_component_provenance():
@@ -295,3 +381,33 @@ def test_reranked_retriever_exposes_same_retriever_contract_and_full_base_proven
     assert reranker_service["implementation"] == "lifecycle-intent-reranker"
     assert results[0]["base_retrieval"]["service"]["implementation"] == "base"
     assert results[0]["rerank"]["service"]["implementation"] == "lifecycle-intent-reranker"
+
+
+def test_reranked_retriever_surfaces_cross_encoder_service_identity():
+    base = FakeRetriever(
+        "base",
+        [doc("alpha", rank=1), doc("beta", rank=2)],
+        model_id="dense@revision",
+    )
+    reranker = SentenceTransformerCrossEncoderReranker(
+        model=FakeCrossEncoder([0.1, 0.9]),
+        provider_version="5.2.2",
+    )
+    retriever = RerankedRetriever(
+        base,
+        reranker,
+        candidate_multiplier=2,
+        version="cross-encoder-fixture",
+    )
+
+    results = retriever.search("query", pack_ids=[PACK], limit=2)
+    metadata = retriever.metadata()
+    reranker_metadata = json.loads(metadata["runtime"]["reranker_service"])
+
+    assert [item["id"] for item in results] == ["beta", "alpha"]
+    assert reranker_metadata["model_id"] == (
+        f"{DEFAULT_CROSS_ENCODER_MODEL}@{DEFAULT_CROSS_ENCODER_REVISION}"
+    )
+    assert results[0]["rerank"]["service"]["implementation"] == (
+        "cross-encoder-pairwise-reranker"
+    )
