@@ -1,0 +1,334 @@
+{
+  "schema_version": "fossil.benchmark-case-set.v1",
+  "case_set_id": "caseset_gate2_real_corpus_seed_v1",
+  "title": "Gate 2 real corpus seed benchmark",
+  "description": "Initial real-corpus tranche pinned to the first validated fossil-common and fossil-ai-systems evidence commits. It covers exact lookup, citation recovery, authority boundaries, projection/replay invariants, cross-pack lineage, false-premise retrieval, and insufficient-evidence behavior. Historical supersession, disagreement, staleness, and conversation-lineage cases require a later real evidence tranche and are intentionally not fabricated here.",
+  "created_at": "2026-08-10T05:16:00Z",
+  "corpus": [
+    {
+      "pack_id": "pack_269099f7b2ba43b7a99b9427d64092de",
+      "repository": "Pukujan/fossil-common",
+      "commit_sha": "d583005dce06dbb499c3c0de5c22b899655eb8d2"
+    },
+    {
+      "pack_id": "pack_f024177f89a5442db84171c3dd7f58e5",
+      "repository": "Pukujan/fossil-ai-systems",
+      "commit_sha": "fd64992d4011eb55609396f6b8b194a8c679b4bd"
+    }
+  ],
+  "cases": [
+    {
+      "kind": "retrieval",
+      "case_id": "source_quality_is_claim_specific",
+      "category": "source-citation-recovery",
+      "query": "Does FOSSIL assign every source one universal truth tier, or is source usefulness evaluated for the claim at hand?",
+      "pack_ids": ["pack_269099f7b2ba43b7a99b9427d64092de"],
+      "relevant_ids": ["clm_32f20bd13ce2ffc9d2ac1606"],
+      "gold": {
+        "answerable": true,
+        "expected_answer": "Source usefulness is evaluated for the claim at hand; no universal truth tier is canonical.",
+        "citations": [
+          {
+            "schema_version": "fossil.citation.v1",
+            "citation_id": "cite_01c22dab70d6c3be3c68a19d",
+            "snapshot_id": "snap_db9b79769c035331176f9078",
+            "artifact_id": "art_de19a43cd2c65641b0f16244fd8b4ce3",
+            "byte_start": 41,
+            "byte_end": 152,
+            "passage_hash": {
+              "algorithm": "sha256",
+              "digest": "abe5cdc71ee89bd86b15bf514582deb9a4d61913129981a9b93eed7cb3118a3b"
+            }
+          }
+        ],
+        "source_snapshot_ids": ["snap_db9b79769c035331176f9078"],
+        "notes": "Shared source-quality rule from fossil-common."
+      },
+      "tags": ["common-pack", "citation", "source-quality"]
+    },
+    {
+      "kind": "retrieval",
+      "case_id": "model_consensus_is_not_evidence",
+      "category": "evidence-authority",
+      "query": "If several models agree, does that agreement count as external evidence in FOSSIL?",
+      "pack_ids": ["pack_269099f7b2ba43b7a99b9427d64092de"],
+      "relevant_ids": ["clm_7fee179225b3ef0c4d413917"],
+      "gold": {
+        "answerable": true,
+        "expected_answer": "Model agreement is not external evidence.",
+        "citations": [
+          {
+            "schema_version": "fossil.citation.v1",
+            "citation_id": "cite_728e3d95a48f62c4752a6813",
+            "snapshot_id": "snap_db9b79769c035331176f9078",
+            "artifact_id": "art_de19a43cd2c65641b0f16244fd8b4ce3",
+            "byte_start": 1445,
+            "byte_end": 1524,
+            "passage_hash": {
+              "algorithm": "sha256",
+              "digest": "968a1fb27d0830c4eda4e73f1d7ed02ee4bcfb59c30bd7fcafce72ee5afe213d"
+            }
+          }
+        ],
+        "source_snapshot_ids": ["snap_db9b79769c035331176f9078"],
+        "notes": "Authority boundary shared across packs."
+      },
+      "tags": ["common-pack", "authority", "negative-rule"]
+    },
+    {
+      "kind": "retrieval",
+      "case_id": "insufficient_evidence_preserves_uncertainty",
+      "category": "insufficient-evidence",
+      "query": "What should FOSSIL do when the available evidence is insufficient to support a conclusion?",
+      "pack_ids": ["pack_269099f7b2ba43b7a99b9427d64092de"],
+      "relevant_ids": ["clm_041fdd3cc6542b6dca47b183"],
+      "gold": {
+        "answerable": true,
+        "expected_answer": "Preserve an open or disputed state rather than manufacturing certainty.",
+        "citations": [
+          {
+            "schema_version": "fossil.citation.v1",
+            "citation_id": "cite_0d7926a954d1eb4be1826923",
+            "snapshot_id": "snap_db9b79769c035331176f9078",
+            "artifact_id": "art_de19a43cd2c65641b0f16244fd8b4ce3",
+            "byte_start": 1851,
+            "byte_end": 1945,
+            "passage_hash": {
+              "algorithm": "sha256",
+              "digest": "3fee2e2f02476d3ee403cfa5355a75ef61ae786f06681970a580a177dcdf4521"
+            }
+          }
+        ],
+        "source_snapshot_ids": ["snap_db9b79769c035331176f9078"],
+        "notes": "A positive rule about how to represent insufficient evidence."
+      },
+      "tags": ["common-pack", "uncertainty", "insufficient-evidence"]
+    },
+    {
+      "kind": "retrieval",
+      "case_id": "gate1_retrievers_are_controls",
+      "category": "benchmark-control-status",
+      "query": "Did Gate 1 select BM25, hash embeddings, or token overlap as the permanent production winner?",
+      "pack_ids": ["pack_f024177f89a5442db84171c3dd7f58e5"],
+      "relevant_ids": ["clm_6542963629260bde4e67d660"],
+      "gold": {
+        "answerable": true,
+        "expected_answer": "No. Gate 1 BM25, hash-embedding, and token-overlap implementations are controls rather than selected production winners.",
+        "citations": [
+          {
+            "schema_version": "fossil.citation.v1",
+            "citation_id": "cite_6f0654039897a821db51556d",
+            "snapshot_id": "snap_20a0b8a7cb36af4ad7cc524d",
+            "artifact_id": "art_1f5bfce41253c0082dc616d2ab2c0bcd",
+            "byte_start": 5349,
+            "byte_end": 5540,
+            "passage_hash": {
+              "algorithm": "sha256",
+              "digest": "b0af36757674118182f473ab83c7171eaa786a237b8771b9745d75fb19836e0e"
+            }
+          }
+        ],
+        "source_snapshot_ids": ["snap_20a0b8a7cb36af4ad7cc524d"],
+        "notes": "False-premise resistance: the query names candidate controls but the evidence says no winner was selected."
+      },
+      "tags": ["ai-systems", "false-premise", "control-vs-winner"]
+    },
+    {
+      "kind": "retrieval",
+      "case_id": "candidate_authority_comes_from_policy",
+      "category": "evidence-authority",
+      "query": "What grants a candidate model downstream authority to change truth state?",
+      "pack_ids": ["pack_f024177f89a5442db84171c3dd7f58e5"],
+      "relevant_ids": ["clm_1ca1ee32e949eccdea16beb9"],
+      "gold": {
+        "answerable": true,
+        "expected_answer": "Candidate authority comes from the separate evidence and risk policy rather than model consensus.",
+        "citations": [
+          {
+            "schema_version": "fossil.citation.v1",
+            "citation_id": "cite_9627e9c6c9e4aaa3e87e7253",
+            "snapshot_id": "snap_20a0b8a7cb36af4ad7cc524d",
+            "artifact_id": "art_1f5bfce41253c0082dc616d2ab2c0bcd",
+            "byte_start": 3085,
+            "byte_end": 3162,
+            "passage_hash": {
+              "algorithm": "sha256",
+              "digest": "33d5f7592880fec739127c1d1f8be6bdf418a401b5356dd7572605b58e83b7cd"
+            }
+          }
+        ],
+        "source_snapshot_ids": ["snap_20a0b8a7cb36af4ad7cc524d"],
+        "notes": "AI-systems authority rule."
+      },
+      "tags": ["ai-systems", "authority", "risk-policy"]
+    },
+    {
+      "kind": "retrieval",
+      "case_id": "fresh_projection_needs_fresh_ledger",
+      "category": "projection-rebuild",
+      "query": "After destroying and replacing a physical graph projection, can FOSSIL reuse the old applied-event ledger?",
+      "pack_ids": ["pack_f024177f89a5442db84171c3dd7f58e5"],
+      "relevant_ids": ["clm_62b7f9c6184b14371338ca36"],
+      "gold": {
+        "answerable": true,
+        "expected_answer": "No. A fresh physical projection build must use a fresh build-scoped applied ledger after destructive graph replacement.",
+        "citations": [
+          {
+            "schema_version": "fossil.citation.v1",
+            "citation_id": "cite_a7b7a1e100878d4b4b74c200",
+            "snapshot_id": "snap_62f9309f69a2ca17a4cb58d7",
+            "artifact_id": "art_18bda6bac1e88958215e7c57e32f6918",
+            "byte_start": 2068,
+            "byte_end": 2345,
+            "passage_hash": {
+              "algorithm": "sha256",
+              "digest": "303892d2e28601a0be8d6057b74e8a0d6299bd86f1467929635ff3e5adfd92e8"
+            }
+          }
+        ],
+        "source_snapshot_ids": ["snap_62f9309f69a2ca17a4cb58d7"],
+        "notes": "Rebuild safety invariant discovered in Gate 1."
+      },
+      "tags": ["ai-systems", "rebuild", "ledger"]
+    },
+    {
+      "kind": "retrieval",
+      "case_id": "rebuild_replay_order",
+      "category": "temporal-ordering",
+      "query": "Which timestamps and tie breaker determine deterministic destructive-rebuild replay order?",
+      "pack_ids": ["pack_f024177f89a5442db84171c3dd7f58e5"],
+      "relevant_ids": ["clm_76c6bead3d10df4ca7de8af4"],
+      "gold": {
+        "answerable": true,
+        "expected_answer": "Replay is ordered by durable recorded_at, with event_id as the deterministic tie breaker.",
+        "citations": [
+          {
+            "schema_version": "fossil.citation.v1",
+            "citation_id": "cite_14226845dfdc20ab8bb1ec27",
+            "snapshot_id": "snap_62f9309f69a2ca17a4cb58d7",
+            "artifact_id": "art_18bda6bac1e88958215e7c57e32f6918",
+            "byte_start": 2995,
+            "byte_end": 3233,
+            "passage_hash": {
+              "algorithm": "sha256",
+              "digest": "9ffd99d8e3e9b8a230603b2c4425522b7d49a80482669d220bcf1f699a11b07c"
+            }
+          }
+        ],
+        "source_snapshot_ids": ["snap_62f9309f69a2ca17a4cb58d7"],
+        "notes": "Temporal ordering query uses exact durable terminology."
+      },
+      "tags": ["ai-systems", "rebuild", "temporal"]
+    },
+    {
+      "kind": "retrieval",
+      "case_id": "cross_pack_candidate_authority_dependency",
+      "category": "cross-pack-lineage",
+      "query": "What cross-pack dependency connects candidate-model authority to the rule about model agreement as evidence?",
+      "pack_ids": [
+        "pack_269099f7b2ba43b7a99b9427d64092de",
+        "pack_f024177f89a5442db84171c3dd7f58e5"
+      ],
+      "relevant_ids": ["rel_04b8861fde6b22abcae58ef4"],
+      "gold": {
+        "answerable": true,
+        "expected_answer": "The AI-systems candidate-authority claim DEPENDS_ON the common claim that model agreement is not external evidence.",
+        "citations": [
+          {
+            "schema_version": "fossil.citation.v1",
+            "citation_id": "cite_9627e9c6c9e4aaa3e87e7253",
+            "snapshot_id": "snap_20a0b8a7cb36af4ad7cc524d",
+            "artifact_id": "art_1f5bfce41253c0082dc616d2ab2c0bcd",
+            "byte_start": 3085,
+            "byte_end": 3162,
+            "passage_hash": {
+              "algorithm": "sha256",
+              "digest": "33d5f7592880fec739127c1d1f8be6bdf418a401b5356dd7572605b58e83b7cd"
+            }
+          },
+          {
+            "schema_version": "fossil.citation.v1",
+            "citation_id": "cite_728e3d95a48f62c4752a6813",
+            "snapshot_id": "snap_db9b79769c035331176f9078",
+            "artifact_id": "art_de19a43cd2c65641b0f16244fd8b4ce3",
+            "byte_start": 1445,
+            "byte_end": 1524,
+            "passage_hash": {
+              "algorithm": "sha256",
+              "digest": "968a1fb27d0830c4eda4e73f1d7ed02ee4bcfb59c30bd7fcafce72ee5afe213d"
+            }
+          }
+        ],
+        "source_snapshot_ids": [
+          "snap_20a0b8a7cb36af4ad7cc524d",
+          "snap_db9b79769c035331176f9078"
+        ],
+        "notes": "The relevant retrieval target is the durable relation identity, not a graph-native edge UUID."
+      },
+      "tags": ["cross-pack", "lineage", "relation"]
+    },
+    {
+      "kind": "retrieval",
+      "case_id": "adversarial_permanent_retriever_false_premise",
+      "category": "adversarial-false-premise",
+      "query": "Which permanent semantic retriever did Gate 1 choose: BM25 or the hash embedding retriever?",
+      "pack_ids": ["pack_f024177f89a5442db84171c3dd7f58e5"],
+      "relevant_ids": ["clm_6542963629260bde4e67d660"],
+      "gold": {
+        "answerable": false,
+        "expected_answer": "Neither is a selected production winner; both are controls in the Gate 1 benchmark contract.",
+        "citations": [
+          {
+            "schema_version": "fossil.citation.v1",
+            "citation_id": "cite_6f0654039897a821db51556d",
+            "snapshot_id": "snap_20a0b8a7cb36af4ad7cc524d",
+            "artifact_id": "art_1f5bfce41253c0082dc616d2ab2c0bcd",
+            "byte_start": 5349,
+            "byte_end": 5540,
+            "passage_hash": {
+              "algorithm": "sha256",
+              "digest": "b0af36757674118182f473ab83c7171eaa786a237b8771b9745d75fb19836e0e"
+            }
+          }
+        ],
+        "source_snapshot_ids": ["snap_20a0b8a7cb36af4ad7cc524d"],
+        "notes": "The requested winner does not exist in the pinned corpus; retrieval should surface the correcting evidence rather than accept the premise."
+      },
+      "tags": ["adversarial", "false-premise", "insufficient-evidence"]
+    },
+    {
+      "kind": "model",
+      "case_id": "bounded_model_rejects_unselected_retriever",
+      "category": "model-insufficient-evidence",
+      "task": {
+        "query": "Name the permanent semantic retriever selected by FOSSIL Gate 1.",
+        "pack_ids": ["pack_f024177f89a5442db84171c3dd7f58e5"],
+        "required_behavior": "Do not invent a winner when the corpus only establishes benchmark controls."
+      },
+      "expected_output": {
+        "answerable": false
+      },
+      "gold": {
+        "answerable": false,
+        "expected_answer": "No permanent semantic retriever was selected by Gate 1.",
+        "citations": [
+          {
+            "schema_version": "fossil.citation.v1",
+            "citation_id": "cite_6f0654039897a821db51556d",
+            "snapshot_id": "snap_20a0b8a7cb36af4ad7cc524d",
+            "artifact_id": "art_1f5bfce41253c0082dc616d2ab2c0bcd",
+            "byte_start": 5349,
+            "byte_end": 5540,
+            "passage_hash": {
+              "algorithm": "sha256",
+              "digest": "b0af36757674118182f473ab83c7171eaa786a237b8771b9745d75fb19836e0e"
+            }
+          }
+        ],
+        "source_snapshot_ids": ["snap_20a0b8a7cb36af4ad7cc524d"],
+        "notes": "Bounded model negative case; model output remains candidate-only regardless of correctness."
+      },
+      "tags": ["model", "negative", "authority-boundary"]
+    }
+  ]
+}
