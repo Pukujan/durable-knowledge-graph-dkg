@@ -1,0 +1,102 @@
+{
+  "schema_version": "fossil.gate2-comparison-summary.v1",
+  "proof": {
+    "workflow_run_id": 31364039745,
+    "head_sha": "1f71b981feb9ff10636901c61bfb16e677a9f258",
+    "artifact_id": 9053475462,
+    "artifact_name": "gate2-comparative-results",
+    "artifact_digest": "sha256:23c95b46f47cec5a16e0a8c0926a4f13532f283d8f4fbcc0de12ceb63db63c41",
+    "comparison_json_sha256": "81ccdc958d544fcb4cae2421e72658a24a6142353edec027bba1e2e634b8a38f",
+    "context_probes_json_sha256": "955bd0d09af2f442ac0a25278bd79f3034e94aad789bd24aad6507f3de775d45"
+  },
+  "inputs": {
+    "case_set_id": "caseset_gate2_real_corpus_history_v2",
+    "case_count": 21,
+    "limit": 5,
+    "context_max_chars": 4000,
+    "common": {
+      "repository": "Pukujan/fossil-common",
+      "commit_sha": "d583005dce06dbb499c3c0de5c22b899655eb8d2",
+      "pack_id": "pack_269099f7b2ba43b7a99b9427d64092de"
+    },
+    "ai_systems": {
+      "repository": "Pukujan/fossil-ai-systems",
+      "commit_sha": "cf7cf4087bde543cb247a978de2a7252b1b8e4de",
+      "pack_id": "pack_f024177f89a5442db84171c3dd7f58e5"
+    },
+    "environment": {
+      "platform": "Linux-6.17.0-1020-azure-x86_64-with-glibc2.39",
+      "python": "3.12.13",
+      "device": "cpu"
+    }
+  },
+  "selection": {
+    "selected": null,
+    "reason": "comparison evidence only; policy selection belongs to Gate 2D / #37"
+  },
+  "services": {
+    "bm25-control": {
+      "benchmark_id": "bench_0f38e1889dbbe45ff7b50c3d",
+      "hit_rate": 0.9523809523809523,
+      "mean_recall_at_5": 0.9523809523809523,
+      "mrr": 0.8174603174603176,
+      "mean_latency_ms": 3.2703406190413324,
+      "p95_latency_ms": 4.565660999986676,
+      "peak_python_alloc_bytes": 58844,
+      "estimated_cost_usd": 0.0,
+      "failure_counts": {"bad_ranking": 5, "incomplete_multi_target_recall": 1, "pack_isolation_violation": 0, "retrieval_miss": 1, "stale_superseded_leakage": 1},
+      "context_probe_item_ids": ["clm_a047d79b8604fadbd44efdf4", "clm_bdf2ed41fb11e6b1808d3df4", "rel_0996c7d4b845cf3a3fc6bdf8", "clm_1f4c5f053bd7dccac79c301c", "rel_c0e74317e7ff1ee59461b036"],
+      "context_chars_used": 505,
+      "context_truncation_or_overload": false
+    },
+    "hash-embedding-control": {
+      "benchmark_id": "bench_34838d25385f4e1c9d98a052",
+      "hit_rate": 0.9523809523809523,
+      "mean_recall_at_5": 0.9206349206349206,
+      "mrr": 0.8373015873015872,
+      "mean_latency_ms": 1.2825771428540953,
+      "p95_latency_ms": 1.5579209999998511,
+      "peak_python_alloc_bytes": 34100,
+      "estimated_cost_usd": 0.0,
+      "failure_counts": {"bad_ranking": 4, "incomplete_multi_target_recall": 2, "pack_isolation_violation": 0, "retrieval_miss": 1, "stale_superseded_leakage": 1},
+      "context_probe_item_ids": ["clm_643b698b7e9e6aee6a16c48c", "clm_a047d79b8604fadbd44efdf4", "rel_0996c7d4b845cf3a3fc6bdf8", "clm_bdf2ed41fb11e6b1808d3df4", "clm_fabdddf47e97cdd1876329fe"],
+      "context_chars_used": 402,
+      "context_truncation_or_overload": false
+    },
+    "bge-dense": {
+      "benchmark_id": "bench_e1db0cd15f1e43d63034c685",
+      "provider": "sentence-transformers",
+      "provider_version": "5.2.2",
+      "model_id": "BAAI/bge-small-en-v1.5@5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+      "torch_version": "2.13.0",
+      "transformers_version": "5.14.1",
+      "normalize_embeddings": true,
+      "hit_rate": 1.0,
+      "mean_recall_at_5": 0.9841269841269842,
+      "mrr": 0.8587301587301588,
+      "mean_latency_ms": 36.20063761905056,
+      "p95_latency_ms": 38.535340999966916,
+      "peak_python_alloc_bytes": 81779,
+      "estimated_cost_usd": 0.0,
+      "failure_counts": {"bad_ranking": 5, "incomplete_multi_target_recall": 1, "pack_isolation_violation": 0, "retrieval_miss": 0, "stale_superseded_leakage": 1},
+      "context_probe_item_ids": ["clm_76c6bead3d10df4ca7de8af4", "clm_62b7f9c6184b14371338ca36", "clm_bdf2ed41fb11e6b1808d3df4", "rel_e0102ade0b5fad5cc2668ccd", "clm_7f5c691c564c30e1b61f8dc0"],
+      "context_chars_used": 603,
+      "context_truncation_or_overload": false
+    },
+    "bge-bm25-rrf-lifecycle": {
+      "benchmark_id": "bench_8fe8d93dc085a3b147733e54",
+      "model_id": "BAAI/bge-small-en-v1.5@5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+      "hit_rate": 0.9523809523809523,
+      "mean_recall_at_5": 0.9523809523809523,
+      "mrr": 0.8666666666666666,
+      "mean_latency_ms": 58.65779085714605,
+      "p95_latency_ms": 66.02280000001315,
+      "peak_python_alloc_bytes": 183065,
+      "estimated_cost_usd": 0.0,
+      "failure_counts": {"bad_ranking": 3, "incomplete_multi_target_recall": 1, "pack_isolation_violation": 0, "retrieval_miss": 1, "stale_superseded_leakage": 0},
+      "context_probe_item_ids": ["clm_76c6bead3d10df4ca7de8af4", "rel_0996c7d4b845cf3a3fc6bdf8", "clm_62b7f9c6184b14371338ca36", "rel_e0102ade0b5fad5cc2668ccd", "rel_c0e74317e7ff1ee59461b036"],
+      "context_chars_used": 707,
+      "context_truncation_or_overload": false
+    }
+  }
+}
