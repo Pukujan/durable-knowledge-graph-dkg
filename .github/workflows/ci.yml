@@ -31,9 +31,33 @@ jobs:
             --ai-root .retrieval-bakeoff-packs/ai-systems \
             --run-ref "github-actions:${GITHUB_RUN_ID}:${GITHUB_JOB}" \
             --output .retrieval-bakeoff-proof/report.json \
-            > .retrieval-bakeoff-proof/stdout.json
+            > .retrieval-bakeoff-proof/stdout.json 2> .retrieval-bakeoff-proof/stderr.txt
           status=$?
           set -e
+          printf '%s\n' "$status" > .retrieval-bakeoff-proof/runner-status.txt
+          exit 0
+      - name: Upload Workstream D proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: post-gate2-retrieval-bakeoff-proof
+          path: .retrieval-bakeoff-proof/
+          if-no-files-found: error
+
+  summarize:
+    if: always()
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Workstream D proof
+        uses: actions/download-artifact@v4
+        with:
+          name: post-gate2-retrieval-bakeoff-proof
+          path: .retrieval-bakeoff-proof
+      - name: Summarize Workstream D proof
+        run: |
+          status="$(cat .retrieval-bakeoff-proof/runner-status.txt)"
+          echo "runner_status=$status"
           if [ -f .retrieval-bakeoff-proof/report.json ]; then
             python - <<'PY'
           import json
@@ -53,7 +77,7 @@ jobs:
               answer = route['answer_reliability']['metrics']
               audit = route['safety_audit']
               service = route['retrieval']['service']
-              print(name, json.dumps({
+              print('FOSSIL_D_ROUTE=' + name, json.dumps({
                   'implementation': service['implementation'],
                   'model_id': service.get('model_id'),
                   'hit_rate': retrieval['hit_rate'],
@@ -71,16 +95,15 @@ jobs:
           PY
           else
             echo 'No report.json was produced; runner failed before completing the benchmark.'
+            if [ -s .retrieval-bakeoff-proof/stderr.txt ]; then
+              echo 'FOSSIL_D_STDERR_BEGIN'
+              tail -n 80 .retrieval-bakeoff-proof/stderr.txt
+              echo 'FOSSIL_D_STDERR_END'
+            fi
             if [ -s .retrieval-bakeoff-proof/stdout.json ]; then
-              echo 'Captured stdout:'
-              cat .retrieval-bakeoff-proof/stdout.json
+              echo 'FOSSIL_D_STDOUT_BEGIN'
+              tail -n 80 .retrieval-bakeoff-proof/stdout.json
+              echo 'FOSSIL_D_STDOUT_END'
             fi
           fi
           exit "$status"
-      - name: Upload Workstream D proof
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: post-gate2-retrieval-bakeoff-proof
-          path: .retrieval-bakeoff-proof/
-          if-no-files-found: warn
