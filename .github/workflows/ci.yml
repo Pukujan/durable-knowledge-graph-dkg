@@ -29,3 +29,13 @@ jobs:
             --ai-root .gate2-packs/ai-systems \
             --case-set benchmarks/gate2/real-corpus-history-v2.json \
             --output-dir .gate2-results
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          for path in sorted(Path('.gate2-results').glob('*.json')):
+              result = json.loads(path.read_text())
+              print(f"DETAIL {path.name}")
+              for observation in result['observations']:
+                  if observation['failed'] or observation['recall_at_k'] < 1.0 or observation['reciprocal_rank'] < 1.0:
+                      print(json.dumps(observation, sort_keys=True))
+          PY
