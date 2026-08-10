@@ -4,15 +4,15 @@
 **Project:** **FOSSIL — Fault-tolerant Open Semantic Store for Intellectual Lineage**  
 **Durable substrate:** **DICS — Durable Intellectual Corpus System**  
 **Repository:** `Pukujan/fossil-core`  
-**Status:** **Gate 1 executable durability proof is complete (15/15). Issue #7 retrieval/model benchmark work is next.**
+**Status:** **Milestone 0 is complete: Gate 1 = 15/15 and every child Issue #2–#10 is complete.**
 
 ## Repository family
 
-- `Pukujan/fossil-core` — architecture/contracts/core/projections/control plane;
+- `Pukujan/fossil-core` — architecture/contracts/core/projections/benchmark/control plane;
 - `Pukujan/fossil-common` — stable pack `pack_269099f7b2ba43b7a99b9427d64092de`;
 - `Pukujan/fossil-ai-systems` — stable pack `pack_f024177f89a5442db84171c3dd7f58e5`, depending on common.
 
-Repository, graph, and database placement are not knowledge identity. Never mint replacement pack IDs because placement changes.
+Repository/database/graph placement is not knowledge identity. Stable `pack_id` values survive moves and future physical sharding.
 
 ## Fresh-session order
 
@@ -27,105 +27,103 @@ Repository, graph, and database placement are not knowledge identity. Never mint
 9. `docs/implementation/2026-08-09-gate1-conversation-lineage-proof.md`
 10. `docs/implementation/2026-08-09-gate1-agent-boundary-proof.md`
 11. `docs/implementation/2026-08-10-gate1-source-provenance-redaction-proof.md`
-12. Issue #1 and active Issue #7
+12. `docs/implementation/2026-08-10-retrieval-model-benchmark-contract-proof.md`
+13. closed Milestone #1 and child Issues #2–#10
 
 The chat UI is source material, not the control plane.
 
-## Architecture that must not be casually changed
+## Frozen architecture
 
-Canonical truth is immutable evidence + stable corpus IDs + append-only validated knowledge events + versioned pack/ontology contracts + provenance/history.
+Canonical FOSSIL knowledge is immutable evidence + stable corpus IDs + append-only validated knowledge events + versioned pack/ontology contracts + provenance/history.
 
-Graphiti/Neo4j, vector/lexical indexes, models, Skills, MCP, retrieval strategies, and future databases are replaceable projections/services.
+Graphiti/Neo4j, lexical/vector indexes, context construction, models, Skills, MCP, and future databases remain replaceable projections/services.
 
 A graph deletion must never delete irreplaceable intellectual history.
 
-## Gate 1 completion summary
+## Completed executable proofs
 
-### #2 durable event/artifact store — complete
-Atomic immutable publication, deterministic idempotency, content-addressed evidence, integrity/tamper checks, and exceptional audited artifact/event erasure paths.
+### Durable core / packs / lifecycle
+Issues #2, #3, and #6 cover atomic immutable publication, deterministic idempotency, content-addressed artifacts, pack read/write boundaries and dependencies, provenance-preserving promotion, disagreement, supersession, and stale dependency propagation.
 
-### #3 pack boundaries/promotion — complete
-Explicit read/write mounts and required dependencies. Cross-pack promotion is a new provenance-preserving target-pack event rather than source mutation.
+### #4 live Graphiti/Neo4j
+Run `31338875226`: Graphiti `0.29.3` + Neo4j `5.26.29`, stable pack namespace, durable-first materialization, build metadata, failure preservation, idempotent replay.
 
-### #6 lifecycle — complete
-Replay preserves disagreement, disputed state, relation history, supersession, and stale dependent propagation.
+### #5 destructive rebuild + blue/green
+Run `31339930551`: candidate graph destroyed to zero, rebuilt from the same durable source with fresh build identity, semantic compare matched, active switch recorded only after checks.
 
-### #4 real Graphiti/Neo4j — complete
-Run `31338875226` proved Graphiti `0.29.3` + Neo4j `5.26.29`, durable-first materialization, stable pack/group namespaces, build metadata, projection-failure preservation, and idempotent retry. `json_schema` is the proven local structured-output mode.
+Critical invariant: **new/rebuilt physical projection => fresh build-scoped applied ledger**.
 
-### #5 destructive rebuild + blue/green — complete
-Run `31339930551` proved a candidate graph can be destroyed and rebuilt from durable events with a fresh build-scoped ledger while current remains live; stable semantic digests drive comparison and activation, not graph UUID equality.
+### #9 conversation lineage
+Run `31340924480` / job `93314435997`: immutable source bytes/spans, stable message ordering/parentage, explicit `verbatim` vs `reconstructed`, derived intellectual lineage with exact provenance, opposing/current/historical queries.
 
-Critical invariant: **a physically new/rebuilt projection gets a fresh build identity/applied ledger**. Reusing an old applied ledger after deleting a graph can silently produce an empty rebuild because every event appears already applied.
+The recovered chat-loss material remains reconstructed, never a verbatim transcript.
 
-### #9 conversation lineage — complete
-Run `31340924480` / job `93314435997` proved immutable conversation source bytes/spans, stable message ordering/parentage, durable `verbatim` vs `reconstructed` status, derived lineage provenance, opposing-position retrieval, current conclusions, and historical path reconstruction.
+### #8 Agent Skills/API/MCP
+Run `31341456769` / job `93315824532`: **39 passed in 0.51s**. Six progressive-disclosure Skills, protocol-independent `CorpusService`, pack/Skill-gated mutations, actor/model/harness/skill provenance, no arbitrary Cypher/Graphiti mutation path.
 
-The recovered path remains explicitly reconstructed:
+### #10 source provenance + redaction
+Deterministic run `31345462801` / job `93326450028`: **51 passed in 1.40s**.
 
-`learning UX/parabola -> representation mismatch -> AI translation -> failure learning -> MAPE-K/KEDB -> truth maintenance -> temporal knowledge graph`
+Live run `31346791333` / job `93330095684`: event `evt_416e5c516581c8dea8c5c54025361960` materialized under stable AI-systems pack, then exceptional tombstone-before-delete erased canonical event bytes, blocked same-ID resurrection, purged active Graphiti episode/entity state to zero, and stayed absent on a fresh rebuild. Proof artifact `9047631921`.
 
-Never silently promote the recovery artifact to a verbatim transcript.
+Redaction is exceptional; normal intellectual revision remains append-only.
 
-### #8 safe Agent Skills/API/MCP — complete
-Run `31341456769` / job `93315824532`: **39 passed in 0.51s**.
+### #7 retrieval/model service benchmark contract
+Run `31347744797` / job `93332738616`: **56 passed in 0.70s**.
 
-Six Skills use progressive disclosure. `CorpusService` is protocol-independent and exposes only `search/read/lineage/propose/validate/commit/manage`. Normal agent mutation is pack- and Skill-gated, preserves actor/model/harness/skill provenance, commits durable events first, and exposes no arbitrary Cypher/Graphiti mutation escape hatch. MCP remains an adapter.
+Versioned cognitive interfaces now have executable controls:
 
-### #10 source snapshots/citations/redaction — complete
-Final deterministic run `31345462801` / job `93326450028`: **51 passed in 1.40s**.
+- `BM25Retriever`
+- `HashEmbeddingProvider`
+- `EmbeddingRetriever`
+- `TokenOverlapReranker`
+- `BudgetedContextProvider`
+- `CallableCandidateModelService`
+- `RiskEscalationPolicy`
+- `PolicyVerificationService`
 
-Real live redaction run `31346791333` / job `93330095684` used Graphiti `0.29.3`, Neo4j `5.26.29`, `qwen2.5:3b`, `nomic-embed-text`, and `json_schema`.
+`schemas/benchmark/v1.schema.json` + `src/dkg/benchmark.py` measure retrieval/model quality, latency, peak Python memory, estimated cost, and failure rates by category. Provider/model/runtime/benchmark identity can be persisted in review event provenance.
 
-Event `evt_416e5c516581c8dea8c5c54025361960` first materialized under AI-systems pack `pack_f024177f89a5442db84171c3dd7f58e5` as one Graphiti episode and one entity. Exceptional redaction then:
+These implementations are **baselines/controls, not production winners**. Future real providers must compete behind the interfaces.
 
-- wrote a minimal non-sensitive durable event tombstone;
-- physically removed canonical event bytes;
-- blocked republication of the same deterministic event identity;
-- used the projection applied ledger's episode UUID to remove the active Graphiti episode;
-- reduced pack-local episode/entity/fact counts to `0/0/0`;
-- survived a fresh projection rebuild without resurrection (`fresh_rebuild_receipts == []`).
+A local/small model remains `candidate_only`. Truth-changing commit eligibility comes from independent evidence + risk/uncertainty policy, not model consensus.
 
-Proof artifact ID: `9047631921`.
+Evidence: `docs/implementation/2026-08-10-retrieval-model-benchmark-contract-proof.md`.
 
-Evidence: `docs/implementation/2026-08-10-gate1-source-provenance-redaction-proof.md`.
+## Final clean-state CI
 
-## Redaction semantics now frozen
+Before #7, Gate 1's cleaned repository passed run `31347457485` / job `93331933728`: **51 passed in 0.82s**.
 
-Ordinary revision stays append-only. Privacy/legal deletion is an explicit exceptional operation.
+After #7 implementation, trusted run `31347744797` / job `93332738616` passed the expanded suite: **56 passed in 0.70s**.
 
-- artifact/event tombstone is persisted before sensitive bytes are physically removed;
-- tombstones intentionally avoid copying sensitive payload content;
-- erased content/event identities cannot be silently reintroduced;
-- exports and projection rebuilds respect redaction;
-- historical projection applied receipts remain audit history while a separate redaction receipt records purge;
-- event redaction tombstones plus build-scoped applied ledgers allow active projection cleanup after a crash/restart;
-- Graphiti episode UUID is an operational purge handle for one projection build, not canonical knowledge identity.
+Normal `.github/workflows/ci.yml` is restored. Disposable proof branches/PRs are never merged.
 
-## Workflow note
+`.github/workflows/graphiti-live.yml` contains reusable materialization + redaction/non-resurrection smoke coverage. Runner-dependent proof paths are step-scoped; the earlier invalid job-level `runner.temp` usage is fixed.
 
-During #10, the previously mysterious standalone live-workflow registration failure was traced to `${{ runner.temp }}` being used in job-level `env`. GitHub's runner context is not available there. The permanent `.github/workflows/graphiti-live.yml` now scopes runner-dependent proof paths to steps and includes both materialization and redaction/non-resurrection smoke scripts.
+## Milestone result
 
-Normal `.github/workflows/ci.yml` has been restored to the fast contract suite. Disposable proof PRs were closed unmerged.
+All original child issues are complete:
 
-## Exact next task — Issue #7
+- #2 durable event/artifact store
+- #3 pack boundaries/promotion
+- #4 live Graphiti projection
+- #5 destructive rebuild/blue-green
+- #6 lifecycle/disagreement/staleness
+- #7 pluggable cognitive services + benchmark contract
+- #8 safe Skills/API/MCP boundary
+- #9 conversation lineage
+- #10 source snapshots/citation/redaction
 
-**Pluggable retrieval/model services + local specialist benchmark contract.**
+Issue #1 can be closed as completed.
 
-Do not build a model zoo. Make implementations compete behind existing interfaces.
+## Natural next phase — not yet opened
 
-Acceptance:
+The next useful campaign is **corpus-scale provider benchmarking**, not more architecture invention:
 
-1. use/complete `ContextProvider`, `Retriever`, `EmbeddingProvider`, `Reranker`, `ModelService`, `VerificationService` interfaces;
-2. add one initial implementation per capability needed for benchmark execution;
-3. record model/provider/runtime versions in projection/review provenance;
-4. make risk/uncertainty escalation policy explicit and testable;
-5. define benchmark fixtures/metrics for retrieval quality, latency, cost/RAM, and domain-specific failure rates;
-6. local/small models may propose candidates but may not gain truth-changing authority without policy/evidence;
-7. compare long-context, lexical/vector/graph retrieval and specialist approaches by measured corpus behavior rather than architecture fashion.
+1. build representative benchmark fixtures from `fossil-common` and `fossil-ai-systems`;
+2. compare current lexical/hash controls against selected real semantic/vector/graph/long-context providers;
+3. record quality, latency, memory, cost, and failure categories under the existing schema;
+4. keep model output candidate-only unless evidence/risk policy supports downstream authority;
+5. let measured corpus performance choose adapters.
 
-Research references already exist in the evidence ledger. New research should be triggered by benchmark uncertainty or implementation contradictions, not by novelty alone.
-
-## End-of-session rule
-
-After substantial work, update this file, `docs/PROJECT_STATE.md`, Issue #1, the active child issue, durable benchmark/proof evidence, and `docs/DECISION_LOG.md` when a decision changes.
+Open a new tracked gate before materially expanding this work.
