@@ -62,6 +62,8 @@ class SentenceTransformerEmbeddingProvider:
                     ) from None
                 provider_version = "injected-runtime"
         self.provider_version = provider_version
+        self.torch_version = _installed_version("torch")
+        self.transformers_version = _installed_version("transformers")
 
         if model is None:
             try:
@@ -95,8 +97,8 @@ class SentenceTransformerEmbeddingProvider:
                 "device": self.device,
                 "model_revision": self.revision,
                 "normalize_embeddings": str(self.normalize_embeddings).lower(),
-                "torch_version": _installed_version("torch"),
-                "transformers_version": _installed_version("transformers"),
+                "torch_version": self.torch_version,
+                "transformers_version": self.transformers_version,
             },
         ).as_dict()
 
