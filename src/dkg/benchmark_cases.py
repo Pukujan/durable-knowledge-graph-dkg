@@ -21,8 +21,9 @@ def load_benchmark_case_set(
     """Load and validate a persistent benchmark case set.
 
     JSON Schema owns the portable data shape. These semantic checks cover the
-    relationships JSON Schema cannot express compactly: case IDs are unique and
-    retrieval cases may only mount packs pinned by the case-set corpus manifest.
+    relationships JSON Schema cannot express compactly: case IDs are unique,
+    retrieval cases may only mount packs pinned by the case-set corpus, and
+    exact citation gold must resolve to source snapshots declared by the case.
     """
 
     candidate = json.loads(Path(path).read_text(encoding="utf-8"))
@@ -35,14 +36,31 @@ def load_benchmark_case_set(
 
     corpus_pack_ids = {str(entry["pack_id"]) for entry in candidate["corpus"]}
     for case in candidate["cases"]:
-        if case["kind"] != "retrieval":
-            continue
-        requested = {str(pack_id) for pack_id in case["pack_ids"]}
-        unavailable = requested - corpus_pack_ids
-        if unavailable:
+        if case["kind"] == "retrieval":
+            requested = {str(pack_id) for pack_id in case["pack_ids"]}
+            unavailable = requested - corpus_pack_ids
+            if unavailable:
+                raise BenchmarkCaseSetError(
+                    "retrieval case references packs not pinned by the case-set corpus: "
+                    + ", ".join(sorted(unavailable))
+                )
+
+        gold = dict(case.get("gold", {}))
+        citations = list(gold.get("citations", []))
+        citation_ids = [str(citation["citation_id"]) for citation in citations]
+        if len(citation_ids) != len(set(citation_ids)):
             raise BenchmarkCaseSetError(
-                "retrieval case references packs not pinned by the case-set corpus: "
-                + ", ".join(sorted(unavailable))
+                f"benchmark case {case['case_id']} contains duplicate citation IDs"
+            )
+        declared_snapshots = {
+            str(snapshot_id) for snapshot_id in gold.get("source_snapshot_ids", [])
+        }
+        cited_snapshots = {str(citation["snapshot_id"]) for citation in citations}
+        undeclared = cited_snapshots - declared_snapshots
+        if undeclared:
+            raise BenchmarkCaseSetError(
+                f"benchmark case {case['case_id']} citations reference undeclared source snapshots: "
+                + ", ".join(sorted(undeclared))
             )
 
     return copy.deepcopy(candidate)
