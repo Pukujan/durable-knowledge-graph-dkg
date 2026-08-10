@@ -18,3 +18,14 @@ jobs:
         run: python -m pip install -e '.[test]'
       - name: Test
         run: pytest -q
+      - name: Post-Gate-2 query execution receipt replay proof
+        run: |
+          git clone --quiet https://github.com/Pukujan/fossil-common.git .receipt-packs/common
+          git -C .receipt-packs/common checkout --quiet d583005dce06dbb499c3c0de5c22b899655eb8d2
+          git clone --quiet https://github.com/Pukujan/fossil-ai-systems.git .receipt-packs/ai-systems
+          git -C .receipt-packs/ai-systems checkout --quiet 84accd2ee895663990e82ca5b79b592cb503db24
+          python scripts/run_post_gate2_query_receipt.py \
+            --common-root .receipt-packs/common \
+            --ai-root .receipt-packs/ai-systems \
+            --run-ref "github-actions:${GITHUB_RUN_ID}:${GITHUB_JOB}" \
+            --output .receipt-proof/report.json
