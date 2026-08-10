@@ -4,17 +4,17 @@
 **Project:** **FOSSIL — Fault-tolerant Open Semantic Store for Intellectual Lineage**  
 **Durable substrate:** **DICS — Durable Intellectual Corpus System**  
 **Repository:** `Pukujan/fossil-core`  
-**Status:** **Milestone 0 complete. Gate 1 = 15/15. Issues #1–#10 are closed completed. No PRs or issues are open.**
+**Status:** **Milestone 0 / Gate 1 complete. Gate 2 is active under Issue #33; current work is #34 with draft PR #38.**
 
 ## Fresh-session transfer record
 
-For a new ChatGPT/Codex/Claude session, read the detailed dated transfer first after the core contracts:
+The detailed Milestone 0 transfer remains:
 
 `docs/handoffs/2026-08-10-chatgpt-session-handoff.md`
 
-That file contains the verified proof runs, code surfaces, operational quirks, do-not-change rules, and the recommended shape of the next campaign.
+That dated handoff is authoritative for completed Gate 1 proof runs, operational quirks, and frozen do-not-change rules. This file is now authoritative for the newer Gate 2 continuation point.
 
-The repository was verified immediately before the transfer at `main` commit `239335ed5a8b23fb34aa9a80afb7faf62e3caffe`; the handoff documentation commits follow that clean state.
+Milestone 0 handoff tip commit: `b87b573c9d7514787c904836b48547a10a45d6bc`.
 
 ## Repository family
 
@@ -30,10 +30,12 @@ Repository/database/graph placement is not knowledge identity. Never mint replac
 2. `ARCHITECTURE.md`
 3. this file
 4. `docs/PROJECT_STATE.md`
-5. `docs/handoffs/2026-08-10-chatgpt-session-handoff.md`
-6. `docs/DECISION_LOG.md`
-7. proof docs under `docs/implementation/`
-8. closed Issue #1 and child Issues #2–#10 when detailed issue history is useful.
+5. Gate 2 control Issue #33 and active children #34–#37
+6. current PRs, especially draft PR #38 while #34 is active
+7. `docs/DECISION_LOG.md`
+8. `docs/handoffs/2026-08-10-chatgpt-session-handoff.md` for completed Gate 1 detail
+9. proof docs under `docs/implementation/`
+10. closed Issue #1 and children #2–#10 only when detailed implementation history is useful
 
 The chat UI is source material, not the control plane.
 
@@ -62,108 +64,107 @@ Additional frozen invariants:
 
 Do not casually rename the internal `src/dkg` namespace.
 
-## Completed proof stack
+## Completed Gate 1 proof stack
 
-### Durable core / packs / lifecycle
+- **#4 live Graphiti/Neo4j:** run `31338875226` — Graphiti `0.29.3` + Neo4j `5.26.29`, stable pack namespace, durable-first materialization, projection-failure preservation, idempotent retry.
+- **#5 destructive rebuild + blue/green:** run `31339930551` — graph candidate destroyed to zero, rebuilt from durable source using a fresh build-scoped ledger, semantic comparison matched, active switch guarded.
+- **#9 conversation lineage:** run `31340924480`, job `93314435997` — immutable source bytes/spans, `verbatim` vs `reconstructed`, opposing/current/historical lineage queries.
+- **#8 Agent Skills/API/MCP:** run `31341456769`, job `93315824532` — **39 passed in 0.51s**, protocol-independent `CorpusService`, pack/Skill-gated mutations, no arbitrary graph mutation path.
+- **#10 source provenance + redaction:** deterministic run `31345462801`, job `93326450028`; live run `31346791333`, job `93330095684` — tombstone-before-delete, active Graphiti purge, zero-state fresh rebuild/non-resurrection.
+- **#7 retrieval/model benchmark contract:** run `31347744797`, job `93332738616` — **56 passed in 0.70s**; versioned cognitive interfaces and benchmark result contract.
 
-Issues #2, #3, #6: atomic immutable publication, deterministic idempotency, content-addressed evidence, pack read/write boundaries/dependencies, provenance-preserving promotion, disagreement/supersession/staleness replay.
+The current BM25/hash-embedding/token-overlap stack is a **control**, not a production winner.
 
-### #4 live Graphiti/Neo4j
+## Gate 2 — active campaign
 
-Run `31338875226`: Graphiti `0.29.3` + Neo4j `5.26.29`, stable pack namespace, durable-first materialization, build metadata, projection-failure preservation, idempotent retry.
+Control: **#33 — Real Corpus + Retrieval/Model Bakeoff**.
 
-`json_schema` is the proven local structured-output mode; an earlier `json_object` attempt allowed malformed structured field names.
+Children:
 
-### #5 destructive rebuild + blue/green
+1. **#34** representative real corpus fixtures + versioned gold/adversarial benchmark set;
+2. **#35** real retrieval/context adapters behind existing interfaces;
+3. **#36** reproducible comparative bakeoff + failure taxonomy;
+4. **#37** evidence-based default retrieval/routing policy.
 
-Run `31339930551`: candidate destroyed to zero, rebuilt from the same durable source with a fresh build-scoped ledger, semantic comparison matched, active switch recorded only after checks.
+Do not reopen Issues #1–#10 for this work.
 
-Critical invariant: **new/rebuilt physical projection => fresh build-scoped applied ledger**.
+### #34 discovery: the pack repositories are scaffolds
 
-### #9 conversation lineage
+Verified `fossil-common` and `fossil-ai-systems` before writing benchmark fixtures.
 
-Run `31340924480` / job `93314435997`: immutable source bytes/spans, stable message ordering/parentage, explicit `verbatim` vs `reconstructed`, derived intellectual lineage with exact provenance, opposing/current/historical queries.
+- `fossil-common` current seed commit `94fd576286ee359f1929b31bbba99e0ca54d4b41` contains the stable pack manifest, contract/policy pointers, empty `artifacts/manifest.jsonl`, and `events/.gitkeep`.
+- `fossil-ai-systems` current seed commit `cfd03e08c36f00a5eb25c8de4c1463d06877e015` has the same scaffold-only shape.
 
-Recovered chat-loss material remains reconstructed, never a verbatim transcript.
+Therefore Gate 2A must **seed representative canonical evidence/events into the existing stable packs first**, then derive gold/adversarial cases from those durable objects. Do not fabricate benchmark-only prose and call it real corpus material.
 
-### #8 Agent Skills/API/MCP
+The AI-systems pack may read common + itself and write only itself. The common pack reads/writes itself. Use this real dependency boundary in cross-pack benchmark cases.
 
-Run `31341456769` / job `93315824532`: **39 passed in 0.51s**. Six progressive-disclosure Skills, protocol-independent `CorpusService`, pack/Skill-gated mutations, actor/model/harness/skill provenance, no arbitrary Cypher/Graphiti mutation path.
+### #34 implementation checkpoint: draft PR #38
 
-### #10 source provenance + redaction
+Branch: `agent/gate2-benchmark-case-set`.
 
-Deterministic run `31345462801` / job `93326450028`: **51 passed in 1.40s**.
+PR: **#38 — Gate 2: persist benchmark case sets**.
 
-Live run `31346791333` / job `93330095684`: exceptional tombstone-before-delete removed canonical event bytes, blocked same-ID resurrection, purged active Graphiti episode/entity state to zero, and remained absent on a fresh rebuild. Proof artifact `9047631921`.
+Purpose: Gate 1 versioned benchmark results but kept gold cases as Python fixtures. Gate 2 needs a persistent case-set contract so every provider runs against the same pinned corpus and evidence targets.
 
-Normal intellectual revision remains append-only. Privacy/legal erasure is an explicit exceptional path.
+Current PR contents:
 
-### #7 retrieval/model benchmark contract
+- `schemas/benchmark/case-set-v1.schema.json` — `fossil.benchmark-case-set.v1`;
+- `src/dkg/benchmark_cases.py` — schema/semantic loader + conversion into existing benchmark case types;
+- `tests/test_benchmark_case_set.py` — contract coverage;
+- case-set corpus entries pin exact repository commit SHAs;
+- retrieval cases cannot mount packs not pinned by the case set;
+- duplicate case IDs are rejected;
+- gold metadata stores exact `fossil.citation.v1` citation objects, including byte span and passage hash, plus declared source snapshots;
+- citation gold referring to an undeclared snapshot is rejected.
 
-Run `31347744797` / job `93332738616`: **56 passed in 0.70s**.
+First trusted PR CI run before the citation follow-up:
 
-Versioned service controls:
+- run `31356440481`
+- job `93356916077`
+- **60 passed in 0.69s**
 
-- `BM25Retriever`
-- `HashEmbeddingProvider`
-- `EmbeddingRetriever`
-- `TokenOverlapReranker`
-- `BudgetedContextProvider`
-- `CallableCandidateModelService`
-- `RiskEscalationPolicy`
-- `PolicyVerificationService`
+The branch has follow-up citation-contract and continuity-doc commits after that run. **Check the latest PR CI before merging.**
 
-The benchmark schema/harness measures quality, latency, peak Python allocation memory, estimated provider cost, and category-specific failure rates. Provider/model/runtime/benchmark provenance can be committed to review events.
+### Next implementation step
 
-These are **controls, not production winners**. Future providers must compete behind the interfaces.
+After PR #38 is current/green:
 
-## CI / workflow state
+1. seed a modest representative evidence set into `fossil-common` and `fossil-ai-systems` through the existing artifact/source/event contracts rather than hand-written ad hoc objects;
+2. use immutable `repository_ref` locators and exact source commit SHAs for imported FOSSIL proof/policy material;
+3. derive exact citations from source bytes and persist those citation objects in Gate 2 gold cases;
+4. include cases for source/citation recovery, lineage, historical/current distinction, disagreement, stale/superseded assumptions, cross-pack boundaries, obscure evidence, conversation lineage, and insufficient evidence;
+5. only then proceed to #35 provider competitors.
 
-Final clean Gate 1 run `31347457485` / job `93331933728`: **51 passed in 0.82s**.
+Good initial source material already inspected in `fossil-core` includes:
 
-Expanded post-#7 run `31347744797` / job `93332738616`: **56 passed in 0.70s**.
+- `policies/source-quality-v1.md` for shared/common source methodology;
+- `docs/implementation/2026-08-10-retrieval-model-benchmark-contract-proof.md` for provider/control and authority boundaries;
+- `docs/implementation/2026-08-09-gate1-rebuild-blue-green-proof.md` for rebuild/ledger/history semantics;
+- other Gate 1 lineage/redaction proofs as needed for difficult cases.
 
-`.github/workflows/ci.yml` is the normal fast suite.
+Do not assign fake universal quality tiers. Source snapshots preserve independent quality dimensions and exact repository version metadata.
 
-`.github/workflows/graphiti-live.yml` contains reusable real Graphiti/Neo4j materialization + redaction/non-resurrection coverage. Runner-dependent temporary paths are step-scoped; the earlier invalid job-level `${{ runner.temp }}` usage is fixed.
+## Gate 2 exit criteria
 
-Operational nuance: the permanent live workflow currently names `deepseek-r1:7b`; the successful final live redaction proof used `qwen2.5:3b`. Model choice in this workflow is replaceable test/runtime configuration, not architecture.
-
-## Milestone closure
-
-All original children #2–#10 and control Issue #1 are closed completed. At this checkpoint GitHub has **zero open issues and zero open pull requests**.
-
-Do not reopen those completed issues just to start the next development phase.
-
-## Natural next phase — intentionally not opened automatically
-
-Recommended next campaign:
-
-**Gate 2 — Real Corpus + Retrieval/Model Bakeoff**
-
-Goal: use representative `fossil-common` and `fossil-ai-systems` material to compare the current controls against selected real semantic/vector/graph/long-context providers under the existing benchmark contract.
-
-A fresh session should first verify current GitHub state, then—if the user still wants to proceed—open a **new tracked Gate 2 control issue** and a small set of child issues rather than extending closed Milestone 0.
-
-Suggested Gate 2 work:
-
-1. representative real corpus + gold/adversarial benchmark cases;
-2. a few materially different real retrieval/context adapters behind existing interfaces;
-3. reproducible comparative benchmark runs for quality, latency, memory, estimated cost, and failure categories;
-4. evidence-based default routing/retrieval policy selection.
-
-Do not build a model zoo. Do not choose providers by novelty. Let measured corpus performance choose adapters.
-
-See `docs/handoffs/2026-08-10-chatgpt-session-handoff.md` for proposed Gate 2 exit criteria and a ready-to-paste continuation prompt.
+- representative real corpus fixtures exist using both stable packs;
+- versioned gold/adversarial benchmark set exists;
+- at least two materially different real retrieval strategies are compared with controls;
+- reproducible `fossil.benchmark.v1` outputs record provider/runtime/model/implementation identity;
+- quality, latency, memory, estimated cost, and category-specific failures are captured;
+- failure taxonomy is documented;
+- one default routing/retrieval policy is selected from measured evidence;
+- canonical FOSSIL identity/durability does not change merely to suit a benchmark winner;
+- `docs/DECISION_LOG.md`, `docs/PROJECT_STATE.md`, and this handoff reflect the Gate 2 result.
 
 ## End-of-session rule
 
 After substantial future work:
 
 - update this file;
-- update `docs/PROJECT_STATE.md` when the gate changes;
-- update the active GitHub issue(s);
+- update `docs/PROJECT_STATE.md` when gate/work state changes;
+- update active GitHub issues;
 - commit material benchmark/proof evidence;
-- update `docs/DECISION_LOG.md` when a decision changes;
+- update `docs/DECISION_LOG.md` when an actual architectural/default decision changes;
 - preserve prior reasoning rather than rewriting history;
 - never rely on the chat UI as the only durable project record.
