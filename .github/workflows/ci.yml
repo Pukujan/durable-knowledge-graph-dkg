@@ -18,3 +18,18 @@ jobs:
         run: python -m pip install -e '.[test]'
       - name: Test
         run: pytest -q
+      - name: Post-Gate-2 production RAG research pack audit
+        run: |
+          git clone --quiet https://github.com/Pukujan/fossil-common.git .post-gate2-packs/common
+          git -C .post-gate2-packs/common checkout --quiet d583005dce06dbb499c3c0de5c22b899655eb8d2
+          git clone --quiet https://github.com/Pukujan/fossil-ai-systems.git .post-gate2-packs/ai-systems
+          git -C .post-gate2-packs/ai-systems checkout --quiet 10627d9a376a6af8d50406333609227487197134
+          python - <<'PY'
+          from pathlib import Path
+          from dkg.pack_fixture import validate_pack_fixtures
+
+          roots = [Path('.post-gate2-packs/common'), Path('.post-gate2-packs/ai-systems')]
+          report = validate_pack_fixtures(roots, schemas_root=Path('schemas'))
+          print(report)
+          print('post-Gate-2 research pack audit: PASS')
+          PY
