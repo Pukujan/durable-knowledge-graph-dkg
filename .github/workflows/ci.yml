@@ -19,9 +19,9 @@ jobs:
       - name: Test
         run: pytest -q
 
-  # Temporary Issue #10 execution hook. Remove after the proof PR completes.
+  # Temporary Issue #10 execution hook. Remove after the proof completes.
   live-redaction:
-    if: github.event_name == 'pull_request' && github.head_ref == 'agent/issue10-live-redaction-exec'
+    if: ${{ github.event_name == 'pull_request' && (github.head_ref == 'agent/issue10-live-redaction-exec' || github.head_ref == 'agent/issue10-final-contract-ci-probe') }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     services:
