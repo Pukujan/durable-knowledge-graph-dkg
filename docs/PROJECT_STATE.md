@@ -2,8 +2,8 @@
 
 **Project:** **FOSSIL — Fault-tolerant Open Semantic Store for Intellectual Lineage**  
 **Durable substrate:** **DICS — Durable Intellectual Corpus System**  
-**Completed:** **Milestone 0 / Gate 1; Gate 2**  
-**Active work:** **Issue #48 — production RAG hardening and evidence-driven retrieval evolution**  
+**Completed:** **Milestone 0 / Gate 1; Gate 2; Issue #48 research ingestion; Issue #48 Workstream A**  
+**Active work:** **Issue #48 Workstream B — end-to-end answer/citation/abstention evaluation**  
 **Related workstream:** **Issue #47 — embedding/reranker/model-scale bakeoff**  
 **Control plane:** GitHub issues + durable repository docs  
 **Last updated:** 2026-08-10
@@ -21,12 +21,13 @@ Repository/database/graph placement is physical placement, not knowledge identit
 1. `AGENTS.md`
 2. `ARCHITECTURE.md`
 3. `docs/HANDOFF_CURRENT.md`
-4. this file
-5. `docs/research/2026-08-10-production-rag-hardening-research-trace.md`
-6. Issue #48
-7. Issue #47
-8. `docs/DECISION_LOG.md`
-9. completed Gate 2 proof/policy docs under `docs/implementation/`
+4. `docs/handoffs/2026-08-10-chatgpt-session-handoff-post-temporal-benchmark.md`
+5. this file
+6. `docs/research/2026-08-10-production-rag-hardening-research-trace.md`
+7. Issue #48
+8. Issue #47
+9. `docs/DECISION_LOG.md`
+10. completed proof/policy docs under `docs/implementation/`
 
 The chat UI is source material, not the control plane.
 
@@ -52,8 +53,8 @@ Gate 2 control #33 and children #34–#37 are closed/completed.
 
 Evidence anchors:
 
-- Gate 2A real history-rich corpus core commit `a028f9e328c2cbcde0185930e90b5eeb4c4efcb8`;
-- Gate 2B real retrieval/context adapters core commit `2affde923acf196319d90bfa63f206e4a5e2f25f`;
+- Gate 2A core commit `a028f9e328c2cbcde0185930e90b5eeb4c4efcb8`;
+- Gate 2B core commit `2affde923acf196319d90bfa63f206e4a5e2f25f`;
 - Gate 2C PR #44 / squash `38aac6325cdb5b738c8a6ac5e55959affb3acfb5`;
 - Gate 2C final CI run `31366259213`, job `93385174741` — **86 passed in 1.25s**;
 - semantic proof run `31364039745`, artifact `9053475462`, digest `sha256:23c95b46f47cec5a16e0a8c0926a4f13532f283d8f4fbcc0de12ceb63db63c41`;
@@ -81,24 +82,78 @@ Research basis:
 
 `docs/research/2026-08-10-production-rag-hardening-research-trace.md`
 
-The current external review covers version-aware/temporal RAG, answer/citation/refusal evaluation, uncertainty under retrieval noise, adaptive routing, hybrid+rereanking, poisoning attacks, simple long-context baselines, contextual retrieval, and observable agentic retrieval.
+The campaign conclusion remains **harden, do not redesign the durable core**.
 
-The conclusion is **harden, do not redesign the durable core**.
+### Workstream state
 
-### Workstream order
+1. **A — evolving-corpus temporal/update benchmark: COMPLETE**
+2. **B — end-to-end answer/citation/unsupported-claim/abstention evaluation: ACTIVE NEXT**
+3. **C — poisoning/untrusted-context adversarial suite: pending**
+4. **F — replayable query execution receipt: pending**
+5. **D / #47 — embedding/hybrid/reranker/model bakeoff: pending provider-backed comparison**
+6. **E — conservative adaptive routing: pending evidence**
+7. **G — ACL/redaction propagation readiness: pending**
+8. final retrieval-policy/decision-log/residual-risk reconciliation: pending
 
-1. evolving-corpus temporal/update benchmark;
-2. end-to-end answer/citation/unsupported-claim/abstention evaluation;
-3. poisoning/untrusted-context adversarial suite;
-4. replayable query execution receipt;
-5. #47 embedding/hybrid/reranker bakeoff;
-6. conservative adaptive routing if it earns a matched-baseline win;
-7. ACL/redaction propagation readiness before multi-user/shared/cloud use.
+### Workstream A — landed evidence
 
-### New hardening principles under test
+Core PR #54 / squash:
+
+`e14148f504702ae9e708e2d58add4ee5c91bc8de`
+
+Final CI:
+
+- run `31431210018`;
+- job `93594807498`;
+- **88 passed in 0.99s**.
+
+The implementation adds:
+
+- historical/as-of durable-event replay for pack search projections;
+- reusable phased temporal benchmark machinery;
+- a versioned real-corpus benchmark plan;
+- exact Git pin verification in the runner;
+- deterministic lifecycle/current/history tests;
+- durable proof at `docs/implementation/2026-08-10-post-gate2-temporal-benchmark-proof.md`.
+
+Execution-only proof PR #55 ran the exact plan against:
+
+- `fossil-common@d583005dce06dbb499c3c0de5c22b899655eb8d2`;
+- `fossil-ai-systems@84accd2ee895663990e82ca5b79b592cb503db24`.
+
+Proof run `31431113829`, job `93594491275`:
+
+- **88 tests passed in 0.84s**;
+- temporal benchmark **PASS** across three phases;
+- former SQLite premise changed `supported -> superseded`;
+- its dependent prototype changed `supported -> stale_pending_review`;
+- accepted durable-core claim remained `supported`;
+- current and historical queries were rank 1 / recall@5 1.0;
+- after projected corpus growth from 13 to 27 documents, both repeated queries remained rank 1 / recall@5 1.0 with no current-state leakage;
+- projection rebuilds were roughly 23.68–25.28 ms on that runner.
+
+The timing observations are baseline measurements, not evidence to replace D021.
+
+Issue #48 now has all four Workstream A checklist items checked and the `Evolving-corpus benchmark committed` exit criterion checked.
+
+### Workstream B — exact next target
+
+Extend evaluation above retrieval to answer-level reliability. The first committed baseline should be provider-independent and should measure:
+
+- final-answer correctness;
+- citation/source-snapshot/span correctness;
+- unsupported-claim rate;
+- answer completeness;
+- contradiction handling;
+- explicit insufficient/conflicting/unresolved outcomes;
+- appropriate abstention/calibration.
+
+Use deterministic/direct-source/read paths and existing `ModelService` / `VerificationService` contracts first. Hosted/frontier models may later be evaluated behind those interfaces; they should not become correctness dependencies.
+
+### Hardening principles under test
 
 - retrieved/source text is untrusted data, not executable policy;
-- uncertainty/abstention should be explicit answer behavior when evidence is insufficient/conflicting/unresolved;
+- uncertainty/abstention is explicit answer behavior when evidence is insufficient/conflicting/unresolved;
 - simple direct-source/read and fixed retrieval baselines remain mandatory competitors;
 - a reranker can improve candidate ordering but cannot decide lifecycle truth;
 - adaptive planners must expose route/execution metadata and earn their cost/complexity;
@@ -108,7 +163,7 @@ These are campaign hypotheses/requirements, not silent changes to `ARCHITECTURE.
 
 ## Research-to-corpus state
 
-The 2026-08-10 production-RAG research synthesis has been ingested into `fossil-ai-systems` as a **local derived research artifact** with stable artifact/source identity, exact citations, deterministic event identity, and claim provenance.
+The 2026-08-10 production-RAG research synthesis is ingested into `fossil-ai-systems` as a **local derived research artifact** with stable artifact/source identity, exact citations, deterministic event identity, and claim provenance.
 
 Exact landed pack state:
 
@@ -121,15 +176,13 @@ Exact landed pack state:
 
 Cross-pack validation proof ran in execution-only core PR #51, workflow `31415053398`, job `93541977670`: **86 core tests passed** and `PackFixtureAudit` reported **6 artifacts, 6 snapshots, 51 events, 47 citations, 23 claims, 4 relations — PASS**.
 
-The first Issue #48 research-trace/corpus-ingestion milestone is complete. The active continuation is the evolving-corpus / temporal benchmark.
-
 Original external papers and production documentation must still be captured as distinct source snapshots when full research-source ingestion is implemented. The synthesis or chat transcript must not be presented as verbatim external evidence.
 
 ## Cognitive-service posture
 
 Current approved retrieval profile remains D021 until new committed benchmark evidence says otherwise.
 
-Existing replaceable service contracts already include:
+Existing replaceable service contracts include:
 
 - `Retriever`;
 - `EmbeddingProvider`;
@@ -138,7 +191,7 @@ Existing replaceable service contracts already include:
 - `ModelService`;
 - `VerificationService`.
 
-This allows #48/#47 to test new embeddings, rerankers, routing/context strategies, and model services without coupling canonical knowledge to them.
+This allows later #48/#47 work to test new embeddings, rerankers, routing/context strategies, and model services without coupling canonical knowledge to them.
 
 ## Frozen invariants
 
@@ -164,4 +217,4 @@ This allows #48/#47 to test new embeddings, rerankers, routing/context strategie
 
 `.github/workflows/graphiti-live.yml` contains reusable live materialization plus redaction/non-resurrection smoke coverage.
 
-Gate 2 temporary proof workflows were removed before landing. Issue #48 is the active campaign; do not extend closed Gate 2 issues to implement it. Execution-only PR #51 was closed without merge after proving the current research corpus seed.
+Execution-only PRs #51 and #55 were closed without merge after their proofs. Issue #48 remains active; do not extend closed Gate 2 issues to implement it.
