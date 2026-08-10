@@ -42,6 +42,7 @@ jobs:
         with:
           name: post-gate2-retrieval-bakeoff-proof
           path: .retrieval-bakeoff-proof/
+          include-hidden-files: true
           if-no-files-found: error
 
   summarize:
