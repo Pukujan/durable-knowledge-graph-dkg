@@ -12,12 +12,31 @@ Read, in order:
 1. `AGENTS.md`
 2. `ARCHITECTURE.md`
 3. this file
-4. `docs/PROJECT_STATE.md`
-5. `docs/research/2026-08-10-production-rag-hardening-research-trace.md`
-6. Issue #48 — production RAG hardening campaign
-7. Issue #47 — future embedding/reranker/model-scale bakeoff workstream
-8. `docs/handoffs/2026-08-10-chatgpt-session-handoff-gate2-complete.md` when Gate 2 history is needed
-9. `docs/DECISION_LOG.md`
+4. `docs/handoffs/2026-08-10-chatgpt-session-handoff-post-gate2-rag-hardening-midpoint.md`
+5. `docs/PROJECT_STATE.md`
+6. `docs/research/2026-08-10-production-rag-hardening-research-trace.md`
+7. Issue #48 — production RAG hardening campaign
+8. Issue #47 — future embedding/reranker/model-scale bakeoff workstream
+9. `docs/handoffs/2026-08-10-chatgpt-session-handoff-gate2-complete.md` when Gate 2 history is needed
+10. `docs/DECISION_LOG.md`
+
+## Exact active continuation point
+
+PR #49 has already landed the post-Gate-2 production-RAG research trace and activated Issue #48. The unfinished task is **research-to-corpus ingestion** into `Pukujan/fossil-ai-systems`.
+
+Continue only from:
+
+`agent/post-gate2-rag-research-seed-v2`
+
+Latest verified v2 head at handoff time:
+
+`10627d9a376a6af8d50406333609227487197134`
+
+Do **not** merge/use the abandoned first attempt:
+
+`agent/post-gate2-rag-research-seed`
+
+The v2 branch already contains the content-addressed research artifact, deterministic source snapshot, six exact-citation claim pairs, and artifact index update, but **the full cross-pack `validate_pack_fixtures` audit has not yet been run**. Do not call ingestion complete or merge the v2 branch until that audit passes. The detailed handoff above contains the exact validation/resume steps.
 
 ## Completed foundation
 
@@ -46,11 +65,17 @@ BGE dense was selected because it was the only compared Gate 2 strategy with zer
 
 ## Active campaign — #48 production RAG hardening
 
-Issue #48 is the first explicit post-Gate-2 campaign. It was created from a new review of current production RAG systems and 2025–2026 research.
+Issue #48 is the first explicit post-Gate-2 campaign. It was created from a review of current production RAG systems and 2025–2026 research.
 
 Durable research trace:
 
 `docs/research/2026-08-10-production-rag-hardening-research-trace.md`
+
+Research/campaign activation landed in PR #49 / merge commit:
+
+`6799b2db743d91b004b1e16b5129285a582f8847`
+
+PR #49 CI: run `31395512960`, job `93477303856`, **86 passed in 0.96s**.
 
 The campaign focuses on:
 
@@ -70,11 +95,13 @@ The 2026-08-10 synthesis is a **local derived research artifact**. It may be ing
 
 The external papers/vendor pages must remain distinguishable from this synthesis. When full research-trace ingestion is implemented, capture original external source snapshots separately rather than treating the synthesis or a chat transcript as verbatim external evidence.
 
-## Repository control state at campaign start
+## Repository control state
 
 - #33–#37 — closed/completed Gate 2 campaign;
 - #47 — open future embedding/model-scale bakeoff workstream;
-- #48 — open active production RAG hardening campaign.
+- #48 — open active production RAG hardening campaign;
+- PR #49 — merged production-RAG research/campaign activation;
+- AI-systems v2 research corpus seed — branch exists, validation/PR/merge still pending.
 
 ## Frozen invariants
 
@@ -87,4 +114,4 @@ Canonical truth remains durable evidence + stable identity + append-only validat
 
 ## Suggested next-session prompt
 
-> Continue my FOSSIL project from `Pukujan/fossil-core`. Read `AGENTS.md`, `ARCHITECTURE.md`, `docs/HANDOFF_CURRENT.md`, `docs/PROJECT_STATE.md`, and `docs/research/2026-08-10-production-rag-hardening-research-trace.md` first. Verify GitHub state before changing anything. Gate 1 and Gate 2 are completed campaigns. Continue active Issue #48 using evidence-driven hardening; keep Issue #47 as its embedding/reranker candidate workstream. Preserve stable pack IDs and D021 unless new committed benchmark evidence justifies reconsideration. Do not let retrieval rank, a reranker, a planner, a model, or a graph projection become canonical truth.
+> Continue FOSSIL from the post-Gate-2 RAG hardening midpoint. Read `AGENTS.md`, `ARCHITECTURE.md`, `docs/HANDOFF_CURRENT.md`, and `docs/handoffs/2026-08-10-chatgpt-session-handoff-post-gate2-rag-hardening-midpoint.md` first. Verify GitHub state. PR #49 / core commit `6799b2db743d91b004b1e16b5129285a582f8847` already landed the research trace and activated Issue #48. Resume the unfinished research-to-corpus ingestion from `Pukujan/fossil-ai-systems` branch `agent/post-gate2-rag-research-seed-v2` at `10627d9a376a6af8d50406333609227487197134` or its known descendant. Do not merge or use the abandoned `agent/post-gate2-rag-research-seed` branch. First run `validate_pack_fixtures` jointly over `fossil-common` and the v2 AI-systems branch; only after that audit passes should you open/merge the AI-systems PR and update Issue #48. Preserve stable pack IDs and D021 unless new committed benchmark evidence justifies reconsideration.
