@@ -1,0 +1,256 @@
+{
+  "benchmark_id": "bench_0f38e1889dbbe45ff7b50c3d",
+  "case_count": 21,
+  "environment": {
+    "platform": "Linux-6.17.0-1020-azure-x86_64-with-glibc2.39",
+    "python": "3.12.13"
+  },
+  "kind": "retrieval",
+  "metrics": {
+    "estimated_cost_usd": 0.0,
+    "failure_rate_by_category": {
+      "contradiction-disagreement": 0.0,
+      "conversation-lineage": 0.0,
+      "cross-pack-isolation": 0.0,
+      "current-vs-historical": 0.5,
+      "decision-lineage": 0.0,
+      "exact-factual-lookup": 0.0,
+      "insufficient-evidence": 0.0,
+      "obscure-deep-evidence": 0.0,
+      "source-citation-recovery": 0.0,
+      "stale-superseded": 0.0
+    },
+    "hit_rate": 0.9523809523809523,
+    "limit": 5,
+    "mean_latency_ms": 3.2873362380991282,
+    "mean_recall_at_k": 0.9523809523809523,
+    "mrr": 0.8174603174603176,
+    "p95_latency_ms": 4.560060000017074,
+    "peak_python_alloc_bytes": 51559
+  },
+  "observations": [
+    {
+      "case_id": "source_quality_claim_specific",
+      "category": "source-citation-recovery",
+      "failed": false,
+      "latency_ms": 1.0439050000172756,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "relevant_ids": ["clm_32f20bd13ce2ffc9d2ac1606"],
+      "returned_ids": ["clm_32f20bd13ce2ffc9d2ac1606", "clm_041fdd3cc6542b6dca47b183", "clm_7fee179225b3ef0c4d413917"]
+    },
+    {
+      "case_id": "model_agreement_not_evidence",
+      "category": "insufficient-evidence",
+      "failed": false,
+      "latency_ms": 0.8902170000055776,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "relevant_ids": ["clm_7fee179225b3ef0c4d413917"],
+      "returned_ids": ["clm_7fee179225b3ef0c4d413917", "clm_32f20bd13ce2ffc9d2ac1606", "clm_041fdd3cc6542b6dca47b183"]
+    },
+    {
+      "case_id": "insufficient_evidence_keeps_uncertainty",
+      "category": "insufficient-evidence",
+      "failed": false,
+      "latency_ms": 0.7845899999665562,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "relevant_ids": ["clm_041fdd3cc6542b6dca47b183"],
+      "returned_ids": ["clm_041fdd3cc6542b6dca47b183", "clm_7fee179225b3ef0c4d413917", "clm_32f20bd13ce2ffc9d2ac1606"]
+    },
+    {
+      "case_id": "gate1_controls_not_winners",
+      "category": "exact-factual-lookup",
+      "failed": false,
+      "latency_ms": 4.152015999977721,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "relevant_ids": ["clm_6542963629260bde4e67d660"],
+      "returned_ids": ["clm_6542963629260bde4e67d660", "clm_677f372218d173f32ab6cb30", "clm_76c6bead3d10df4ca7de8af4", "clm_a047d79b8604fadbd44efdf4", "rel_0996c7d4b845cf3a3fc6bdf8"]
+    },
+    {
+      "case_id": "fresh_build_scoped_ledger",
+      "category": "obscure-deep-evidence",
+      "failed": false,
+      "latency_ms": 3.5690440000166745,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "relevant_ids": ["clm_62b7f9c6184b14371338ca36"],
+      "returned_ids": ["clm_62b7f9c6184b14371338ca36", "clm_76c6bead3d10df4ca7de8af4", "clm_f69dd23d961d485db1c53f0b", "rel_c0e74317e7ff1ee59461b036", "clm_bdf2ed41fb11e6b1808d3df4"]
+    },
+    {
+      "case_id": "candidate_authority_cross_pack_dependency",
+      "category": "cross-pack-isolation",
+      "failed": false,
+      "latency_ms": 4.694082000014532,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "relevant_ids": ["rel_04b8861fde6b22abcae58ef4"],
+      "returned_ids": ["rel_04b8861fde6b22abcae58ef4", "clm_1ca1ee32e949eccdea16beb9", "clm_7fee179225b3ef0c4d413917", "rel_e0102ade0b5fad5cc2668ccd", "rel_0996c7d4b845cf3a3fc6bdf8"]
+    },
+    {
+      "case_id": "current_architecture_after_reconsideration",
+      "category": "current-vs-historical",
+      "failed": true,
+      "latency_ms": 3.6510980000343807,
+      "recall_at_k": 0.0,
+      "reciprocal_rank": 0.0,
+      "relevant_ids": ["clm_7f5c691c564c30e1b61f8dc0"],
+      "returned_ids": ["clm_a047d79b8604fadbd44efdf4", "clm_bdf2ed41fb11e6b1808d3df4", "rel_0996c7d4b845cf3a3fc6bdf8", "clm_1f4c5f053bd7dccac79c301c", "rel_c0e74317e7ff1ee59461b036"]
+    },
+    {
+      "case_id": "former_sqlite_canonical_history",
+      "category": "current-vs-historical",
+      "failed": false,
+      "latency_ms": 2.7488580000181173,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 0.5,
+      "relevant_ids": ["clm_643b698b7e9e6aee6a16c48c"],
+      "returned_ids": ["rel_0996c7d4b845cf3a3fc6bdf8", "clm_643b698b7e9e6aee6a16c48c", "clm_a047d79b8604fadbd44efdf4", "clm_677f372218d173f32ab6cb30", "rel_e0102ade0b5fad5cc2668ccd"]
+    },
+    {
+      "case_id": "sqlite_supersession_lineage",
+      "category": "decision-lineage",
+      "failed": false,
+      "latency_ms": 3.9076580000028116,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 0.3333333333333333,
+      "relevant_ids": ["rel_e0102ade0b5fad5cc2668ccd"],
+      "returned_ids": ["rel_0996c7d4b845cf3a3fc6bdf8", "clm_a047d79b8604fadbd44efdf4", "rel_e0102ade0b5fad5cc2668ccd", "clm_643b698b7e9e6aee6a16c48c", "rel_c0e74317e7ff1ee59461b036"]
+    },
+    {
+      "case_id": "sqlite_dependent_staleness",
+      "category": "stale-superseded",
+      "failed": false,
+      "latency_ms": 4.265818999954263,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 0.5,
+      "relevant_ids": ["clm_a047d79b8604fadbd44efdf4"],
+      "returned_ids": ["rel_0996c7d4b845cf3a3fc6bdf8", "clm_a047d79b8604fadbd44efdf4", "clm_643b698b7e9e6aee6a16c48c", "rel_e0102ade0b5fad5cc2668ccd", "clm_1f4c5f053bd7dccac79c301c"]
+    },
+    {
+      "case_id": "graph_canonical_rejected",
+      "category": "contradiction-disagreement",
+      "failed": false,
+      "latency_ms": 3.550941000014518,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "relevant_ids": ["clm_bdf2ed41fb11e6b1808d3df4"],
+      "returned_ids": ["clm_bdf2ed41fb11e6b1808d3df4", "rel_c0e74317e7ff1ee59461b036", "clm_76c6bead3d10df4ca7de8af4", "clm_643b698b7e9e6aee6a16c48c", "rel_0996c7d4b845cf3a3fc6bdf8"]
+    },
+    {
+      "case_id": "graphiti_current_role",
+      "category": "exact-factual-lookup",
+      "failed": false,
+      "latency_ms": 3.5009960000138562,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "relevant_ids": ["clm_f69dd23d961d485db1c53f0b"],
+      "returned_ids": ["clm_f69dd23d961d485db1c53f0b", "rel_c0e74317e7ff1ee59461b036", "clm_7f5c691c564c30e1b61f8dc0", "rel_e0102ade0b5fad5cc2668ccd", "clm_bdf2ed41fb11e6b1808d3df4"]
+    },
+    {
+      "case_id": "graph_disagreement_relation",
+      "category": "contradiction-disagreement",
+      "failed": false,
+      "latency_ms": 3.4259060000181307,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "relevant_ids": ["rel_c0e74317e7ff1ee59461b036"],
+      "returned_ids": ["rel_c0e74317e7ff1ee59461b036", "clm_f69dd23d961d485db1c53f0b", "clm_bdf2ed41fb11e6b1808d3df4", "rel_e0102ade0b5fad5cc2668ccd", "rel_0996c7d4b845cf3a3fc6bdf8"]
+    },
+    {
+      "case_id": "logical_packs_over_physical_shards",
+      "category": "obscure-deep-evidence",
+      "failed": false,
+      "latency_ms": 3.9166859999681947,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "relevant_ids": ["clm_783ff75008ce760e0a227fa9"],
+      "returned_ids": ["clm_783ff75008ce760e0a227fa9", "clm_677f372218d173f32ab6cb30", "clm_1f4c5f053bd7dccac79c301c", "clm_76c6bead3d10df4ca7de8af4", "clm_62b7f9c6184b14371338ca36"]
+    },
+    {
+      "case_id": "recovery_is_reconstructed",
+      "category": "conversation-lineage",
+      "failed": false,
+      "latency_ms": 4.560060000017074,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "relevant_ids": ["clm_fabdddf47e97cdd1876329fe"],
+      "returned_ids": ["clm_fabdddf47e97cdd1876329fe", "clm_841df02f01de69cafeb9c084", "clm_1f4c5f053bd7dccac79c301c", "clm_f69dd23d961d485db1c53f0b", "rel_c0e74317e7ff1ee59461b036"]
+    },
+    {
+      "case_id": "lost_chat_exact_wording_unavailable",
+      "category": "conversation-lineage",
+      "failed": false,
+      "latency_ms": 4.300675000024512,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "relevant_ids": ["clm_1f4c5f053bd7dccac79c301c"],
+      "returned_ids": ["clm_1f4c5f053bd7dccac79c301c", "clm_643b698b7e9e6aee6a16c48c", "clm_841df02f01de69cafeb9c084", "rel_0996c7d4b845cf3a3fc6bdf8", "rel_e0102ade0b5fad5cc2668ccd"]
+    },
+    {
+      "case_id": "do_not_invent_recovery_wording",
+      "category": "conversation-lineage",
+      "failed": false,
+      "latency_ms": 3.2009850000349616,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 0.5,
+      "relevant_ids": ["clm_841df02f01de69cafeb9c084"],
+      "returned_ids": ["clm_677f372218d173f32ab6cb30", "clm_841df02f01de69cafeb9c084", "clm_1f4c5f053bd7dccac79c301c", "clm_fabdddf47e97cdd1876329fe", "clm_1ca1ee32e949eccdea16beb9"]
+    },
+    {
+      "case_id": "later_primary_evidence_preferred",
+      "category": "conversation-lineage",
+      "failed": false,
+      "latency_ms": 4.426389999991898,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "relevant_ids": ["clm_677f372218d173f32ab6cb30"],
+      "returned_ids": ["clm_677f372218d173f32ab6cb30", "clm_62b7f9c6184b14371338ca36", "clm_fabdddf47e97cdd1876329fe"]
+    },
+    {
+      "case_id": "false_premise_quote_missing_chat",
+      "category": "conversation-lineage",
+      "failed": false,
+      "latency_ms": 3.980906000037976,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "relevant_ids": ["clm_1f4c5f053bd7dccac79c301c", "clm_841df02f01de69cafeb9c084"],
+      "returned_ids": ["clm_1f4c5f053bd7dccac79c301c", "clm_841df02f01de69cafeb9c084", "clm_fabdddf47e97cdd1876329fe", "clm_a047d79b8604fadbd44efdf4", "rel_0996c7d4b845cf3a3fc6bdf8"]
+    },
+    {
+      "case_id": "historical_current_supersession_bundle",
+      "category": "decision-lineage",
+      "failed": false,
+      "latency_ms": 3.5310029999777726,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 0.3333333333333333,
+      "relevant_ids": ["clm_643b698b7e9e6aee6a16c48c", "clm_7f5c691c564c30e1b61f8dc0", "rel_e0102ade0b5fad5cc2668ccd"],
+      "returned_ids": ["clm_a047d79b8604fadbd44efdf4", "rel_0996c7d4b845cf3a3fc6bdf8", "rel_e0102ade0b5fad5cc2668ccd", "clm_643b698b7e9e6aee6a16c48c", "clm_7f5c691c564c30e1b61f8dc0"]
+    },
+    {
+      "case_id": "common_mount_isolation",
+      "category": "cross-pack-isolation",
+      "failed": false,
+      "latency_ms": 0.9322259999748894,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "relevant_ids": ["clm_7fee179225b3ef0c4d413917"],
+      "returned_ids": ["clm_7fee179225b3ef0c4d413917", "clm_041fdd3cc6542b6dca47b183", "clm_32f20bd13ce2ffc9d2ac1606"]
+    }
+  ],
+  "recorded_at": "2026-08-10T06:52:07.978506+00:00",
+  "schema_version": "fossil.benchmark.v1",
+  "service": {
+    "estimated_cost_per_call_usd": 0.0,
+    "implementation": "bm25",
+    "implementation_version": "gate2-comparison-v1",
+    "kind": "retriever",
+    "local": true,
+    "model_id": null,
+    "provider": "fossil",
+    "provider_version": "1",
+    "runtime": {}
+  }
+}
