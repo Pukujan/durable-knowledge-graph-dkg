@@ -1,0 +1,102 @@
+{
+  "research_run_id": "research-agent-methodology-executor-options-20260811",
+  "schema_version": "1.0",
+  "started_at": "2026-08-11T19:20:00Z",
+  "ended_at": null,
+  "question": "How should AI-assisted projects surface missing engineering foundations before implementation, and what methodology/control/executor responsibilities should remain in Cortex V4 after evaluating established tooling?",
+  "scope": "External research plus repository-local evidence. Executor selection, final V4 boundary, and methodology adoption remain explicitly undecided.",
+  "initiated_by_refs": [
+    "github:Pukujan/fossil-core#84",
+    "conversation:chatgpt-2026-08-11-agent-methodology-executor-research"
+  ],
+  "actors": [
+    {
+      "actor_id": "owner:Pukujan",
+      "actor_type": "human"
+    },
+    {
+      "actor_id": "agent:chatgpt-gpt-5.6-sol",
+      "actor_type": "agent",
+      "provider": "OpenAI",
+      "model": "GPT-5.6 Sol"
+    }
+  ],
+  "search_queries": [
+    {
+      "query": "GitHub Spec Kit workflows pause resume fan-out fan-in",
+      "purpose": "Determine how much generic methodology/workflow machinery already exists outside V4."
+    },
+    {
+      "query": "OpenCode server sessions prompt_async provider OpenAI compatible",
+      "purpose": "Determine OpenCode's documented programmatic execution and provider boundary."
+    },
+    {
+      "query": "Aider architect mode scripting OpenAI compatible API",
+      "purpose": "Evaluate Aider as an alternative coding executor and cross-family architect/editor candidate."
+    },
+    {
+      "query": "OpenAI harness engineering progressive AGENTS repository knowledge",
+      "purpose": "Ground agent-harness and progressive-disclosure practices in primary source material."
+    }
+  ],
+  "source_refs": [
+    "https://github.com/github/spec-kit",
+    "https://github.com/github/spec-kit/blob/main/docs/reference/workflows.md",
+    "https://openai.com/index/harness-engineering/",
+    "https://sre.google/sre-book/evolving-sre-engagement-model/",
+    "https://dev.opencode.ai/docs/server/",
+    "https://dev.opencode.ai/docs/providers",
+    "https://aider.chat/docs/",
+    "https://aider.chat/docs/scripting.html",
+    "https://aider.chat/docs/usage/modes.html",
+    "https://aider.chat/docs/llms/openai-compat.html",
+    "repo:Pukujan/cortex-v4:cortex_v4/adapters/ssc_summon.py@cae783ad9cbd700e32f75ac040cc0f4c6ccf3c47",
+    "repo:Pukujan/cortex-v4:cortex_v4/adapters/ssc_dispatch.py@cae783ad9cbd700e32f75ac040cc0f4c6ccf3c47",
+    "repo:Pukujan/cortex-v4:scripts/run_v4_live_litellm.py@cae783ad9cbd700e32f75ac040cc0f4c6ccf3c47",
+    "repo:Pukujan/cortex-v4:docs/SUMMON-TOOLS-ABCD-REPLAY-2026-08-05.md@cae783ad9cbd700e32f75ac040cc0f4c6ccf3c47",
+    "github:Pukujan/litellm-ckff-ops#7",
+    "github:Pukujan/cortex-v4#10",
+    "github:Pukujan/fossil-core#78"
+  ],
+  "claim_refs": [
+    "claim:spec-kit-already-owns-substantial-generic-spec-workflow-primitives",
+    "claim:opencode-end-to-end-failure-not-yet-opencode-root-cause",
+    "claim:aider-is-openai-compatible-and-scriptable-but-python-api-unstable",
+    "claim:granularity-cannot-fix-empty-2xx-transport-defect",
+    "claim:granularity-may-help-other-recovery-and-diagnosability-failure-classes",
+    "claim:executor-must-remain-undecided-until-matched-bakeoff"
+  ],
+  "alternative_refs": [
+    "alternative:opencode-persistent-server",
+    "alternative:aider",
+    "alternative:direct-v4-tool-loop",
+    "alternative:spec-kit-workflow-agent-execution",
+    "alternative:other-executor-adapter"
+  ],
+  "critique_refs": [
+    "critique:do-not-equate-failed-end-to-end-opencode-path-with-opencode-unsuitability",
+    "critique:do-not-reimplement-generic-sdlc-workflow-in-v4-without-comparative-value",
+    "critique:do-not-assume-more-task-granularity-always-improves-reliability"
+  ],
+  "unresolved_question_refs": [
+    "unresolved:executor-selection",
+    "unresolved:v4-final-methodology-boundary",
+    "unresolved:spec-kit-vs-v4-workflow-boundary",
+    "unresolved:persistent-session-vs-small-idempotent-task-strategy",
+    "unresolved:monolithic-vs-granular-task-shape",
+    "unresolved:cross-family-aider-architect-editor-value"
+  ],
+  "decision_refs": [],
+  "implementation_refs": [
+    "github:Pukujan/fossil-core#84",
+    "github:Pukujan/litellm-ckff-ops#7",
+    "github:Pukujan/cortex-v4#10",
+    "github:Pukujan/fossil-core#78"
+  ],
+  "decision_state": "open",
+  "trace_refs": [
+    "docs/research/2026-08-11-agent-engineering-methodology-and-executor-options.md"
+  ],
+  "research_policy_version": "RESEARCH_TRACE_CONTRACT-2026-08-09",
+  "notes": "Research only. Do not update ARCHITECTURE.md or DECISION_LOG.md from this envelope without matched executor evidence and an explicit later decision."
+}
