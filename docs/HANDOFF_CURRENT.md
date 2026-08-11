@@ -1,5 +1,13 @@
 # Current Handoff
 
+## Issue #79 control-plane continuation
+
+Draft PR [#80](https://github.com/Pukujan/fossil-core/pull/80) adds the GitHub-hosted Tailscale workflows, fail-closed private service/inference probes, Langfuse synthetic-trace verification, ownership contract, and bootstrap runbook for `Pukujan/fossil-core#79`.
+
+Discovery confirmed local Codex can reach the remote Gravebuster host over Tailscale and found the Fossil source checkout there. No running Fossil health/API service or durable Fossil database endpoint was observed, and no separate Gravebuster GitHub source repository was identified. The live workflows are intentionally fail-closed until those facts are configured in GitHub variables/secrets and Tailscale ACL/trust policy.
+
+Validation: the new control-plane tests pass 12/12; the rest of the suite passes 120 tests when the unrelated retrieval-bakeoff test is excluded. GitHub CI also reports 120 passed and four pre-existing retrieval-bakeoff failures because `main` lacks `_route_eligibility`. Do not widen #79 to repair that separate Workstream-D baseline without a separate decision.
+
 **Date:** 2026-08-10  
 **Project:** **FOSSIL — Fault-tolerant Open Semantic Store for Intellectual Lineage**  
 **Repository:** `Pukujan/fossil-core`  

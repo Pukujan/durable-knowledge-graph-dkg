@@ -1,0 +1,59 @@
+name: Gravebuster private health
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "29 * * * *"
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: gravebuster-private-health
+  cancel-in-progress: false
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GRAVEBUSTER_TAILSCALE_HOST: ${{ vars.GRAVEBUSTER_TAILSCALE_HOST }}
+      GRAVEBUSTER_HEALTH_URL: ${{ vars.GRAVEBUSTER_HEALTH_URL }}
+      GRAVEBUSTER_HEALTH_JSON_KEY: ${{ vars.GRAVEBUSTER_HEALTH_JSON_KEY }}
+      GRAVEBUSTER_HEALTH_TOKEN: ${{ secrets.GRAVEBUSTER_HEALTH_TOKEN }}
+      GRAVEBUSTER_OTEL_HEALTH_URL: ${{ vars.GRAVEBUSTER_OTEL_HEALTH_URL }}
+      GRAVEBUSTER_OTEL_HEALTH_JSON_KEY: ${{ vars.GRAVEBUSTER_OTEL_HEALTH_JSON_KEY }}
+      GRAVEBUSTER_OTEL_HEALTH_TOKEN: ${{ secrets.GRAVEBUSTER_OTEL_HEALTH_TOKEN }}
+      GRAVEBUSTER_LANGFUSE_HEALTH_URL: ${{ vars.GRAVEBUSTER_LANGFUSE_HEALTH_URL }}
+      GRAVEBUSTER_LANGFUSE_HEALTH_JSON_KEY: ${{ vars.GRAVEBUSTER_LANGFUSE_HEALTH_JSON_KEY }}
+      GRAVEBUSTER_LANGFUSE_HEALTH_TOKEN: ${{ secrets.GRAVEBUSTER_LANGFUSE_HEALTH_TOKEN }}
+      GRAVEBUSTER_PROBE_OUTPUT_DIR: ${{ runner.temp }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate private endpoint configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$GRAVEBUSTER_TAILSCALE_HOST"
+          test -n "$GRAVEBUSTER_HEALTH_URL"
+
+      - name: Join tailnet ephemerally
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          ping: ${{ vars.GRAVEBUSTER_TAILSCALE_HOST }}
+
+      - name: Probe required Gravebuster service
+        run: bash scripts/probe-gravebuster.sh
+
+      - name: Upload sanitized probe evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gravebuster-private-health-${{ github.run_id }}
+          path: ${{ runner.temp }}/gravebuster-*-private-health.json
+          if-no-files-found: warn

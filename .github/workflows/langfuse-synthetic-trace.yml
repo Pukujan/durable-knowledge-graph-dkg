@@ -1,0 +1,51 @@
+name: Langfuse synthetic trace
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  trace:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      LANGFUSE_TAILSCALE_HOST: ${{ vars.LANGFUSE_TAILSCALE_HOST }}
+      LANGFUSE_BASE_URL: ${{ vars.LANGFUSE_BASE_URL }}
+      LANGFUSE_OTEL_PATH: ${{ vars.LANGFUSE_OTEL_PATH }}
+      LANGFUSE_OBSERVATIONS_PATH: ${{ vars.LANGFUSE_OBSERVATIONS_PATH }}
+      LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+      LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate private observability configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$LANGFUSE_TAILSCALE_HOST"
+          test -n "$LANGFUSE_BASE_URL"
+      - name: Join tailnet ephemerally
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          ping: ${{ vars.LANGFUSE_TAILSCALE_HOST }}
+      - name: Install trace exporter
+        run: python -m pip install opentelemetry-sdk opentelemetry-exporter-otlp-proto-http
+      - name: Emit and verify one synthetic trace
+        run: |
+          python scripts/emit_langfuse_trace.py \
+            --base-url "$LANGFUSE_BASE_URL" \
+            --otel-path "${LANGFUSE_OTEL_PATH:-/api/public/otel}" \
+            --observations-path "${LANGFUSE_OBSERVATIONS_PATH:-/api/public/observations}" \
+            --output "$RUNNER_TEMP/langfuse-synthetic-trace.json"
+      - name: Upload sanitized trace evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: langfuse-synthetic-trace-${{ github.run_id }}
+          path: ${{ runner.temp }}/langfuse-synthetic-trace.json
+          if-no-files-found: warn
