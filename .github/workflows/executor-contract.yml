@@ -1,0 +1,30 @@
+name: Persistent executor contract
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - agent/opencode-persistent-path-20260811
+    paths:
+      - "contracts/executor/**"
+      - "scripts/validate_executor_contract.py"
+      - ".github/workflows/executor-contract.yml"
+  pull_request:
+    paths:
+      - "contracts/executor/**"
+      - "scripts/validate_executor_contract.py"
+      - ".github/workflows/executor-contract.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: python scripts/validate_executor_contract.py
