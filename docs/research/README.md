@@ -2,6 +2,20 @@
 
 This directory is the durable research record behind the architecture. It exists so future sessions do not have to rediscover why decisions were made.
 
+## Open research — not architecture authority
+
+### Agent engineering methodology and executor options — 2026-08-11
+
+`2026-08-11-agent-engineering-methodology-and-executor-options.md`
+
+**Status: OPEN / UNDECIDED.** This trace preserves the current research on AI engineering preflight, GitHub Spec Kit, OpenAI harness engineering, Google production-readiness patterns, OpenCode, Aider, V4/SSC summon history, task granularity, and the unresolved executor boundary. It intentionally does **not** update `ARCHITECTURE.md` or `docs/DECISION_LOG.md`.
+
+Research envelope:
+
+- `examples/research-trace/2026-08-11-agent-methodology-executor-options.json`
+
+Use this trace when another session needs to reconstruct why execution is currently treated as an executor bakeoff rather than an OpenCode/Aider/V4 conclusion.
+
 ## Frozen research set
 
 ### Final synthesis
