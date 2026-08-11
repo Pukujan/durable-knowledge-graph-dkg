@@ -3,7 +3,7 @@
 **Date:** 2026-08-10  
 **Project:** **FOSSIL — Fault-tolerant Open Semantic Store for Intellectual Lineage**  
 **Repository:** `Pukujan/fossil-core`  
-**Status:** **Gate 1 complete. Gate 2 complete/formally closed. Post-Gate-2 campaign #48 active. Workstreams A/B/C/F complete. Workstream D stage 1 complete. D stage 2 is active next. Cortex↔FOSSIL ownership boundary is now explicitly documented; legacy `stupidly-simple-cortex` is being retired as a live memory/runtime authority while its evaluation estate is preserved separately.**
+**Status:** **Gate 1 complete. Gate 2 complete/formally closed. Post-Gate-2 campaign #48 active. Workstreams A/B/C/F complete. Workstream D stage 1 complete. D stage 2 is active next. Cortex↔FOSSIL ownership boundary is explicitly documented; legacy `stupidly-simple-cortex` is being retired as a live memory/runtime authority while its evaluation estate and engineering lessons are preserved separately.**
 
 ## Fresh-session transfer
 
@@ -13,17 +13,21 @@ Read, in order:
 2. `ARCHITECTURE.md`
 3. this file
 4. `docs/architecture/2026-08-10-cortex-fossil-ownership-boundary.md`
-5. `docs/research/2026-08-10-legacy-ssc-evaluation-estate-inventory.md`
-6. `docs/handoffs/2026-08-10-chatgpt-session-handoff-post-retrieval-bakeoff-stage1.md`
-7. `docs/PROJECT_STATE.md`
-8. `docs/implementation/2026-08-10-post-gate2-retrieval-bakeoff-stage1-proof.md`
-9. `docs/implementation/2026-08-10-post-gate2-query-execution-receipt-proof.md`
-10. `docs/implementation/2026-08-10-post-gate2-retrieval-poisoning-proof.md`
-11. `docs/implementation/2026-08-10-post-gate2-answer-reliability-proof.md`
-12. `docs/operations/LITELLM-GATEWAY.md`
-13. Issue #48 — active production RAG hardening campaign
-14. Issue #47 — active Workstream D retrieval/reranking/model bakeoff
-15. `docs/DECISION_LOG.md`
+5. `docs/architecture/2026-08-10-context-construction-compression-boundary.md`
+6. `docs/research/2026-08-10-legacy-ssc-engineering-retrospective.md`
+7. `docs/research/2026-08-10-legacy-ssc-evaluation-estate-inventory.md`
+8. `docs/research/2026-08-10-legacy-eval-estate-deduplication-policy.md`
+9. `docs/handoffs/2026-08-10-chatgpt-session-handoff-post-retrieval-bakeoff-stage1.md`
+10. `docs/PROJECT_STATE.md`
+11. `docs/implementation/2026-08-10-post-gate2-retrieval-bakeoff-stage1-proof.md`
+12. `docs/implementation/2026-08-10-post-gate2-query-execution-receipt-proof.md`
+13. `docs/implementation/2026-08-10-post-gate2-retrieval-poisoning-proof.md`
+14. `docs/implementation/2026-08-10-post-gate2-answer-reliability-proof.md`
+15. `docs/operations/LITELLM-GATEWAY.md`
+16. Issue #73 — master integration tracker
+17. Issue #48 — active production RAG hardening campaign
+18. Issue #47 — active Workstream D retrieval/reranking/model bakeoff
+19. `docs/DECISION_LOG.md`
 
 Verify GitHub state before changing anything.
 
@@ -38,6 +42,8 @@ Do not redo:
 - Workstream C — retrieval poisoning/untrusted context;
 - Workstream F — query execution receipts;
 - Workstream D stage 1 — incumbent/hybrid/real-reranker matched bakeoff.
+
+Do not treat old SSC research, ontology, current-state conclusions, or runtime components as current FOSSIL/Cortex authority. The historical retrospective exists to preserve lessons and failed experiments without reintroducing the monolith.
 
 ## Workstream D stage 1 — complete
 
@@ -117,7 +123,7 @@ Do not automatically progress to Qwen 4B or 8B. The preceding result and resourc
 
 ## Cortex ↔ FOSSIL ownership boundary
 
-The durable boundary is now:
+The durable boundary is:
 
 > **Cortex owns execution. FOSSIL owns knowledge. FOSSIL projections retrieve knowledge. Infrastructure runs the components. Models propose; deterministic gates commit.**
 
@@ -133,9 +139,10 @@ See `docs/architecture/2026-08-10-cortex-fossil-ownership-boundary.md` for the f
 - task classification and executable methodology selection;
 - preflight/tool/risk gates;
 - model/worker dispatch;
-- retry/decomposition/fan-out/merge strategy;
-- context-window/resource budgets;
-- compression/decomposition decisions;
+- retry/fan-out/merge strategy;
+- task-level context-window/resource budget;
+- the decision to direct-read, request bounded context, decompose, or escalate;
+- compression of Cortex-owned operational/session notes;
 - operational checkpoints/closeouts.
 
 ### FOSSIL owns
@@ -151,9 +158,10 @@ See `docs/architecture/2026-08-10-cortex-fossil-ownership-boundary.md` for the f
 - exact citations;
 - redaction/suppression;
 - proposal validation and durable commit;
-- corpus retrieval semantics and rebuildable graph/vector/lexical projections.
+- corpus retrieval semantics and rebuildable graph/vector/lexical projections;
+- evidence-safe context construction/compression of FOSSIL-sourced material through `ContextProvider`.
 
-Prevent double routing: Cortex provides task intent, pack scope, risk/resource/context constraints; FOSSIL executes the approved retrieval/lifecycle/lineage/citation semantics. Cortex must not bypass FOSSIL by querying a graph/vector index and treating that result as knowledge authority.
+Prevent double routing: Cortex provides task intent, pack scope, risk/resource/context constraints; FOSSIL executes the approved retrieval/lifecycle/lineage/citation/context-construction semantics. Cortex must not bypass FOSSIL by querying a graph/vector index and treating that result as knowledge authority.
 
 ## Gravebuster + local-PC deployment
 
@@ -175,23 +183,29 @@ Hosting does not confer semantic authority. Stable IDs and pack identity remain 
 
 A future multi-writer topology requires a separate concurrency/consensus decision and proof.
 
-## Compression boundary
+## Compression/context-construction boundary
 
-Cortex owns model-context budgeting and the decision to compress/direct-read/decompose.
+Cortex owns the task-level context budget and chooses among direct read, bounded context construction, larger-context execution, decomposition, and escalation.
 
-FOSSIL owns the exact evidence/stable identities that compression is forbidden to corrupt.
+FOSSIL `ContextProvider` owns evidence-safe context construction/compression for FOSSIL-sourced material because ACLs, redaction, stable IDs, exact citation spans, lifecycle, and lineage must remain enforceable through the transformation.
 
 Required rules:
 
+- **filter first, compress second**;
 - summaries never replace source evidence;
 - protected citation/source/claim identities survive verbatim where required;
 - numbers/code identifiers/provenance IDs may be protected spans;
+- source→compressed mapping and a preservation report are required for lossy/structured transformations;
 - compressed packets remain temporary untrusted context;
 - required-span loss fails closed;
-- if safe compression cannot meet budget, raise budget/direct-read/decompose instead of silent destructive compression;
-- a durable summary is a new derived proposal with provenance, never replacement evidence.
+- if safe context construction cannot meet budget, Cortex raises budget/direct-reads/decomposes instead of silently dropping evidence;
+- a durable summary is a new derived proposal with provenance, never replacement evidence;
+- uncompressed retrieve-then-read and selection-only baselines remain mandatory in the benchmark;
+- any lossy compressor must earn itself under matched answer/citation/security/resource evidence.
 
-The legacy SSC protected-span compressor is prior art only, not a live dependency.
+The legacy SSC protected-span/deep-audit research is historical prior art only, not a live dependency or current evidence for accepting compression.
+
+See `docs/architecture/2026-08-10-context-construction-compression-boundary.md`.
 
 ## Legacy `stupidly-simple-cortex` retirement
 
@@ -206,7 +220,33 @@ Do **not** import the following as FOSSIL truth:
 - old task/project state;
 - model consensus/judge conclusions.
 
-Old SSC research prose can remain historical/unverified source material for manual discovery, but no automatic ingestion into normal FOSSIL knowledge is required.
+Old SSC research prose can remain historical/unverified source material for project archaeology, but no automatic ingestion into normal FOSSIL knowledge is required.
+
+## Legacy SSC engineering retrospective — preserve lessons, not components
+
+Historical research and reviews have now been explicitly preserved in:
+
+`docs/research/2026-08-10-legacy-ssc-engineering-retrospective.md`
+
+The retrospective records useful methodology and failure evidence without authorizing integration. Important observed themes include:
+
+- early Fable evidence-tier discipline and correction of bad imported research;
+- the SSRF sequence of live exploit → independent TDD contract → separate implementation → live adversarial verification → residual DNS-rebinding finding;
+- system-coherence failures where the corpus could not index its own critical planning docs;
+- retrieval false negatives that demonstrate why absence from top-k cannot imply nonexistence;
+- documentation/runtime and MCP-contract drift;
+- concurrency/operational-state concerns mixed into the corpus domain;
+- a state-machine design with good single-writer/event-sourcing/policy-separation ideas but an overly broad “server DB is the only truth” statement;
+- deep-audit/context research that correctly recognized provenance-never-replacement and context-growth problems but lacked today's explicit Cortex/FOSSIL ownership boundary;
+- later provenance/ownership designs that were careful to state they provided zero protection until actually built/anchored.
+
+The principal lesson carried forward is:
+
+> **Good local designs do not compose safely when ownership is ambiguous.**
+
+Operational truth, semantic knowledge truth, evaluation-label authority, and infrastructure state are separate domains.
+
+Future owner-supplied historical material should arrive as separate immutable source bundles and be classified as `validated_methodology_example`, `historical_lesson`, `failed_experiment`, `superseded_design`, `obsolete_unverified`, or `historical_source_only` rather than silently becoming current architecture.
 
 ## Legacy SSC evaluation estate — preserve separately
 
@@ -269,9 +309,13 @@ Create a standalone versioned/content-addressed evaluation archive containing se
 - quarantine data;
 - reports/source-license metadata.
 
+Raw source bundles remain immutable. Normalization/deduplication is derived and provenance-preserving; intentional mutation/counterexample families and conflicting labels are not silently collapsed. Cross-dataset leakage/holdout exposure must be measured explicitly.
+
 Revalidate each historical `hard_gold` label during extraction. If checker/reference/license provenance cannot be established, downgrade the archive classification rather than trusting the old filename/label.
 
 Resolve holdout secrecy before copying any `*_holdout` assets into a developer-visible archive.
+
+See `docs/research/2026-08-10-legacy-eval-estate-deduplication-policy.md`.
 
 ## D021 remains frozen
 
@@ -306,12 +350,17 @@ Do not casually rename `src/dkg`.
 
 ## Remaining campaign / integration order
 
+The master checklist is Issue #73. Current high-level order:
+
 1. **D stage 2** — BGE vs Qwen3-Embedding 0.6B vs Gemini Embedding 2, with matched reranker routes and Workstream-F receipts.
-2. **Legacy SSC evaluation-estate extraction** — separate archive/inventory track; not a live runtime dependency and not a blocker for basic D retrieval benchmarking unless an extracted eval is intentionally used.
-3. **Context-budget/compression benchmark** — preservation-safe Cortex context handling against direct/uncompressed baselines.
-4. **D 4B/8B only if justified** by prior evidence/resources.
-5. **E** — conservative adaptive routing, including direct-read vs retrieve vs retrieve+compress vs decompose where evidence supports it.
-6. **G** — ACL/redaction propagation readiness, including proof that retrieval/reranking/compression/replicas cannot resurrect suppressed data.
-7. **Cortex↔FOSSIL live integration proof** — Cortex persistent memory uses FOSSIL without SSC runtime dependency; exact IDs/citations/lifecycle/lineage survive the boundary; FOSSIL outage yields pending/uncommitted state rather than false success.
-8. final D021/retrieval-policy decision reconciliation;
-9. decision log + residual risks + final handoff.
+2. **Legacy SSC evaluation-estate extraction** — separate archive/inventory track; incorporate later owner-supplied missing assets as separate immutable bundles.
+3. **Dataset normalization/dedupe/leakage proof** — preserve raw bytes, derive deduped/family-aware views, expose holdout leakage honestly.
+4. **Context-budget/compression benchmark** — FOSSIL ContextProvider safety/integrity against direct/uncompressed and selection-only baselines.
+5. **D 4B/8B only if justified** by prior evidence/resources.
+6. **E** — conservative adaptive routing, including direct-read vs retrieve vs retrieve+safe-context-construction vs decompose where evidence supports it.
+7. **G** — ACL/redaction propagation readiness, including proof that retrieval/reranking/context construction/replicas cannot resurrect suppressed data.
+8. **Cortex↔FOSSIL live integration proof** — Cortex persistent memory uses FOSSIL without SSC runtime dependency; exact IDs/citations/lifecycle/lineage survive the boundary; FOSSIL outage yields pending/uncommitted state rather than false success.
+9. **Gravebuster/local-PC deployment proof** — one logical durable writer initially, rebuildable projections/services on either node, backup/recovery proven.
+10. final D021/context/retrieval-policy decision reconciliation;
+11. decision log + residual risks + final handoff;
+12. legacy SSC formally cold after eval recovery and live dependency removal are proven.
