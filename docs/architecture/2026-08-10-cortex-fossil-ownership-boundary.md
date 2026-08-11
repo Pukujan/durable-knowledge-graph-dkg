@@ -28,6 +28,8 @@ The new architecture must not recreate the old monolith by allowing Cortex and F
 | Task classification / methodology selection | Cortex | Executable control policy belongs to the harness |
 | Tool/risk gates / preflight / retries | Cortex | FOSSIL does not schedule or authorize agent actions |
 | Model/worker dispatch | Cortex | Models remain replaceable workers |
+| Model/API capability registry | Cortex control plane + replaceable transport adapters | Shared machine-readable limits/capabilities/errors; methodology must not guess provider behavior |
+| Provider transport / LiteLLM / local model servers | Replaceable infrastructure service | API wiring, serialization, bounded transport failover, quota/capacity reporting; never methodology-loop authority |
 | Context-window budget | Cortex | Chooses budget and whether compression/decomposition is needed |
 | Compression/decomposition strategy | Cortex | May transform temporary context but may not rewrite FOSSIL evidence |
 | Immutable source evidence | FOSSIL | Canonical durable bytes + stable identity |
@@ -41,6 +43,65 @@ The new architecture must not recreate the old monolith by allowing Cortex and F
 | Graphiti/Neo4j knowledge graph | FOSSIL projection layer | Rebuildable view, never canonical identity/truth |
 | Gravebuster / local PC / future nodes | Infrastructure | Host services/projections; hosting does not confer semantic authority |
 | Legacy `stupidly-simple-cortex` | Retired migration source | No new runtime or truth authority |
+
+## Replaceable model/API boundary
+
+LiteLLM, provider APIs, local model servers, embedding services, rerankers, and future gateways are replaceable execution infrastructure. They expose capabilities and perform bounded invocations; they do not own the methodology loop.
+
+Cortex owns logical execution policy, including:
+
+- which methodology state runs next;
+- whether another model turn is allowed;
+- whole-task and per-turn deadlines;
+- same-route retry budget;
+- cross-route fallback/escalation budget;
+- checkpoint/recovery generation;
+- decomposition/fan-out/merge;
+- terminal completion/block/failure after mechanical verification.
+
+The transport/gateway layer owns provider mechanics only, including endpoint/auth wiring, request serialization, provider-specific parameter translation, bounded low-level node/provider failover when explicitly allowed, and normalized reporting of actual route/model/error/usage.
+
+**Hidden provider/gateway logical retry loops are forbidden.** Any transport retry/failover must be bounded, visible in the execution receipt, and charged against Cortex's explicit policy budget.
+
+### Shared capability/limit registry
+
+Workers and methodologies must not guess provider/model behavior. Cortex should consume a shared versioned machine-readable registry for invokable routes. Where known, the registry records:
+
+- route/profile identity;
+- provider/service/protocol kind;
+- requested alias and actual/upstream model identity;
+- supported modalities, tool calling, structured output, streaming and endpoint type;
+- context-window and max-output limits;
+- payload, batch, document-count and embedding/reranker limits;
+- embedding dimensions/normalization/prompt policy where applicable;
+- supported parameters/ranges;
+- model/provider/key-pool concurrency and rate-limit scope;
+- quota/cooldown/`retry-after` behavior;
+- timeout bounds;
+- cost/accounting unit where known;
+- privacy/retention/ZDR status where known;
+- canonical normalized error classes;
+- retryability/fallback eligibility per error class;
+- health/probe status and registry provenance/version.
+
+Unknown fields remain explicitly unknown/unverified rather than inferred from model names or old behavior.
+
+Shared quotas and API limits are centrally coordinated. A WorkOrder requests a capability/profile; it does not invent sleeps, rate-limit heuristics, alternate endpoints, provider-specific loops, or error-string parsing.
+
+Conceptually:
+
+```text
+Cortex methodology step
+  -> summon(capability/profile, task constraints, budget)
+  -> shared dispatcher resolves approved route/capacity
+  -> one bounded mechanical invocation
+  -> normalized result/error + requested/actual identity + usage/limit metadata
+  -> Cortex decides next logical state
+```
+
+Provider errors should be normalized into shared classes such as `rate_limited`, `quota_exhausted`, `context_limit_exceeded`, `unsupported_feature`, `invalid_request`, `authentication_failed`, `provider_unavailable`, `transport_timeout`, `model_timeout`, `content_policy_rejected`, `capacity_exhausted`, `response_malformed`, and `unknown_provider_error`, with structured retry/fallback/cooldown metadata.
+
+Methodologies should describe the capability and success contract, not vendor recipes. Replacing LiteLLM/provider/model/local runtime should change the adapter/registry and require relevant evals, but should not require rewriting Cortex methodology or FOSSIL semantics.
 
 ## Memory classes
 
