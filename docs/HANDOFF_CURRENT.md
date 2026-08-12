@@ -1,366 +1,284 @@
 # Current Handoff
 
-**Date:** 2026-08-10  
+**Date:** 2026-08-12  
 **Project:** **FOSSIL — Fault-tolerant Open Semantic Store for Intellectual Lineage**  
 **Repository:** `Pukujan/fossil-core`  
-**Status:** **Gate 1 complete. Gate 2 complete/formally closed. Post-Gate-2 campaign #48 active. Workstreams A/B/C/F complete. Workstream D stage 1 complete. D stage 2 is active next. Cortex↔FOSSIL ownership boundary is explicitly documented; legacy `stupidly-simple-cortex` is being retired as a live memory/runtime authority while its evaluation estate and engineering lessons are preserved separately.**
+**Current architecture authority:** Issue #86  
+**Current execution queue / claim ledger:** Issue #94
 
-## Fresh-session transfer
+## Current status
 
-Read, in order:
+The project has moved from a local-machine-centered architecture to **disposable ordinary compute + durable truth**, with one narrow trusted-local exception for credentials that currently exist only on the owner's PC.
+
+The current invariant is:
+
+> **Compute may disappear; truth must not.**
+
+The current subsystem boundary is:
+
+> **Cortex owns execution. FOSSIL owns durable knowledge/evidence. GitHub owns coordination/review. LiteLLM/CKFF owns provider/model/route factual transport. Infrastructure is replaceable.**
+
+The owner's PC may act as a **trusted self-hosted execution/credential bridge**, but it is not semantic authority and is not required for ordinary secretless PR CI.
+
+## Read first
+
+For a fresh autonomous session, read in this order:
 
 1. `AGENTS.md`
 2. `ARCHITECTURE.md`
 3. this file
-4. `docs/architecture/2026-08-10-cortex-fossil-ownership-boundary.md`
-5. `docs/architecture/2026-08-10-context-construction-compression-boundary.md`
-6. `docs/research/2026-08-10-legacy-ssc-engineering-retrospective.md`
-7. `docs/research/2026-08-10-legacy-ssc-evaluation-estate-inventory.md`
-8. `docs/research/2026-08-10-legacy-eval-estate-deduplication-policy.md`
-9. `docs/handoffs/2026-08-10-chatgpt-session-handoff-post-retrieval-bakeoff-stage1.md`
-10. `docs/PROJECT_STATE.md`
-11. `docs/implementation/2026-08-10-post-gate2-retrieval-bakeoff-stage1-proof.md`
-12. `docs/implementation/2026-08-10-post-gate2-query-execution-receipt-proof.md`
-13. `docs/implementation/2026-08-10-post-gate2-retrieval-poisoning-proof.md`
-14. `docs/implementation/2026-08-10-post-gate2-answer-reliability-proof.md`
-15. `docs/operations/LITELLM-GATEWAY.md`
-16. Issue #73 — master integration tracker
-17. Issue #48 — active production RAG hardening campaign
-18. Issue #47 — active Workstream D retrieval/reranking/model bakeoff
-19. `docs/DECISION_LOG.md`
+4. Issue #86 — current architecture reconciliation
+5. Issue #94 — current execution queue and append-only claim ledger
+6. `docs/DECISION_LOG.md`
+7. `docs/architecture/2026-08-12-trusted-local-runner-boundary.md`
+8. `docs/architecture/2026-08-10-cortex-fossil-ownership-boundary.md`
+9. `docs/architecture/2026-08-10-context-construction-compression-boundary.md`
+10. Issue #96 — trusted local autonomous WorkOrder runner
+11. Cortex issue #1 / current Cortex queue refs
+12. LiteLLM issue #11 / current LiteLLM queue refs
 
-Verify GitHub state before changing anything.
+Verify live GitHub state immediately before any write, merge, rebase, deploy or task claim.
 
-## Do not redo
+## Frozen authority rules
 
-Do not redo:
+- Retrieval rank is candidate ordering, not truth.
+- Reranker score is not truth.
+- Model confidence is not truth.
+- Multi-model agreement is not external evidence.
+- GitHub Actions artifacts/caches are not canonical FOSSIL truth.
+- FOSSIL durable evidence/events, stable IDs, provenance, lifecycle, lineage and accepted contracts remain semantic authority.
+- Cortex owns task/execution policy, WorkOrder lifecycle, retries, fencing, fan-out/fan-in, deadlines and closeout.
+- LiteLLM/CKFF owns provider/model/route/capability/timeout/health factual transport state; callers own selection policy.
+- Ordinary PR CI remains secretless.
+- Production promotion requires a separate explicit authorization.
 
-- Gate 1 or Gate 2;
-- production-RAG research ingestion;
-- Workstream A — evolving-corpus temporal/update benchmark;
-- Workstream B — answer/citation/abstention reliability;
-- Workstream C — retrieval poisoning/untrusted context;
-- Workstream F — query execution receipts;
-- Workstream D stage 1 — incumbent/hybrid/real-reranker matched bakeoff.
+## Legacy SSC — RETIRED / SUPERSEDED
 
-Do not treat old SSC research, ontology, current-state conclusions, or runtime components as current FOSSIL/Cortex authority. The historical retrospective exists to preserve lessons and failed experiments without reintroducing the monolith.
+Legacy `stupidly-simple-cortex` (SSC) is **not a current runtime, memory, RAG, ontology/current-state, project-state, orchestration or Cortex authority**.
 
-## Workstream D stage 1 — complete
+Cortex V4 must operate with SSC absent.
 
-Core PR #67 landed the first matched retrieval/reranker comparison surface.
+Do not use as current authority:
 
-Execution-only PR #68 was a failed-first instrumentation/exit-semantics probe and was closed unmerged.
-
-Execution-only PR #69 was the corrected final real-semantic proof and was closed unmerged after PASS.
-
-Stage-1 proof inputs:
-
-- common pack revision `d583005dce06dbb499c3c0de5c22b899655eb8d2`;
-- AI-systems pack revision `84accd2ee895663990e82ca5b79b592cb503db24`;
-- 27 projected documents;
-- 21 history-rich retrieval cases;
-- 6 Workstream-B answer cases;
-- 6 routes;
-- 36 Workstream-F receipts;
-- real D021 `BAAI/bge-small-en-v1.5@5c38ec7c405ec4b44b94cc5a9bb96e735b38267a` on CPU;
-- real `cross-encoder/ms-marco-MiniLM-L6-v2@ce0834f22110de6d9222af7a7a03628121708969` on CPU, batch 16, max length 512.
-
-The final stage gate passed with pack isolation intact and the incumbent D021 downstream answer/citation/unsupported-claim guardrails intact. Challenger routes have explicit promotion eligibility/disqualification evidence. Stage 1 does **not** authorize replacing D021.
-
-## Live LiteLLM retrieval-lane checkpoint
-
-Execution-only PR #71 was used only to probe the shared LiteLLM gateway and was closed unmerged.
-
-Final probe:
-
-- run `31441469357`;
-- job `93626893009`;
-- `POST /v1/embeddings` with `gemini-embedding-2` -> HTTP 200, non-empty 3072-dimensional embedding, response model `google/gemini-embedding-2`;
-- `POST /v1/rerank` with `rerank-v4-pro` -> HTTP 200 and ranked results;
-- privacy-warning header present on the live retrieval lanes;
-- `/v1/models` and `/v1/model/info` -> HTTP 500;
-- chat/responses probes for Qwen and Gemini aliases -> HTTP 500.
-
-Conclusion: embedding and reranking lanes are live and usable for Workstream D. Chat/model-discovery failure is a separate gateway issue and must not be represented as proof that Gemini chat itself is unavailable.
-
-Do not infer that hosted reranking is free from zero token counters; hosted rerank billing may use a different unit. If the gateway does not expose actual upstream reranker identity, record provenance as unresolved rather than inventing it.
-
-## Exact next Workstream-D task
-
-Run a matched D stage-2 benchmark with the existing exact corpus pins and Workstream-F receipts.
-
-Minimum candidate set:
-
-1. incumbent pinned BGE D021 baseline;
-2. Qwen3-Embedding 0.6B, after resolving an immutable official model revision and pinning runtime/prompt/dimension/precision/device settings;
-3. live LiteLLM `gemini-embedding-2` embedding lane with requested/actual identity recorded;
-4. comparable local cross-encoder rerank route;
-5. live LiteLLM `rerank-v4-pro` route, with actual upstream identity explicitly recorded when available or marked unresolved.
-
-Reuse the stage-1 21 retrieval cases and six Workstream-B answer cases unless a versioned benchmark change is explicitly justified.
-
-Compare at minimum:
-
-- full retrieval misses/hit rate;
-- recall@k;
-- MRR/ranking quality;
-- decision-critical misses;
-- current-vs-superseded leakage;
-- lineage/multi-target failures;
-- final-answer correctness;
-- exact citation correctness;
-- unsupported-claim/abstention behavior;
-- poisoning/context-security compatibility;
-- pack isolation;
-- latency;
-- memory/resource use;
-- provider cost;
-- outage/fallback behavior;
-- exact requested and actual provider/model/service/runtime identity;
-- Workstream-F receipt identity.
-
-Do not automatically progress to Qwen 4B or 8B. The preceding result and resource evidence must justify escalation.
-
-## Cortex ↔ FOSSIL ownership boundary
-
-The durable boundary is:
-
-> **Cortex owns execution. FOSSIL owns knowledge. FOSSIL projections retrieve knowledge. Infrastructure runs the components. Models propose; deterministic gates commit.**
-
-And:
-
-> **Cortex may decide when and why to ask memory; it cannot decide what durable memory means. FOSSIL may use replaceable cognitive services internally; it cannot decide what an agent is allowed to do next.**
-
-See `docs/architecture/2026-08-10-cortex-fossil-ownership-boundary.md` for the full contract.
-
-### Cortex owns
-
-- agent/session/mission state;
-- task classification and executable methodology selection;
-- preflight/tool/risk gates;
-- model/worker dispatch;
-- retry/fan-out/merge strategy;
-- task-level context-window/resource budget;
-- the decision to direct-read, request bounded context, decompose, or escalate;
-- compression of Cortex-owned operational/session notes;
-- operational checkpoints/closeouts.
-
-### FOSSIL owns
-
-- immutable evidence;
-- persistent semantic memory;
-- stable claim/source/relation/citation IDs;
-- provenance;
-- lifecycle/current-state semantics;
-- disagreement/supersession/history;
-- lineage reconstruction;
-- pack boundaries;
-- exact citations;
-- redaction/suppression;
-- proposal validation and durable commit;
-- corpus retrieval semantics and rebuildable graph/vector/lexical projections;
-- evidence-safe context construction/compression of FOSSIL-sourced material through `ContextProvider`.
-
-Prevent double routing: Cortex provides task intent, pack scope, risk/resource/context constraints; FOSSIL executes the approved retrieval/lifecycle/lineage/citation/context-construction semantics. Cortex must not bypass FOSSIL by querying a graph/vector index and treating that result as knowledge authority.
-
-## Gravebuster + local-PC deployment
-
-Treat the cluster as **one logical FOSSIL**, even when services run on multiple machines.
-
-Initial rule: use **one logical durable FOSSIL commit authority**, not independent multi-master semantic writers.
-
-Gravebuster and the local PC may host replaceable:
-
-- Graphiti/Neo4j projections;
-- BM25/vector indexes;
-- embedding/reranking services;
-- model servers/LiteLLM;
-- caches;
-- replicas/backups;
-- benchmark workers.
-
-Hosting does not confer semantic authority. Stable IDs and pack identity remain independent of machine/database placement.
-
-A future multi-writer topology requires a separate concurrency/consensus decision and proof.
-
-## Compression/context-construction boundary
-
-Cortex owns the task-level context budget and chooses among direct read, bounded context construction, larger-context execution, decomposition, and escalation.
-
-FOSSIL `ContextProvider` owns evidence-safe context construction/compression for FOSSIL-sourced material because ACLs, redaction, stable IDs, exact citation spans, lifecycle, and lineage must remain enforceable through the transformation.
-
-Required rules:
-
-- **filter first, compress second**;
-- summaries never replace source evidence;
-- protected citation/source/claim identities survive verbatim where required;
-- numbers/code identifiers/provenance IDs may be protected spans;
-- source→compressed mapping and a preservation report are required for lossy/structured transformations;
-- compressed packets remain temporary untrusted context;
-- required-span loss fails closed;
-- if safe context construction cannot meet budget, Cortex raises budget/direct-reads/decomposes instead of silently dropping evidence;
-- a durable summary is a new derived proposal with provenance, never replacement evidence;
-- uncompressed retrieve-then-read and selection-only baselines remain mandatory in the benchmark;
-- any lossy compressor must earn itself under matched answer/citation/security/resource evidence.
-
-The legacy SSC protected-span/deep-audit research is historical prior art only, not a live dependency or current evidence for accepting compression.
-
-See `docs/architecture/2026-08-10-context-construction-compression-boundary.md`.
-
-## Legacy `stupidly-simple-cortex` retirement
-
-The old SSC runtime should be retired rather than maintained as a second live memory system.
-
-Do **not** import the following as FOSSIL truth:
-
-- old SSC living-ontology/current-state values;
-- SSC BM25/vector ranking results;
+- SSC living ontology/current-state values;
+- SSC BM25/vector ranking output;
 - generated conclusions/summaries;
-- old research prose merely because it was labeled research/reviewed/accepted/current;
-- old task/project state;
-- model consensus/judge conclusions.
+- historical project/task state;
+- model consensus/judge conclusions;
+- old SSC research prose merely because SSC labeled it accepted/current;
+- private-SSC compatibility tests as a merge/runtime requirement.
 
-Old SSC research prose can remain historical/unverified source material for project archaeology, but no automatic ingestion into normal FOSSIL knowledge is required.
+The retirement is evidence-backed by known noisy/false-positive corpus behavior and historical retrieval/index/stale-artifact failures. Treating those outputs as authority can degrade decisions by turning retrieval/system errors into apparent truth.
 
-## Legacy SSC engineering retrospective — preserve lessons, not components
+Potentially useful old eval/checker assets may survive only after **independent standalone extraction and revalidation** with exact source revision/path, bytes/hash, actual row counts, provenance/license, checker/test dependencies and holdout/leakage controls.
 
-Historical research and reviews have now been explicitly preserved in:
+Do not revive SSC runtime merely to preserve an old asset.
 
-`docs/research/2026-08-10-legacy-ssc-engineering-retrospective.md`
+Durable retirement decision: D023 in `docs/DECISION_LOG.md`.
 
-The retrospective records useful methodology and failure evidence without authorizing integration. Important observed themes include:
+## Trusted local autonomous runner
 
-- early Fable evidence-tier discipline and correction of bad imported research;
-- the SSRF sequence of live exploit → independent TDD contract → separate implementation → live adversarial verification → residual DNS-rebinding finding;
-- system-coherence failures where the corpus could not index its own critical planning docs;
-- retrieval false negatives that demonstrate why absence from top-k cannot imply nonexistence;
-- documentation/runtime and MCP-contract drift;
-- concurrency/operational-state concerns mixed into the corpus domain;
-- a state-machine design with good single-writer/event-sourcing/policy-separation ideas but an overly broad “server DB is the only truth” statement;
-- deep-audit/context research that correctly recognized provenance-never-replacement and context-growth problems but lacked today's explicit Cortex/FOSSIL ownership boundary;
-- later provenance/ownership designs that were careful to state they provided zero protection until actually built/anchored.
+Manual per-session Terra/Luna/Codex dispatch is superseded as the normal local operating model.
 
-The principal lesson carried forward is:
+Current plan: Issue #96 / #94 `INFRA-03`.
 
-> **Good local designs do not compose safely when ownership is ambiguous.**
+The local PC may run a dedicated self-hosted GitHub Actions runner because some Railway/provider/telemetry credentials currently remain local-only.
 
-Operational truth, semantic knowledge truth, evaluation-label authority, and infrastructure state are separate domains.
+### Security invariant
 
-Future owner-supplied historical material should arrive as separate immutable source bundles and be classified as `validated_methodology_example`, `historical_lesson`, `failed_experiment`, `superseded_design`, `obsolete_unverified`, or `historical_source_only` rather than silently becoming current architecture.
+> **A pull request must never be able to cause its own mutable code or workflow definition to execute on the credential-bearing local runner.**
 
-## Legacy SSC evaluation estate — preserve separately
+Therefore:
 
-A substantial valuable evaluation estate is actually committed in SSC and should be extracted separately from the retired runtime.
+- ordinary `pull_request` workflows do not target the trusted-local runner;
+- do not use `pull_request_target` to run PR-controlled code with secrets;
+- trusted-local dispatch comes from reviewed/default-branch-controlled workflow/dispatcher code;
+- credential-bearing verification requires an exact reviewed SHA;
+- local `.env` values are never uploaded, printed or copied into GitHub/FOSSIL receipts;
+- Terra/Luna role names never imply secret access.
 
-Verified source revision inspected:
+### Local lanes
 
-`Pukujan/stupidly-simple-cortex@3b6668eff7a1859c37f1aa50c565f0387fdc4ffe`
+**Secretless local engineering worker**
 
-Verified asset classes include:
+- disposable worktree/process per attempt;
+- code/test/lint/mutation/fault work;
+- credentials unloaded;
+- mechanical PASS/FAILED/BLOCKED closeout;
+- Git commit + structured receipt checkpoint where sufficient.
 
-- checker-decided `hard_gold` datasets;
-- generated 73-lane objective manifest with deterministic verdict paths and `judge_in_verdict_path=false`;
-- third-party-derived objective benchmark slices;
-- semi-ground/semi-truth judgment data;
-- rubrics/calibration anchors;
-- oracle/checker code;
-- frozen tests;
-- checker cores/resolvers;
-- promotion/quarantine/results-ledger machinery;
-- live/trainable hard-gold references and holdouts;
-- durable evaluation artifact indexes.
+**Privileged verifier**
 
-Directly inspected examples include:
+- exact reviewed SHA only;
+- local env may be loaded only for the explicitly authorized credential set;
+- isolated Railway staging / protected telemetry / future object-store verification;
+- sanitized receipts only;
+- no implicit production promotion.
 
-- `evals/objective_tool_calling/hard_gold.jsonl` — real rows with objective verdict, BFCL AST checker authority, error/perturbation metadata, source/case ID, hard-gold provenance and reproducibility hash metadata;
-- `evals/hf_datasets/gsm_plus/hard_gold.jsonl` — committed prompt/reference-solution/reference-answer rows;
-- `evals/fable_capture/prompt_evals_semitruth.jsonl` — explicitly provisional candidate-only rows with `human_reviewed=false` and `ground_truth_for_now=false`.
+### Agent roles
 
-### Important stale-index finding
+- **Terra:** complex/root-cause, architecture-sensitive, and explicitly trusted local/infra tasks.
+- **Luna:** cheaper/mechanical regressions, reproductions, lint/test loops, evidence collection and bounded implementation.
 
-Do not trust SSC's narrative artifact counts as the archive manifest.
+Roles are execution policy, not authority.
 
-Observed example:
+Durable runner decision: D022 in `docs/DECISION_LOG.md`.
 
-- `evals/FABLE_DURABLE_ARTIFACT_INDEX.md` reports 500 HaluEval semi-ground rows;
-- direct read of `evals/hf_datasets/halu_eval/semi_ground.jsonl` on current `main` returned empty content.
+## Completed foundation
 
-`evals/README.md` also contains older build-status prose predating later hard-gold work.
+### FOSSIL
 
-Therefore extract by:
+- FOSSIL-01 merged PR #93 — baseline repair; GitHub DKG 112/112.
+- FOSSIL-02 merged PR #92 — status-aware build-context/preflight packet; GitHub DKG 119/119.
+- FOSSIL-03 merged PR #91 — disposable rebuild proof; GitHub DKG 122/122.
+- FOSSIL-04 merged PR #95 — reusable assurance; GitHub DKG + engineering assurance green.
 
-`exact source commit + path + content hash + actual bytes/row count + license/source + checker/test dependency`.
+Build-context v1 now fails closed on unresolved authority/current-state conflict and retrieval rank never creates authority.
 
-See `docs/research/2026-08-10-legacy-ssc-evaluation-estate-inventory.md`.
+### Study OS
 
-### Target extraction posture
+- STUDY-01 merged private-study-log PR #56; validation green; no transcript duplication.
 
-Do not make FOSSIL or Cortex depend on SSC at runtime.
+### LiteLLM / Railway
 
-Create a standalone versioned/content-addressed evaluation archive containing selected:
+- Secretless catalog + semantic-contract work on LiteLLM PR #12 reached code-green before live staging.
+- Isolated Railway staging exists and was proven separately from production.
+- Production was independently restored/verified on its intended main revision after a source-connection action briefly showed shared-source risk; no production semantic request occurred during the incident.
+- Live staging found two real semantic failures:
+  1. Chat streaming can return HTTP 200 with zero usable bytes.
+  2. Forced-tool Responses can fail with HTTP 502.
 
-- hard gold;
-- semi-ground;
-- rubrics;
-- checkers;
-- frozen tests;
-- resolvers;
-- manifests;
-- quarantine data;
-- reports/source-license metadata.
+These are tracked by `LITELLM-05` and must remain fail-closed.
 
-Raw source bundles remain immutable. Normalization/deduplication is derived and provenance-preserving; intentional mutation/counterexample families and conflicting labels are not silently collapsed. Cross-dataset leakage/holdout exposure must be measured explicitly.
+### Cortex
 
-Revalidate each historical `hard_gold` label during extraction. If checker/reference/license provenance cannot be established, downgrade the archive classification rather than trusting the old filename/label.
+- WorkOrder recovery PR #12 has targeted recovery tests 10/10 green.
+- The old full-suite blocker was polluted by remaining SSC-dependent tests/adapters.
+- `CORTEX-03` SSC-compatibility CI plan was explicitly released/superseded.
+- `CORTEX-04` is the current Cortex task: remove SSC from the normal Cortex runtime/merge-critical path and replace legacy tests only with equivalent V4-owned invariants.
+- PR #13 must not be merged merely to preserve SSC compatibility.
 
-Resolve holdout secrecy before copying any `*_holdout` assets into a developer-visible archive.
+## Current READY / active task order
 
-See `docs/research/2026-08-10-legacy-eval-estate-deduplication-policy.md`.
+### P0 — LITELLM-05
 
-## D021 remains frozen
+Repair the two live gateway failures:
 
-Do not replace or weaken D021 without new committed comparative evidence.
+- HTTP 200 empty/zero-usable stream;
+- forced-tool Responses failure.
 
-Current rules:
+Requirements:
 
-- revision-pinned BGE dense is the normal primary retriever;
-- BM25 is explicit degraded availability fallback;
-- current/latest/accepted queries resolve durable lifecycle/provenance;
-- history/lineage/disagreement queries use durable lineage/read-state;
-- top-k absence is not evidence of nonexistence;
-- citations resolve immutable source snapshot/span/hash identity;
-- retrieved/source text is untrusted data;
-- retrieval score is not truth;
-- reranker score is not truth;
-- model confidence is not truth;
-- multi-model consensus is not external evidence;
-- query execution receipts are observability/replay evidence, not truth authority.
+- failed-first deterministic regressions;
+- smallest code/config fix;
+- secretless ordinary PR CI;
+- baseline Chat/Responses/embeddings/rerank unchanged;
+- requested-vs-actual model/route and usage preserved;
+- exact-reviewed-SHA isolated staging verification before merge/promotion claims;
+- production untouched.
 
-Stable pack IDs:
+### P1 — CORTEX-04
 
-- common: `pack_269099f7b2ba43b7a99b9427d64092de`;
-- AI systems: `pack_f024177f89a5442db84171c3dd7f58e5`.
+Make Cortex V4 fully independent of SSC:
 
-Exact pack revisions used by B/C/F/D-stage-1 proofs:
+- Cortex starts/runs with SSC unavailable;
+- remove legacy SSC runtime/corpus dependency from normal execution;
+- classify SSC adapters/tests as migration debt;
+- replace/remove legacy assertions with V4-owned invariant tests, never skip to fake green;
+- preserve WorkOrder recovery/fencing/idempotency semantics;
+- hosted secretless full suite green.
 
-- `fossil-common@d583005dce06dbb499c3c0de5c22b899655eb8d2`;
-- `fossil-ai-systems@84accd2ee895663990e82ca5b79b592cb503db24`.
+### P1.5 — INFRA-03 / Issue #96
 
-Do not casually rename `src/dkg`.
+Build the trusted local autonomous WorkOrder runner:
 
-## Remaining campaign / integration order
+1. WorkOrder schema/validator;
+2. claim/repo/access/generation/deadline validation;
+3. disposable worktree/process per attempt;
+4. Terra/Luna role selection;
+5. secretless worker wrapper;
+6. fault tests for death/duplicate/stale/malformed/timeout/cancel/late result;
+7. trusted/default-branch dispatch workflow;
+8. local runner registration/runbook;
+9. no-secret end-to-end WorkOrder proof;
+10. separate privileged exact-SHA verifier;
+11. exact-SHA isolated staging proof with sanitized receipts.
 
-The master checklist is Issue #73. Current high-level order:
+### Next after those gates
 
-1. **D stage 2** — BGE vs Qwen3-Embedding 0.6B vs Gemini Embedding 2, with matched reranker routes and Workstream-F receipts.
-2. **Legacy SSC evaluation-estate extraction** — separate archive/inventory track; incorporate later owner-supplied missing assets as separate immutable bundles.
-3. **Dataset normalization/dedupe/leakage proof** — preserve raw bytes, derive deduped/family-aware views, expose holdout leakage honestly.
-4. **Context-budget/compression benchmark** — FOSSIL ContextProvider safety/integrity against direct/uncompressed and selection-only baselines.
-5. **D 4B/8B only if justified** by prior evidence/resources.
-6. **E** — conservative adaptive routing, including direct-read vs retrieve vs retrieve+safe-context-construction vs decompose where evidence supports it.
-7. **G** — ACL/redaction propagation readiness, including proof that retrieval/reranking/context construction/replicas cannot resurrect suppressed data.
-8. **Cortex↔FOSSIL live integration proof** — Cortex persistent memory uses FOSSIL without SSC runtime dependency; exact IDs/citations/lifecycle/lineage survive the boundary; FOSSIL outage yields pending/uncommitted state rather than false success.
-9. **Gravebuster/local-PC deployment proof** — one logical durable writer initially, rebuildable projections/services on either node, backup/recovery proven.
-10. final D021/context/retrieval-policy decision reconciliation;
-11. decision log + residual risks + final handoff;
-12. legacy SSC formally cold after eval recovery and live dependency removal are proven.
+- finish/land Cortex WorkOrder recovery chain;
+- wire disposable GitHub Actions WorkOrders using validated build-context v1;
+- run CAMPAIGN-01: first bounded real-model campaign, flat max parallel <=4, objective tests, deliberate kill/retry, no production deploy;
+- only after campaign evidence consider matched executor bakeoff (OpenCode vs Aider vs direct/simple).
+
+## Access classes
+
+- `CLOUD_SECRETLESS` — ordinary code/test/PR CI, no protected credentials.
+- `LOCAL_INFRA` — trusted local PC required.
+- `TRUSTED_SECRET_WORKFLOW` — reviewed/trusted workflow only, never arbitrary PR code.
+- `LIVE_STAGING` — isolated non-production endpoint.
+- `OBJECT_STORE_LIVE` — narrowly scoped non-production object-store credential.
+
+A task's role does not widen its access class.
+
+## Claim protocol
+
+Before mutating work, use Issue #94:
+
+```text
+CLAIM task=<TASK_ID>
+agent=<unique-agent-id>
+mode=<LOCAL_CODEX|CLOUD_CODEX|CHATGPT|ACTIONS>
+lease_until=<ISO-8601 UTC>
+repo=<repo>
+starting_ref=<branch/SHA/PR>
+```
+
+Immediately re-fetch #94 comments. Earliest valid unexpired claim wins. One active mutating owner per repo lane unless the task explicitly declares safe parallelism.
+
+Close with `DONE`, `BLOCKED` or `RELEASE` using exact refs/tests/evidence.
+
+Do not invent architecture or bypass dependencies when no eligible READY task exists.
+
+## Engineering policy
+
+- SDD always.
+- TDD for deterministic code behavior where practical.
+- Infra/config: spec first -> failing verification/probe -> smallest change -> passing verification.
+- Wiring/integration tests for boundaries.
+- E2E for important actual flows.
+- Hidden holdouts for autonomous AI/model evaluation.
+- Mutation testing selectively on small critical validators/gates/recovery/security logic.
+- Fault injection mandatory for recovery/retry infrastructure.
+- Explicit security checks at secret/deployment boundaries.
+- Regression test for every discovered bug.
+
+Shorthand:
+
+> **SDD always, TDD for code behavior, wiring/E2E when there is actual wiring, hidden holdouts for AI evaluation, and mutants only on the small pieces where a false green would hurt us.**
+
+## Forbidden premature conclusions
+
+Do not select without matched evidence:
+
+- OpenCode vs Aider vs direct/simple executor;
+- R2 vs S3;
+- final Spec Kit vs V4 methodology boundary;
+- persistent-service topology;
+- large model matrix.
+
+Do not promote production from the current queue.
+
+## Immediate fresh-agent behavior
+
+1. Read #86 and #94 live.
+2. Confirm SSC retirement / D023.
+3. Confirm trusted-local boundary / #96 / D022.
+4. Find an eligible READY task matching access.
+5. Claim and re-fetch ledger.
+6. Work on an isolated branch/worktree.
+7. Test mechanically and fault-inject where required.
+8. Post exact closeout evidence.
+9. Re-read queue and take the next eligible task.
+
+If no eligible task exists, stop with explicit idle/BLOCKED evidence rather than inventing work.

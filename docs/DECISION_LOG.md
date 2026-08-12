@@ -162,6 +162,36 @@ Current/latest/accepted queries must resolve durable lifecycle/provenance before
 
 **Evidence:** Issue #36 / PR #44 / squash commit `38aac6325cdb5b738c8a6ac5e55959affb3acfb5`; exact-head semantic proof run `31364039745`, artifact `9053475462`, digest `sha256:23c95b46f47cec5a16e0a8c0926a4f13532f283d8f4fbcc0de12ceb63db63c41`; `benchmarks/gate2/results/2026-08-10-comparative/comparison-summary.json`; `docs/implementation/2026-08-10-gate2-comparative-bakeoff-proof.md`; `docs/implementation/2026-08-10-gate2-default-retrieval-policy.md`; Issue #37.
 
+## D022 — Trusted local runner is a credential bridge, not normal truth-bearing compute
+
+**State:** accepted / provisional execution topology  
+**Decision:** ordinary pull-request CI remains secretless and should use disposable GitHub-hosted compute where practical. Because trusted Railway/provider/telemetry and related credentials currently remain local-only, the owner's PC may run a narrowly trusted self-hosted GitHub Actions runner for versioned WorkOrders and a separate privileged verifier lane. The local node is replaceable execution infrastructure, not semantic authority.
+
+A pull request must never be able to cause its own mutable code or workflow definition to execute on the credential-bearing local runner. Trusted-local dispatch must originate from reviewed/default-branch-controlled workflow or dispatcher code. Credential-bearing verification may load local secrets only for an exact reviewed SHA and an explicitly authorized access class. Ordinary engineering WorkOrders keep those secrets unloaded.
+
+Each local WorkOrder uses an isolated disposable worktree/process, explicit task/attempt/generation identity, bounded deadlines, claim verification, stale/duplicate/late-result rejection, objective checks, sanitized receipts and mechanical terminal closeout. Terra and Luna are execution roles only; role selection does not confer authority or implicit secret access.
+
+**Supersedes/refines:** manual per-session local Codex launch/dispatch as the normal operating model; the earlier #86 sequencing assumption that all self-hosted-runner work should wait until the final persistent-extras phase. It does **not** reintroduce a self-hosted runner as a prerequisite for ordinary secretless PR CI and does not change the invariant that durable truth outlives compute.
+
+**Evidence/contract:** Issue #96; issue #94 `INFRA-03`; issue #86 2026-08-12 plan revision; `docs/architecture/2026-08-12-trusted-local-runner-boundary.md`.
+
+**Reconsider when:** local-only credentials move to a protected managed secret runner; no trusted local hardware/service access remains; or a managed executor demonstrates equal/stronger isolation, exact-SHA gating, secret protection and WorkOrder recovery with lower operational burden.
+
+## D023 — Legacy SSC is retired/superseded and cannot supply current semantic or runtime authority
+
+**State:** accepted / frozen retirement boundary  
+**Decision:** legacy `stupidly-simple-cortex` (SSC) is **RETIRED / SUPERSEDED** as a live memory, RAG, ontology/current-state, project-state, orchestration or Cortex runtime authority. Cortex V4 must operate with SSC absent. FOSSIL must not ingest SSC ranking output, generated conclusions/summaries, ontology/current-state values, model consensus, historical project state, or old research prose as current truth merely because SSC stored or labeled it.
+
+The retirement is evidence-backed: the legacy runtime has known noisy/false-positive corpus behavior, while historical reviews also found retrieval/index coverage failures and stale/inconsistent artifact metadata. Treating those outputs as authority can degrade decision quality by turning retrieval/system errors into apparent state or truth. Historical material therefore remains historical/provenance evidence unless independently revalidated.
+
+Potentially useful old eval/checker assets may survive only through a **standalone extracted archive** with exact source revision/path, byte/content hash, actual row counts, provenance/license status, checker/test dependency, holdout/leakage controls and independent revalidation. An extracted asset is not an SSC runtime dependency.
+
+**Supersedes:** any remaining Cortex tests/adapters, queue tasks or local procedures that treat private-SSC compatibility as a merge/runtime requirement. Such code is migration debt unless a current independently justified contract says otherwise.
+
+**Evidence:** `docs/research/2026-08-10-legacy-ssc-engineering-retrospective.md`; `docs/research/2026-08-10-legacy-ssc-evaluation-estate-inventory.md`; historical tracker #73; `Pukujan/stupidly-simple-cortex` PR #70; Cortex issue #1 / boundary PR #7; issue #94 CORTEX-04 correction.
+
+**Reconsider only if:** a specific historical asset is independently validated under the extraction policy. This does not authorize reviving SSC itself.
+
 ## How to add a decision
 
 When implementation or evidence changes an architectural conclusion:
