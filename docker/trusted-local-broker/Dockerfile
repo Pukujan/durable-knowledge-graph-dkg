@@ -10,6 +10,7 @@ RUN apt-get update \
 
 WORKDIR /opt/fossil-core
 COPY pyproject.toml ./
+COPY contracts ./contracts
 COPY src ./src
 COPY scripts ./scripts
 RUN python3 -m venv /opt/fossil-venv \
@@ -19,4 +20,4 @@ COPY docker/trusted-local-broker/worker-codex /usr/local/bin/worker-codex
 RUN chmod 0755 /usr/local/bin/worker-codex
 
 ENV PATH=/opt/fossil-venv/bin:${PATH}
-ENTRYPOINT ["python3", "scripts/run_trusted_local_broker.py"]
+ENTRYPOINT ["/opt/fossil-venv/bin/python", "scripts/run_trusted_local_broker.py"]
