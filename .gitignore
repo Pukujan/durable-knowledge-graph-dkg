@@ -1,6 +1,7 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.trusted-local-worktrees/
 .venv/
 dist/
 build/
