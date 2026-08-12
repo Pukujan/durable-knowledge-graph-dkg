@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fossil.example/contracts/trusted-local-workorder-v1.schema.json",
+  "title": "Trusted local WorkOrder v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "project_issue_id",
+    "work_order_id",
+    "task_id",
+    "attempt_id",
+    "generation",
+    "repo",
+    "starting_ref",
+    "role",
+    "access_class",
+    "mutation_scope",
+    "selected_checks",
+    "deadline",
+    "closeout_contract"
+  ],
+  "properties": {
+    "version": {"const": "trusted-local-workorder-v1"},
+    "project_issue_id": {"type": "integer", "minimum": 1},
+    "work_order_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{2,127}$"},
+    "task_id": {"type": "string", "pattern": "^[A-Z][A-Z0-9-]{1,63}$"},
+    "attempt_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{2,127}$"},
+    "generation": {"type": "integer", "minimum": 0},
+    "repo": {"type": "string", "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"},
+    "starting_ref": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "role": {"enum": ["terra", "luna"]},
+    "access_class": {
+      "enum": ["CLOUD_SECRETLESS", "LOCAL_INFRA", "TRUSTED_SECRET_WORKFLOW", "LIVE_STAGING", "OBJECT_STORE_LIVE"]
+    },
+    "mutation_scope": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "selected_checks": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "deadline": {"type": "string", "format": "date-time"},
+    "closeout_contract": {"type": "string", "minLength": 1},
+    "reviewed_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "trusted_dispatch_ref": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "request_id": {"type": "string", "minLength": 1},
+    "trace_id": {"type": "string", "minLength": 1},
+    "checkpoint_id": {"type": "string", "minLength": 1}
+  }
+}
