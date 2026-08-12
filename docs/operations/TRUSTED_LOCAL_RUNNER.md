@@ -17,7 +17,7 @@ The broker accepts a local Codex task only when all of these are true:
 3. `repo` is in the reviewed local allowlist;
 4. `starting_ref` is an exact 40-character SHA;
 5. `local_role=terra` or `local_role=luna` is explicit;
-6. access is `CLOUD_SECRETLESS` for Codex work;
+6. access is exactly `CLOUD_SECRETLESS` for Codex work;
 7. there is no earlier active unexpired claim;
 8. the broker posts a claim, re-reads #94, and confirms it won;
 9. generation/cancel/terminal attempt state is re-derived from live `WORKORDER*` records before launch.
@@ -29,7 +29,7 @@ Old task prose that lacks the exact SHA or `local_role` is inert to the broker.
 `scripts/run_trusted_local_broker.py` launches a **fresh non-interactive** Codex process for each accepted WorkOrder using `codex exec` with:
 
 - `--ephemeral` — no session rollout reuse;
-- `--sandbox workspace-write` — write access only for the isolated repository worktree;
+- `--sandbox workspace-write` — write access for the isolated repository worktree;
 - `--json` — machine-readable run events;
 - `--ignore-user-config` — do not inherit interactive user MCP/config policy;
 - `gpt-5.6-terra` for role `terra`;
@@ -43,9 +43,11 @@ There are three separate contexts.
 
 ### 1. Broker parent
 
-The parent may use a GitHub coordination credential (prefer the authenticated `gh` credential or a narrow local token). It reads/posts #94, pushes the mechanically checked branch, and opens the draft PR.
+The parent may use a GitHub coordination/publication credential (prefer an authenticated local `gh`/Git credential setup or a narrowly scoped local token). It reads/posts #94, pushes the mechanically checked branch, and opens the draft PR.
 
 **The GitHub token is never passed to the Codex child.**
+
+The parent publication step must use a reviewed repo allowlist, force the expected GitHub origin, disable Git hooks for its commit/push path, and run only after the independent test command succeeds.
 
 ### 2. Secretless Codex worker
 
@@ -142,7 +144,7 @@ GitHub publication happens outside the Codex child so repository credentials do 
 ## Fault and recovery rules
 
 - unreadable GitHub queue -> do nothing / BLOCKED;
-- malformed or unsigned-by-policy task -> ignore;
+- malformed or non-trusted-author task -> ignore;
 - lost claim race -> do not launch;
 - duplicate/terminal attempt -> reject;
 - stale generation -> reject;
@@ -158,7 +160,7 @@ GitHub publication happens outside the Codex child so repository credentials do 
 
 ## Remaining LOCAL_INFRA proof
 
-Repository code/tests can prove policy and deterministic behavior, but this session cannot start a process on the owner's physical PC. Final acceptance still requires one local proof using the dedicated worker profile:
+Repository code/tests can prove policy and deterministic behavior, but a cloud ChatGPT session cannot start a process on the owner's physical PC. Final acceptance still requires one local proof using the dedicated worker profile:
 
 1. broker starts successfully;
 2. one benign `CLOUD_SECRETLESS` local-auto task is claimed and runs through real `codex exec`;
