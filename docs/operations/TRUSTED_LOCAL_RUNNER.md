@@ -61,7 +61,9 @@ Treat Codex's local auth file as a password. Do not copy it into Git, #94, logs,
 
 Railway/provider/telemetry/object-store credentials remain a **separate deterministic verifier lane**. A model/Codex process does not receive those credentials.
 
-The existing `dispatch_privileged_verifier` path may load the minimum local credential environment only after exact-reviewed-SHA authorization. Production promotion remains separately forbidden unless explicitly authorized.
+`scripts/run_privileged_local_verifier.py` is the executable implementation. It has no Codex installation, no model authentication/profile, and never accepts a command or credential variable name from #94. A queue task can select only a locally configured `verifier_action`; that action fixes the literal argv, access class, root-only secret file, and exact environment-variable allowlist. The verifier coordinator loads only that allowlist after exact-reviewed-SHA authorization, demotes the reviewed-code process to its dedicated `verifier` identity, discards its stdout/stderr, and posts only a fixed sanitized receipt.
+
+Production is intentionally unsupported by this service. A `production: true` action is rejected. A future promotion path requires a separately reviewed authorization design.
 
 ## One-time local setup
 
@@ -105,6 +107,54 @@ The GitHub CLI parent login is performed as container root and stored only in it
 
 Docker Desktop may prohibit Codex's nested Linux `workspace-write` namespace. Only in the checked-in Docker topology, set `codex_sandbox` to `danger-full-access`: Docker's named-volume mount set and `codexworker` identity are then the enforcement boundary. The worker has no owner profile, parent GitHub volume, provider credentials, Docker socket, or inbound port. Keep the default `workspace-write` sandbox for non-container deployments.
 
+### Privileged verifier setup (separate container)
+
+The secret file belongs in a **third**, root-only named volume. On this PC the volume data is held by Docker Desktop's WSL store on `D:\DockerDesktopWSL`; it is not in GitHub, the repository, the Codex volume, or the broker container. The original source file remains yours to rotate/delete after verifying the copy. The unprivileged Codex worker must be unable to read this volume.
+
+Build the separate image:
+
+```text
+docker build --tag fossil-privileged-local-verifier:local --file docker/privileged-local-verifier/Dockerfile .
+```
+
+Keep this local-only JSON at `D:\FossilBrokerWorker\config\privileged-verifier.json` (do not commit it). Start with an empty action map; that is safe and means the service cannot inject any application credential until you deliberately add one narrow action.
+
+```json
+{
+  "agent": "trusted-local-verifier-my-pc",
+  "repos": {"Pukujan/fossil-core": "/data/repos/fossil-core"},
+  "trusted_dispatch_refs": ["<exact verifier-image source commit SHA>"],
+  "actions": {}
+}
+```
+
+An approved staging-only action is an owner-administered mapping such as:
+
+```json
+"railway-staging-smoke": {
+  "access_class": "LIVE_STAGING",
+  "secret_file": "/secrets/ssc.env",
+  "required_env": ["ONE_EXACT_KEY_THE_CHECK_NEEDS"],
+  "command": ["/opt/fossil-venv/bin/python", "scripts/staging_smoke.py", "--worktree", "{worktree}"]
+}
+```
+
+Use literal argv, never a shell. The queue cannot override any field in that mapping. The task must include the exact reviewed SHA, an allowlisted verifier image source SHA, a matching privileged access class, and the action name:
+
+```text
+TASK task=INFRA-EXAMPLE
+state=READY
+repo=Pukujan/fossil-core
+access=LIVE_STAGING
+starting_ref=<exact-40-char-reviewed-sha>
+reviewed_sha=<same-exact-sha>
+trusted_dispatch_ref=<allowlisted-verifier-image-source-sha>
+local_role=luna
+verifier_action=railway-staging-smoke
+```
+
+`local_role=luna` is retained only because the frozen WorkOrder v1 schema requires a role; it never invokes Luna/Codex in this lane and conveys no authority.
+
 
 ## Start and stop
 
@@ -121,6 +171,12 @@ python scripts/run_trusted_local_broker.py --config <local-config.json> --poll-s
 ```
 
 The broker opens no inbound port and requires no webhook or self-hosted Actions runner registration.
+
+The privileged verifier is a separate process/container and uses the same polling cadence:
+
+```text
+python scripts/run_privileged_local_verifier.py --config <local-verifier-config.json> --poll-seconds 60
+```
 
 Stop the process/service to stop local automation immediately.
 
