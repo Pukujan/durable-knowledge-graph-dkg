@@ -47,7 +47,7 @@ The parent may use a GitHub coordination/publication credential (prefer an authe
 
 **The GitHub token is never passed to the Codex child.**
 
-The parent publication step must use a reviewed repo allowlist, force the expected GitHub origin, disable Git hooks for its commit/push path, and run only after the independent test command succeeds.
+The parent publication step uses a reviewed repo allowlist, forces the expected GitHub origin, disables Git hooks for its commit/push path, and runs only after the independent test command succeeds.
 
 ### 2. Secretless Codex worker
 
