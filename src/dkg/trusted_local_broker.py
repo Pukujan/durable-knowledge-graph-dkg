@@ -389,6 +389,11 @@ def _safe_branch(task_id: str, attempt_id: str) -> str:
     return f"agent/{task_id.lower()}-{tail}"[:120]
 
 
+def _git_in_worktree(worktree: Path, *arguments: str) -> list[str]:
+    """Build a parent Git command for this exact unprivileged worktree only."""
+    return ["git", "-c", f"safe.directory={worktree}", "-C", str(worktree), *arguments]
+
+
 def publish_checked_changes(
     repo_policy: RepoPolicy,
     *,
@@ -398,7 +403,7 @@ def publish_checked_changes(
     github: GitHubQueueClient,
 ) -> str:
     status = subprocess.run(
-        ["git", "-C", str(worktree), "status", "--porcelain"],
+        _git_in_worktree(worktree, "status", "--porcelain"),
         check=False,
         capture_output=True,
         text=True,
@@ -412,19 +417,21 @@ def publish_checked_changes(
     empty_hooks = worktree / ".broker-empty-hooks"
     empty_hooks.mkdir(exist_ok=True)
     commands = [
-        ["git", "-C", str(worktree), "switch", "-c", branch],
-        ["git", "-C", str(worktree), "add", "-A"],
-        [
-            "git", "-C", str(worktree), "-c", f"core.hooksPath={empty_hooks}",
+        _git_in_worktree(worktree, "switch", "-c", branch),
+        _git_in_worktree(worktree, "add", "-A"),
+        _git_in_worktree(
+            worktree,
+            "-c", f"core.hooksPath={empty_hooks}",
             "-c", "user.name=trusted-local-broker",
             "-c", "user.email=trusted-local-broker@users.noreply.github.com",
             "commit", "-m", f"{task.task_id}: autonomous local WorkOrder",
-        ],
-        [
-            "git", "-C", str(worktree), "-c", f"core.hooksPath={empty_hooks}",
+        ),
+        _git_in_worktree(
+            worktree,
+            "-c", f"core.hooksPath={empty_hooks}",
             "-c", f"remote.origin.url=https://github.com/{task.repo}.git",
             "push", "origin", f"HEAD:refs/heads/{branch}",
-        ],
+        ),
     ]
     for command in commands:
         completed = subprocess.run(command, check=False, capture_output=True, text=True)
