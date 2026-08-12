@@ -12,6 +12,7 @@ import json
 import re
 import subprocess
 import tempfile
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Protocol, Sequence
@@ -25,6 +26,8 @@ TRUSTED_AUTHORS = frozenset({"Pukujan"})
 SHA = re.compile(r"^[0-9a-f]{40}$")
 VOLUME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$")
 FORBIDDEN_MOUNT_NAME = re.compile(r"(?i)(docker|socket|owner|profile|provider|secret|railway|credential|home|drive)")
+HEALTH_CHECK_ATTEMPTS = 8
+HEALTH_CHECK_INTERVAL_SECONDS = 5
 
 
 class SupervisorError(RuntimeError):
@@ -221,6 +224,37 @@ def _running(host: DockerHost, name: str) -> bool:
         return False
 
 
+def _health_status(host: DockerHost, name: str) -> str | None:
+    """Return Docker's explicit health state, never treating its absence as healthy."""
+    try:
+        value = host.run(
+            [
+                "docker",
+                "container",
+                "inspect",
+                "--format",
+                "{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}",
+                name,
+            ]
+        )
+    except SupervisorError:
+        return None
+    return value or None
+
+
+def _healthy(host: DockerHost, name: str) -> bool:
+    """Wait briefly for the fixed broker Docker healthcheck to become healthy."""
+    for attempt in range(HEALTH_CHECK_ATTEMPTS):
+        status = _health_status(host, name)
+        if status == "healthy":
+            return True
+        if status not in {"starting"}:
+            return False
+        if attempt + 1 < HEALTH_CHECK_ATTEMPTS:
+            time.sleep(HEALTH_CHECK_INTERVAL_SECONDS)
+    return False
+
+
 def _remove(host: DockerHost, name: str) -> None:
     try:
         host.run(["docker", "rm", "-f", name])
@@ -263,8 +297,13 @@ def apply_release(
         _remove(host, config.broker_name)
     try:
         host.run(runtime_argv(config, image))
-        if not _running(host, config.broker_name) or _container_image(host, config.broker_name) != candidate_id or _container_revision(host, config.broker_name) != sha:
-            raise SupervisorError("candidate did not reach requested running image revision")
+        if (
+            not _running(host, config.broker_name)
+            or _container_image(host, config.broker_name) != candidate_id
+            or _container_revision(host, config.broker_name) != sha
+            or not _healthy(host, config.broker_name)
+        ):
+            raise SupervisorError("candidate did not reach requested healthy image revision")
     except SupervisorError:
         _remove(host, config.broker_name)
         if previous is not None:

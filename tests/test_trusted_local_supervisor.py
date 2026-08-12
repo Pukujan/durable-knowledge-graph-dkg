@@ -18,6 +18,8 @@ from dkg.trusted_local_supervisor import (
 SHA = "a" * 40
 OLD_ID = "sha256:old"
 NEW_ID = "sha256:new"
+REPOSITORY_PATH = Path.cwd() / "supervisor-test-repo"
+BROKER_CONFIG_PATH = Path.cwd() / "local" / "broker.json"
 
 
 class Evidence:
@@ -29,21 +31,30 @@ class Evidence:
 
 
 class Host:
-    def __init__(self, *, smoke_fails: bool = False, health_fails: bool = False, live_main: str = SHA):
+    def __init__(
+        self,
+        *,
+        smoke_fails: bool = False,
+        start_fails: bool = False,
+        health_fails: bool = False,
+        live_main: str = SHA,
+    ):
         self.calls: list[tuple[str, ...]] = []
         self.smoke_fails = smoke_fails
+        self.start_fails = start_fails
         self.health_fails = health_fails
         self.live_main = live_main
         self.running = True
+        self.health = "healthy"
         self.image = OLD_ID
         self.revision = "b" * 40
 
     def run(self, argv, *, cwd=None):
         command = tuple(argv)
         self.calls.append(command)
-        if command[:4] == ("git", "-C", "/repo", "config"):
+        if command[:4] == ("git", "-C", str(REPOSITORY_PATH), "config"):
             return "https://github.com/Pukujan/fossil-core.git"
-        if command[:4] == ("git", "-C", "/repo", "ls-remote"):
+        if command[:4] == ("git", "-C", str(REPOSITORY_PATH), "ls-remote"):
             return f"{self.live_main}\trefs/heads/main"
         if command[:2] == ("git", "-C") and command[-2:] == ("rev-parse", "HEAD"):
             return SHA
@@ -59,6 +70,8 @@ class Host:
             template = command[-2]
             if "State.Running" in template:
                 return "true" if self.running else "false"
+            if "State.Health" in template:
+                return self.health if self.running else "none"
             if ".Image" in template:
                 if not self.running:
                     raise SupervisorError("container absent")
@@ -75,13 +88,14 @@ class Host:
             image = command[-1]
             self.image = NEW_ID if "reviewed-" in image else OLD_ID
             self.revision = SHA if "reviewed-" in image else "b" * 40
-            self.running = not (self.health_fails and "reviewed-" in image)
+            self.running = not (self.start_fails and "reviewed-" in image)
+            self.health = "unhealthy" if self.health_fails and "reviewed-" in image else "healthy"
             return "container-id"
         return ""
 
 
 def config() -> SupervisorConfig:
-    return SupervisorConfig(repository_path=Path("/repo"), broker_config_file=Path("/local/broker.json"))
+    return SupervisorConfig(repository_path=REPOSITORY_PATH, broker_config_file=BROKER_CONFIG_PATH)
 
 
 def comment(*, login="Pukujan", sha=SHA, suffix=""):
@@ -111,12 +125,20 @@ def test_candidate_smoke_failure_leaves_old_broker_running():
 
 
 def test_replacement_health_failure_removes_candidate_and_rolls_back_old_image():
-    host = Host(health_fails=True)
+    host = Host(start_fails=True)
     with pytest.raises(SupervisorError):
         apply_release(Release(SHA), config=config(), host=host, evidence=Evidence())
     assert host.running is True and host.image == OLD_ID
     assert any(call[:3] == ("docker", "rm", "-f") for call in host.calls)
     assert not any(call[:3] == ("docker", "image", "rm") for call in host.calls)
+
+
+def test_replacement_unhealthy_but_running_rolls_back_old_image():
+    host = Host(health_fails=True)
+    with pytest.raises(SupervisorError, match="healthy image revision"):
+        apply_release(Release(SHA), config=config(), host=host, evidence=Evidence())
+    assert host.running is True and host.image == OLD_ID
+    assert any("State.Health" in " ".join(call) for call in host.calls)
 
 
 def test_success_has_no_ports_socket_or_owner_profile_and_duplicate_is_noop():
@@ -135,7 +157,7 @@ def test_success_has_no_ports_socket_or_owner_profile_and_duplicate_is_noop():
 
 def test_mount_config_rejects_socket_owner_profile_or_provider_secret_names():
     for value in ("/var/run/docker.sock", "owner-profile", "provider-secret"):
-        bad = SupervisorConfig(Path("/repo"), Path("/local/broker.json"), worker_codex_volume=value)
+        bad = SupervisorConfig(REPOSITORY_PATH, BROKER_CONFIG_PATH, worker_codex_volume=value)
         with pytest.raises(SupervisorError):
             runtime_argv(bad, "image")
 

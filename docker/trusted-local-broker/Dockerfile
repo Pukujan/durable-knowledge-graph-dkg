@@ -20,4 +20,5 @@ COPY docker/trusted-local-broker/worker-codex /usr/local/bin/worker-codex
 RUN chmod 0755 /usr/local/bin/worker-codex
 
 ENV PATH=/opt/fossil-venv/bin:${PATH}
+HEALTHCHECK --interval=15s --timeout=10s --start-period=10s --retries=2 CMD ["python3", "scripts/run_trusted_local_broker.py", "--config", "/etc/fossil/broker.json", "--health"]
 ENTRYPOINT ["/opt/fossil-venv/bin/python", "scripts/run_trusted_local_broker.py"]
