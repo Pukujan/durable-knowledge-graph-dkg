@@ -1,39 +1,168 @@
-# Trusted-local runner enrollment and operations
+# Trusted-local autonomous broker and verifier
 
-**Authority:** D022; `docs/architecture/2026-08-12-trusted-local-runner-boundary.md`; issue #96 / #94 `INFRA-03`.
+**Authority:** D022; issue #96; #94 `INFRA-03` / `INFRA-04`.
 
-This runbook enrolls one narrow credential-boundary runner. It does not authorize a deployment, production promotion, a public inbound endpoint, or ordinary pull-request execution.
+The preferred local execution path is now an **outbound polling broker**, not a self-hosted GitHub Actions runner attached to this public repository.
 
-## Enroll the runner (LOCAL_INFRA)
+Why: the owner's PC is persistent credential-adjacent infrastructure. Public repository workflow code must not be able to schedule it directly. The broker connects outbound to GitHub, reads the append-only queue, and only executes tasks that are explicitly machine-ready under the rules below.
 
-1. In the repository Actions settings, create a short-lived self-hosted runner registration token. Never paste the token into Git, issue comments, chat, logs, receipts, or shell history.
-2. Install the GitHub Actions runner under a dedicated local OS account/service boundary where practical. Use a runner name that identifies the host/trust class but exposes no credential or personal data.
-3. Register it only for `Pukujan/fossil-core` with labels `self-hosted,trusted-local,windows` (replace `windows` only if the actual host OS differs). Do not use `trusted-local` on a general-purpose or untrusted runner.
-4. Start the service with no Railway/provider/telemetry/object-store environment variables. The service account must not inherit an interactive user's `.env`.
-5. Confirm that only `.github/workflows/trusted-local-workorder.yml` targets `trusted-local`, and that it has no `pull_request` or `pull_request_target` trigger.
-6. Dispatch a `CLOUD_SECRETLESS`, `luna` WorkOrder with an exact 40-character reviewed SHA and the `pytest` check profile. Confirm receipt redaction, worktree cleanup, and that no protected variable is visible to the child process.
+## Security invariant
 
-The runner uses GitHub's outbound connection; do not open a webhook listener or inbound public port on the PC.
+> A PR, fork, arbitrary issue comment, or repository workflow cannot directly invoke the owner's PC.
 
-## Privileged verifier installation
+The broker accepts a local Codex task only when all of these are true:
 
-The repository workflow never starts the privileged lane. Install a separate local-only wrapper outside this repository that calls `dkg.trusted_local_runner.dispatch_privileged_verifier`.
+1. the #94 `TASK` comment is authored by trusted GitHub login `Pukujan`;
+2. `state=READY`;
+3. `repo` is in the reviewed local allowlist;
+4. `starting_ref` is an exact 40-character SHA;
+5. `local_role=terra` or `local_role=luna` is explicit;
+6. access is `CLOUD_SECRETLESS` for Codex work;
+7. there is no earlier active unexpired claim;
+8. the broker posts a claim, re-reads #94, and confirms it won;
+9. generation/cancel/terminal attempt state is re-derived from live `WORKORDER*` records before launch.
 
-Before that wrapper loads its minimum local credential environment, it must verify all of the following:
+Old task prose that lacks the exact SHA or `local_role` is inert to the broker.
 
-- the WorkOrder access class is one of `LOCAL_INFRA`, `TRUSTED_SECRET_WORKFLOW`, `LIVE_STAGING`, or `OBJECT_STORE_LIVE`;
-- `starting_ref` is a 40-character SHA and equals `reviewed_sha`;
-- `trusted_dispatch_ref` is a reviewed/default-branch dispatcher SHA pinned in its local policy;
-- #94 reports the running dispatcher as the active winning claim owner;
-- the task/repository/mutation scope are locally allowlisted;
-- production promotion is explicitly absent from mutation scope.
+## What actually invokes Codex
 
-The wrapper must pass only the minimum required credential names to the isolated verifier process, collect a sanitized compact receipt, and observe remote effect identity before retrying. It must never execute PR-controlled workflow definitions or echo environment values.
+`scripts/run_trusted_local_broker.py` launches a **fresh non-interactive** Codex process for each accepted WorkOrder using `codex exec` with:
 
-## Disable, revoke, and recover
+- `--ephemeral` — no session rollout reuse;
+- `--sandbox workspace-write` — write access only for the isolated repository worktree;
+- `--json` — machine-readable run events;
+- `--ignore-user-config` — do not inherit interactive user MCP/config policy;
+- `gpt-5.6-terra` for role `terra`;
+- `gpt-5.6-luna` for role `luna`.
 
-- Disable the runner in GitHub Actions settings first, then stop its local service.
-- Revoke the registration token if it remains valid; rotate any credential that may have reached an unintended process.
-- Remove the runner registration using the GitHub-provided remove token; do not commit either token.
-- Delete only the dedicated disposable worktree directory after terminal receipt preservation; an interrupted attempt remains recoverable from its exact SHA and receipt/correlation IDs.
-- A ledger/API read failure, expired claim, malformed WorkOrder, duplicate attempt, stale generation, cancellation, or late result is a `BLOCKED` closeout, not a reason to bypass validation.
+The generated prompt forbids credential discovery, `.env` access, deploy/promotion, push/PR creation, and external mutation. The Codex child's exit code is not final acceptance: the parent broker runs the configured independent check command afterwards.
+
+## Credential split
+
+There are three separate contexts.
+
+### 1. Broker parent
+
+The parent may use a GitHub coordination credential (prefer the authenticated `gh` credential or a narrow local token). It reads/posts #94, pushes the mechanically checked branch, and opens the draft PR.
+
+**The GitHub token is never passed to the Codex child.**
+
+### 2. Secretless Codex worker
+
+Use a dedicated local OS account/profile where practical. At minimum configure separate `worker_home` and `codex_home` paths that contain only the Codex authentication/config needed to run the CLI.
+
+The child environment is reconstructed from a small OS allowlist. It does not inherit the interactive user's `HOME`, `GITHUB_TOKEN`, Railway/provider keys, `OPENAI_API_KEY`, or other credential-like environment variables.
+
+Treat Codex's local auth file as a password. Do not copy it into Git, #94, logs, chat, or the repository worktree.
+
+### 3. Privileged verifier
+
+Railway/provider/telemetry/object-store credentials remain a **separate deterministic verifier lane**. A model/Codex process does not receive those credentials.
+
+The existing `dispatch_privileged_verifier` path may load the minimum local credential environment only after exact-reviewed-SHA authorization. Production promotion remains separately forbidden unless explicitly authorized.
+
+## One-time local setup
+
+1. Install/update Codex CLI on the PC.
+2. Create a dedicated broker/worker local account or isolated worker home.
+3. Sign Codex in inside that dedicated worker profile only.
+4. Keep the normal interactive user's `.env`, GitHub credential files, Railway/provider keys, browser profiles, and other secrets outside that worker profile.
+5. Authenticate the **broker parent** to GitHub separately. Do not make the GitHub token part of the worker environment.
+6. Ensure each allowed repo already exists as a local clone with the expected GitHub `origin` and that the parent Git credential helper can push.
+7. Create a local-only broker config JSON outside Git. Example:
+
+```json
+{
+  "agent": "trusted-local-broker-my-pc",
+  "worker_home": "<dedicated-worker-home>",
+  "codex_home": "<dedicated-worker-home>/.codex",
+  "codex_executable": "codex",
+  "repos": {
+    "Pukujan/fossil-core": {"path": "<local-fossil-core>", "check_command": ["python", "-m", "pytest", "-q"]},
+    "Pukujan/cortex-v4": {"path": "<local-cortex-v4>", "check_command": ["python", "-m", "pytest", "-q"]},
+    "Pukujan/litellm-ckff-ops": {"path": "<local-litellm-ckff-ops>", "check_command": ["python", "-m", "pytest", "-q"]}
+  }
+}
+```
+
+Do not commit this config if it contains personal paths or local policy details.
+
+## Start and stop
+
+One cycle:
+
+```text
+python scripts/run_trusted_local_broker.py --config <local-config.json> --once
+```
+
+Continuous outbound polling:
+
+```text
+python scripts/run_trusted_local_broker.py --config <local-config.json> --poll-seconds 60
+```
+
+The broker opens no inbound port and requires no webhook or self-hosted Actions runner registration.
+
+Stop the process/service to stop local automation immediately.
+
+## Task format required for autonomous local execution
+
+A queue writer must deliberately opt a task in:
+
+```text
+TASK task=CORTEX-05
+state=READY
+repo=Pukujan/cortex-v4
+access=CLOUD_SECRETLESS
+starting_ref=<exact-40-char-sha>
+local_role=terra
+purpose=...
+acceptance=...
+```
+
+`local_role` is an execution/model choice, not an authority grant. Neither Terra nor Luna receives infrastructure credentials.
+
+## Execution lifecycle
+
+For one eligible task the broker:
+
+1. reads trusted #94 state;
+2. posts `CLAIM`;
+3. re-reads and confirms earliest winning claim;
+4. posts versioned `WORKORDER` with generation/attempt identity;
+5. creates an isolated exact-SHA worktree;
+6. launches fresh ephemeral Codex with the dedicated secretless profile;
+7. runs independent configured checks;
+8. if checks pass and there is a diff, the **parent broker** commits with hooks disabled, pushes a task branch, and opens a draft PR;
+9. posts sanitized `WORKORDER_DONE` + `DONE`/`BLOCKED` + `RELEASE` records;
+10. removes the disposable worktree.
+
+GitHub publication happens outside the Codex child so repository credentials do not have to be exposed to the model-driven process.
+
+## Fault and recovery rules
+
+- unreadable GitHub queue -> do nothing / BLOCKED;
+- malformed or unsigned-by-policy task -> ignore;
+- lost claim race -> do not launch;
+- duplicate/terminal attempt -> reject;
+- stale generation -> reject;
+- cancel record -> reject;
+- deadline/process timeout -> FAILED/BLOCKED mechanically;
+- Codex exits 0 but independent checks fail -> not PASS;
+- Codex produces no diff for a coding WorkOrder -> BLOCKED `NO_CHANGES`;
+- broker/PC dies -> exact SHA + #94 WorkOrder generation make a fresh attempt safe; late attempts remain rejectable.
+
+## Public-repository runner decision
+
+`.github/workflows/trusted-local-workorder.yml` is intentionally removed. If a future GitHub plan/account provides a runner group that can be restricted at the control-plane level to selected trusted workflows, that topology may be re-evaluated. It is not needed for the current outbound-broker design.
+
+## Remaining LOCAL_INFRA proof
+
+Repository code/tests can prove policy and deterministic behavior, but this session cannot start a process on the owner's physical PC. Final acceptance still requires one local proof using the dedicated worker profile:
+
+1. broker starts successfully;
+2. one benign `CLOUD_SECRETLESS` local-auto task is claimed and runs through real `codex exec`;
+3. independent checks pass;
+4. draft PR + sanitized #94 closeout appear;
+5. no infrastructure credential is visible to the Codex child;
+6. privileged verifier remains separate and no production mutation occurs.
