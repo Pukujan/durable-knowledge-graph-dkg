@@ -1,7 +1,7 @@
 """Outbound trusted-local broker helpers for autonomous Codex WorkOrders.
 
 The broker is intentionally outbound-only: it polls the trusted GitHub queue from
-local infrastructure.  Public repository workflow code never schedules the local
+local infrastructure. Public repository workflow code never schedules the local
 machine directly, and GitHub/infra credentials are never passed to the Codex child.
 """
 
@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import shutil
 import subprocess
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -128,12 +129,7 @@ def parse_ready_local_tasks(
     *,
     trusted_authors: frozenset[str] = TRUSTED_QUEUE_AUTHORS,
 ) -> list[QueueTask]:
-    """Parse only explicit local-auto READY tasks from trusted queue authors.
-
-    A local job is impossible unless the TASK itself contains an exact starting SHA
-    and an explicit local_role.  Old/stale queue prose therefore cannot accidentally
-    become executable local work.
-    """
+    """Parse explicit machine-ready local tasks from trusted queue authors."""
     tasks: list[QueueTask] = []
     for comment in _trusted_comments(comments, trusted_authors):
         body = str(comment.get("body", ""))
@@ -362,8 +358,14 @@ def run_bounded_process(
         raise WorkOrderError("DEADLINE_EXPIRED", "WorkOrder deadline passed before process launch")
     try:
         completed = subprocess.run(
-            list(command), cwd=worktree, env=dict(environment), input=stdin_text,
-            capture_output=True, text=True, timeout=remaining, check=False,
+            list(command),
+            cwd=worktree,
+            env=dict(environment),
+            input=stdin_text,
+            capture_output=True,
+            text=True,
+            timeout=remaining,
+            check=False,
         )
         status = "PASS" if completed.returncode == 0 else "FAILED"
         detail = sanitize_text((completed.stdout + "\n" + completed.stderr).strip())
@@ -398,7 +400,9 @@ def publish_checked_changes(
 ) -> str:
     status = subprocess.run(
         ["git", "-C", str(worktree), "status", "--porcelain"],
-        check=False, capture_output=True, text=True,
+        check=False,
+        capture_output=True,
+        text=True,
     )
     if status.returncode != 0:
         raise WorkOrderError("GIT_FAILED", "could not inspect Codex worktree")
@@ -434,10 +438,37 @@ def publish_checked_changes(
         body=(
             f"Autonomous local Codex WorkOrder for `{task.task_id}`.\n\n"
             f"Starting SHA: `{work_order['starting_ref']}`\nRole: `{task.role}`\n"
-            "Publication occurred only after the secretless Codex process exited and the parent "
-            "broker's independent check command passed. Credential-bearing verification is separate."
+            "Publication occurred only after the secretless Codex process exited, the parent "
+            "broker's independent check command passed, and live queue state was reconciled."
         ),
     )
+
+
+def reconcile_before_publication(
+    task: QueueTask,
+    work_order: Mapping[str, Any],
+    *,
+    agent: str,
+    github: GitHubQueueClient,
+    now: datetime | None = None,
+) -> DispatchLedger:
+    """Re-read live queue immediately before any GitHub publication.
+
+    This rejects cancellation, a newer generation, terminal/duplicate attempt state,
+    claim loss/expiry, or queue read failure that happened while Codex/tests ran.
+    """
+    current = now or datetime.now(UTC)
+    live_ledger = parse_broker_ledger(github.comments(), now=current)
+    policy = DispatchPolicy(
+        repo_allowlist=DEFAULT_REPOS,
+        task_allowlist=frozenset({task.task_id}),
+        local_agent=agent,
+        allowed_roles=frozenset(MODEL_BY_ROLE),
+        now=lambda: current,
+    )
+    if authorize_work_order(work_order, ledger=live_ledger, policy=policy) != "secretless":
+        raise WorkOrderError("ACCESS_CLASS_MISMATCH", "publication reconciliation requires secretless WorkOrder")
+    return live_ledger
 
 
 def run_local_codex_task(
@@ -453,7 +484,7 @@ def run_local_codex_task(
     github: GitHubQueueClient,
     codex_executable: str = "codex",
 ) -> tuple[dict[str, Any], str | None]:
-    """Run fresh Codex, independent checks, then parent-only publication."""
+    """Run fresh Codex, independent checks, reconcile live state, then publish."""
     policy = DispatchPolicy(
         repo_allowlist=DEFAULT_REPOS,
         task_allowlist=frozenset({task.task_id}),
@@ -486,14 +517,22 @@ def run_local_codex_task(
             check_receipt["detail"] = "independent check failed\n" + str(check_receipt.get("detail", ""))
             return sanitize_receipt(check_receipt), None
 
+        # Critical late-result fence: do not publish based on authorization that may
+        # have become stale while the model/check process was running.
+        reconcile_before_publication(task, work_order, agent=agent, github=github)
+
         pr_url = publish_checked_changes(
-            repo_policy, worktree=worktree, task=task, work_order=work_order, github=github
+            repo_policy,
+            worktree=worktree,
+            task=task,
+            work_order=work_order,
+            github=github,
         )
         return sanitize_receipt(
             {
                 **check_receipt,
                 "terminal_status": "PASS",
-                "detail": "Codex and independent checks passed; parent broker published draft PR.",
+                "detail": "Codex, independent checks, and live pre-publication reconciliation passed; parent broker published draft PR.",
                 "pr_url": pr_url,
             }
         ), pr_url
