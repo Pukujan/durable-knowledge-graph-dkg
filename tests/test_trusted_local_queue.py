@@ -63,6 +63,36 @@ def test_untrusted_terminal_comment_cannot_cancel_trusted_ready_task():
     assert [task.task_id for task in active] == ["CORTEX-05"]
 
 
+def test_trusted_task_cancel_deactivates_ready_task():
+    comments = [ready(), comment("CANCEL task=CORTEX-05 reason=owner-cancel")]
+    assert active_ready_local_tasks(comments) == []
+
+
+def test_trusted_task_cancel_only_deactivates_named_task():
+    comments = [
+        ready("CORTEX-05"),
+        ready("CORTEX-06", role="luna"),
+        comment("CANCEL task=CORTEX-05 reason=owner-cancel"),
+    ]
+    assert [task.task_id for task in active_ready_local_tasks(comments)] == ["CORTEX-06"]
+
+
+def test_new_ready_explicitly_reactivates_cancelled_task():
+    comments = [
+        ready(),
+        comment("CANCEL task=CORTEX-05 reason=owner-cancel"),
+        ready(sha="b" * 40, role="luna"),
+    ]
+    active = active_ready_local_tasks(comments)
+    assert [task.task_id for task in active] == ["CORTEX-05"]
+    assert active[0].starting_ref == "b" * 40
+
+
+def test_untrusted_task_cancel_cannot_deactivate_trusted_ready_task():
+    comments = [ready(), comment("CANCEL task=CORTEX-05 reason=fake", login="attacker")]
+    assert [task.task_id for task in active_ready_local_tasks(comments)] == ["CORTEX-05"]
+
+
 def test_latest_trusted_ready_order_drives_fifo_selection_order():
     comments = [ready("CORTEX-05"), ready("CORTEX-06", role="luna"), ready("CORTEX-05", sha="c" * 40)]
     active = active_ready_local_tasks(comments)

@@ -14,6 +14,7 @@ from dkg.trusted_local_broker import QueueTask, parse_ready_local_tasks
 
 _TERMINAL_TASK = re.compile(r"^(?:DONE|BLOCKED)\s+task=(?P<task>[^\s]+)", re.MULTILINE)
 _TASK_DIRECTIVE = re.compile(r"^TASK\s+task=(?P<task>[^\s]+)$", re.MULTILINE)
+_CANCEL_TASK = re.compile(r"^CANCEL\s+task=(?P<task>[^\s]+)", re.MULTILINE)
 _TRUSTED_AUTHORS = frozenset({"Pukujan"})
 
 
@@ -33,6 +34,7 @@ def active_ready_local_tasks(
     Rules are deliberately conservative:
     - only trusted-author comments affect executable lifecycle state;
     - a machine-valid `TASK ... state=READY` activates/replaces that task;
+    - a later trusted task-level `CANCEL task=...` deactivates that task;
     - any later trusted `DONE` or `BLOCKED` deactivates it;
     - a later `TASK` directive that is not machine-valid local-auto also deactivates
       the prior local-auto version rather than silently retaining stale authority;
@@ -58,6 +60,14 @@ def active_ready_local_tasks(
                 if task_id in order:
                     order.remove(task_id)
                 order.append(task_id)
+            continue
+
+        cancellation = _CANCEL_TASK.search(body)
+        if cancellation:
+            task_id = cancellation["task"]
+            active.pop(task_id, None)
+            if task_id in order:
+                order.remove(task_id)
             continue
 
         terminal = _TERMINAL_TASK.search(body)
