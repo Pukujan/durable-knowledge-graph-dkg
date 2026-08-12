@@ -1,0 +1,64 @@
+name: Engineering assurance
+
+on:
+  pull_request:
+    paths:
+      - "contracts/engineering/**"
+      - "src/dkg/engineering_preflight.py"
+      - "src/dkg/engineering_assurance.py"
+      - "scripts/validate_engineering_assurance.py"
+      - "tests/test_engineering_preflight.py"
+      - "tests/test_engineering_assurance.py"
+      - ".github/workflows/engineering-assurance.yml"
+      - "pyproject.toml"
+  push:
+    branches: [main]
+    paths:
+      - "contracts/engineering/**"
+      - "src/dkg/engineering_preflight.py"
+      - "src/dkg/engineering_assurance.py"
+      - "scripts/validate_engineering_assurance.py"
+      - "tests/test_engineering_preflight.py"
+      - "tests/test_engineering_assurance.py"
+      - ".github/workflows/engineering-assurance.yml"
+      - "pyproject.toml"
+
+permissions:
+  contents: read
+
+jobs:
+  engineering-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Clean reproducible install and dependency integrity
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e '.[test]'
+          python -m pip check
+      - name: Validate preflight, closeout, and cross-repository contracts
+        run: python scripts/validate_engineering_assurance.py
+      - name: Run risk-triggered semantic and security fixtures
+        run: python -m pytest -q tests/test_engineering_preflight.py tests/test_engineering_assurance.py
+      - name: Emit compact secretless receipt
+        shell: bash
+        run: |
+          {
+            echo "## Engineering assurance receipt"
+            echo "- project_issue_id: #88"
+            echo "- work_order_id: not_applicable"
+            echo "- task_id: FOSSIL-04"
+            echo "- attempt_id: ${{ github.run_id }}.${{ github.run_attempt }}"
+            echo "- generation: not_applicable"
+            echo "- request_id: not_applicable"
+            echo "- trace_id: not_applicable"
+            echo "- checkpoint_id: ${{ github.sha }}"
+            echo "- commit_sha: ${{ github.sha }}"
+            echo "- deployment_id: not_applicable"
+            echo "- security: secretless; contents:read; privileged PR trigger absent"
+          } >> "$GITHUB_STEP_SUMMARY"
