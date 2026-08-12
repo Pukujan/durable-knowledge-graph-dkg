@@ -205,6 +205,15 @@ The queue may select a local `verifier_action`, but cannot provide an executable
 
 **Reconsider when:** a protected managed secret runner provides equal/stronger exact-SHA, action allowlisting, independent runtime identity, non-disclosure receipts, and operational recovery with lower owner burden.
 
+## D027 — Broker refresh is controlled by a tiny host-side supervisor
+
+**State:** accepted / provisional trusted-local topology refinement
+**Decision:** a deterministic host-side supervisor may rebuild and atomically refresh the broker only for a trusted-author `BROKER_RELEASE` directive naming `Pukujan/fossil-core` and an exact reviewed SHA. It validates live `origin/main`, GitHub checks, exact detached build origin/revision, credential-free smoke, and running image revision; all Docker argv is fixed code plus owner-local allowlisted configuration. The broker/Codex containers retain no Docker socket, owner profile, provider credentials, or inbound ports. Failed replacement restores the prior known-good image under the same policy.
+
+**Residual risk:** Docker Desktop gives this supervisor broad Docker capability. Its command surface, configuration, and credential must remain tiny, non-model, local-only, and independently auditable; it is not self-modifying.
+
+**Evidence/contract:** Issue #94 `INFRA-09`; `docs/architecture/2026-08-12-trusted-local-broker-supervisor-boundary.md`; `docs/decisions/2026-08-12-D027-broker-host-supervisor.md`.
+
 ## How to add a decision
 
 When implementation or evidence changes an architectural conclusion:
