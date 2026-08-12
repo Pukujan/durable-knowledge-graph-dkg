@@ -35,7 +35,7 @@ Old task prose that lacks the exact SHA or `local_role` is inert to the broker.
 - `gpt-5.6-terra` for role `terra`;
 - `gpt-5.6-luna` for role `luna`.
 
-The generated prompt forbids credential discovery, `.env` access, deploy/promotion, push/PR creation, and external mutation. The Codex child's exit code is not final acceptance: the parent broker runs the configured independent check command afterwards.
+The generated prompt forbids credential discovery, `.env` access, deploy/promotion, push/PR creation, and external mutation. The Codex child's exit code is not final acceptance: the parent broker runs the configured independent check command afterwards, inside the same dedicated worker boundary.
 
 ## Credential split
 
@@ -51,7 +51,7 @@ The parent publication step uses a reviewed repo allowlist, forces the expected 
 
 ### 2. Secretless Codex worker
 
-Use a dedicated local OS account/profile where practical. At minimum configure separate `worker_home` and `codex_home` paths that contain only the Codex authentication/config needed to run the CLI.
+Use a dedicated local OS account/profile or container boundary. Separate `worker_home` and `codex_home` paths contain only the Codex authentication/config needed to run the CLI. The broker parent and its independent checks must execute in that same boundary: do not run changed-code checks under the owner's normal host identity.
 
 The child environment is reconstructed from a small OS allowlist. It does not inherit the interactive user's `HOME`, `GITHUB_TOKEN`, Railway/provider keys, `OPENAI_API_KEY`, or other credential-like environment variables.
 
@@ -65,8 +65,8 @@ The existing `dispatch_privileged_verifier` path may load the minimum local cred
 
 ## One-time local setup
 
-1. Install/update Codex CLI on the PC.
-2. Create a dedicated broker/worker local account or isolated worker home.
+1. Install/update Codex CLI on the PC, or build the checked-in `docker/trusted-local-broker/Dockerfile` image.
+2. Create a dedicated broker/worker local account or isolated container boundary.
 3. Sign Codex in inside that dedicated worker profile only.
 4. Keep the normal interactive user's `.env`, GitHub credential files, Railway/provider keys, browser profiles, and other secrets outside that worker profile.
 5. Authenticate the **broker parent** to GitHub separately. Do not make the GitHub token part of the worker environment.
@@ -88,6 +88,20 @@ The existing `dispatch_privileged_verifier` path may load the minimum local cred
 ```
 
 Do not commit this config if it contains personal paths or local policy details.
+
+### Container boundary (recommended when the PC owner is the normal login)
+
+The checked-in Dockerfile runs the broker parent, its Git publication, and its independent checks inside one narrow container. It demotes only `codex exec` to an unprivileged `codexworker` user. This keeps both model execution and changed-code tests away from the Windows owner profile.
+
+Build it from the repository root:
+
+```text
+docker build --tag fossil-trusted-local-broker:local --file docker/trusted-local-broker/Dockerfile .
+```
+
+Keep all mounted runtime state under a dedicated `D:` directory (for example `D:\FossilBrokerWorker`): a Codex-auth directory, a root-only GitHub CLI directory for the parent, allowlisted disposable repository clones, worktree directory, and the local configuration JSON. Mount **only** those directories. Do not mount `C:\Users\<owner>`, the Docker socket, provider credentials, browser data, or an inbound port. Configure `codex_executable` as `/usr/local/bin/worker-codex`, and use container paths in the config.
+
+The GitHub CLI parent login is performed as container root and stored only in its dedicated GitHub mount. The Codex device login is performed as `codexworker` and stored only in the dedicated Codex mount. Never copy either auth material between the two directories.
 
 ## Start and stop
 

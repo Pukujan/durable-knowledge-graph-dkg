@@ -1,0 +1,4 @@
+#!/bin/sh
+# Parent broker runs as root inside its narrow container. The model process is
+# deliberately demoted to the separate unprivileged worker identity.
+exec setpriv --reuid=codexworker --regid=codexworker --init-groups "$@"
