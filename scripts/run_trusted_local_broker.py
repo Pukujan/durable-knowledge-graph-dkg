@@ -191,6 +191,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", required=True, type=Path)
     parser.add_argument("--once", action="store_true")
+    parser.add_argument("--health", action="store_true")
     parser.add_argument("--poll-seconds", type=int, default=60)
     parser.add_argument("--worktree-root", type=Path, default=Path(".trusted-local-worktrees"))
     args = parser.parse_args()
@@ -199,6 +200,11 @@ def main() -> int:
 
     agent, worker_home, codex_home, repos, codex_executable, codex_sandbox = load_config(args.config)
     client = GitHubQueueClient(load_token())
+    if args.health:
+        # Read-only queue access verifies the live broker config and its separate
+        # GitHub credential without exposing either to the worker or logs.
+        client.comments()
+        return 0
     worktree_root = args.worktree_root.expanduser().resolve()
 
     while True:

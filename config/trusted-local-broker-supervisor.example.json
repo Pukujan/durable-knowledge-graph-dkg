@@ -1,0 +1,9 @@
+{
+  "repository_path": "/absolute/path/to/fossil-core",
+  "broker_config_file": "/absolute/path/to/local/broker.json",
+  "broker_name": "fossil-trusted-local-broker",
+  "runtime_network": "bridge",
+  "broker_parent_github_volume": "fossil-broker-github-auth",
+  "worker_codex_volume": "fossil-codex-auth",
+  "worktree_volume": "fossil-broker-worktrees"
+}
