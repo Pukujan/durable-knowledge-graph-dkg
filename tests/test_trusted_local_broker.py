@@ -8,6 +8,7 @@ from dkg.trusted_local_broker import (
     build_codex_prompt,
     choose_unclaimed_task,
     codex_worker_environment,
+    _git_in_worktree,
     make_work_order,
     parse_broker_ledger,
     parse_ready_local_tasks,
@@ -92,6 +93,19 @@ def test_codex_command_is_fresh_ephemeral_workspace_write_and_role_mapped():
     assert MODEL_BY_ROLE["terra"] in terra
     assert MODEL_BY_ROLE["luna"] in luna
     assert terra[-1] == "-"
+
+
+def test_parent_git_command_trusts_only_the_exact_disposable_worktree(tmp_path):
+    worktree = tmp_path / "worktree"
+    assert _git_in_worktree(worktree, "status", "--porcelain") == [
+        "git",
+        "-c",
+        f"safe.directory={worktree}",
+        "-C",
+        str(worktree),
+        "status",
+        "--porcelain",
+    ]
 
 
 def test_codex_worker_environment_drops_infra_secrets_and_interactive_home(tmp_path):
