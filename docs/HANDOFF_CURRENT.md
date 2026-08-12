@@ -115,6 +115,8 @@ Therefore:
 - sanitized receipts only;
 - no implicit production promotion.
 
+The verifier is deliberately a separate model-free Docker service. `fossil-privileged-secrets` is a root-only Docker volume in the local Docker Desktop WSL data store (`D:\DockerDesktopWSL`) containing the owner-provided SSC `.env` copy; `codexworker` access was mechanically denied. Queue records select only a locally owned `verifier_action`; they cannot supply commands, secret names, or values. See D026 and `docs/operations/TRUSTED_LOCAL_RUNNER.md` before configuring a staging action.
+
 ### Agent roles
 
 - **Terra:** complex/root-cause, architecture-sensitive, and explicitly trusted local/infra tasks.

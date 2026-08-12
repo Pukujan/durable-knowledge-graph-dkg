@@ -192,6 +192,19 @@ Potentially useful old eval/checker assets may survive only through a **standalo
 
 **Reconsider only if:** a specific historical asset is independently validated under the extraction policy. This does not authorize reviving SSC itself.
 
+## D026 â€” Local application credentials use a model-free, action-allowlisted verifier
+
+**State:** accepted / provisional execution topology
+**Decision:** credentials that must remain only on the owner's PC are stored in a root-only Docker named volume separate from the Codex-worker volume and broker GitHub-auth volume. They are never copied into GitHub, repository worktrees, a Codex prompt/environment, or an issue receipt. A separate privileged verifier container may load only a locally configured named allowlist after it has accepted a trusted queue task for an exact reviewed SHA and reviewed verifier-dispatch revision.
+
+The queue may select a local `verifier_action`, but cannot provide an executable command, secret-file path, or credential variable name. Each action fixes its literal non-shell argv, minimum environment-variable allowlist, and non-production access class in a local owner-controlled configuration. Reviewed-code subprocesses run as the dedicated unprivileged verifier identity; output is discarded rather than made receipt material. Production actions are rejected; any promotion needs a separate explicit authorization design.
+
+**Why:** the normal local Codex broker must remain secretless. A broad mounted `.env`, even in a Docker volume, would make model-driven process compromise a credential disclosure risk. A capability map separates “run code” from “perform this narrowly approved staging verification with exactly these inputs.”
+
+**Evidence/contract:** Issue #94 `INFRA-05`; `docs/operations/TRUSTED_LOCAL_RUNNER.md`; `src/dkg/privileged_local_verifier.py`; `docker/privileged-local-verifier/Dockerfile`; the local volume access proof records that `codexworker` cannot read `fossil-privileged-secrets`.
+
+**Reconsider when:** a protected managed secret runner provides equal/stronger exact-SHA, action allowlisting, independent runtime identity, non-disclosure receipts, and operational recovery with lower owner burden.
+
 ## How to add a decision
 
 When implementation or evidence changes an architectural conclusion:
