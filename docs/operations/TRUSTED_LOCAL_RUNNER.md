@@ -37,6 +37,8 @@ Old task prose that lacks the exact SHA or `local_role` is inert to the broker.
 
 The generated prompt forbids credential discovery, `.env` access, deploy/promotion, push/PR creation, and external mutation. The Codex child's exit code is not final acceptance: the parent broker runs the configured independent check command afterwards, inside the same dedicated worker boundary.
 
+Independent checks use the broker image's `/opt/fossil-venv` runtime and execute the reviewed repository policy's literal argv. The image includes Fossil's test dependencies plus the bounded secretless cross-repository check dependencies currently required by the hosted LiteLLM checks: `fastapi>=0.115,<1`, `httpx>=0.27,<1`, and `pyyaml`. A repository-specific check must not rely on owner-profile packages or credentials; adding further shared runtime packages requires a reviewed image change.
+
 ## Credential split
 
 There are three separate contexts.
