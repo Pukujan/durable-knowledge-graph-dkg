@@ -24,11 +24,11 @@ from dkg.trusted_local_broker import (
     claim_text,
     make_work_order,
     parse_broker_ledger,
-    parse_ready_local_tasks,
     run_local_codex_task,
     terminal_text,
     workorder_text,
 )
+from dkg.trusted_local_queue import active_ready_local_tasks
 from dkg.trusted_local_runner import WorkOrderError, sanitize_receipt
 
 
@@ -120,7 +120,7 @@ def run_once(
     ledger = parse_broker_ledger(comments, now=now)
     candidates = [
         task
-        for task in parse_ready_local_tasks(comments)
+        for task in active_ready_local_tasks(comments)
         if task.repo in repos and task.access == "CLOUD_SECRETLESS"
     ]
     task = choose_unclaimed_task(candidates, ledger)
