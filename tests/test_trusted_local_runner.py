@@ -62,7 +62,11 @@ def policy(**changes: object) -> DispatchPolicy:
 
 def ledger(**changes: object) -> DispatchLedger:
     result = {
-        "claims": {"INFRA-03": LedgerClaim("INFRA-03", "codex-trusted-local-runner-20260812", NOW + timedelta(minutes=10))},
+        "claims": {
+            "INFRA-03": LedgerClaim(
+                "INFRA-03", "codex-trusted-local-runner-20260812", NOW + timedelta(minutes=10)
+            )
+        },
         "latest_generation": {"INFRA-03": 2},
     }
     result.update(changes)
@@ -97,8 +101,14 @@ def test_malformed_or_unauthorized_or_stale_workorders_fail_closed(work_order, e
 
 
 def test_duplicate_cancelled_and_missing_claims_do_not_launch():
-    rejected(order(), expected="DUPLICATE_ATTEMPT", current_ledger=ledger(terminal_attempt_ids=frozenset({"attempt-infra-03"})))
-    rejected(order(), expected="CANCELLED", current_ledger=ledger(cancelled_attempt_ids=frozenset({"attempt-infra-03"})))
+    rejected(
+        order(), expected="DUPLICATE_ATTEMPT",
+        current_ledger=ledger(terminal_attempt_ids=frozenset({"attempt-infra-03"})),
+    )
+    rejected(
+        order(), expected="CANCELLED",
+        current_ledger=ledger(cancelled_attempt_ids=frozenset({"attempt-infra-03"})),
+    )
     rejected(order(), expected="CLAIM_INVALID", current_ledger=ledger(claims={}))
 
 
@@ -133,12 +143,16 @@ def test_ledger_renewal_extends_only_the_active_claim_and_reclaim_survives_old_r
 
 
 def test_secretless_environment_strips_token_and_credential_names():
-    environment = secretless_environment({"PATH": "fixture", "GITHUB_TOKEN": "ghp_should_not_escape", "RAILWAY_API_KEY": "secret", "TEMP": "tmp"})
+    environment = secretless_environment(
+        {"PATH": "fixture", "GITHUB_TOKEN": "ghp_should_not_escape", "RAILWAY_API_KEY": "secret", "TEMP": "tmp"}
+    )
     assert environment == {"PATH": "fixture", "TEMP": "tmp"}
 
 
 def test_receipt_sanitizer_redacts_credential_like_output_and_rejects_nonterminal_status():
-    clean = sanitize_receipt({"terminal_status": "FAILED", "detail": "GITHUB_TOKEN=ghp_abcdefghijklmnop"})
+    clean = sanitize_receipt(
+        {"terminal_status": "FAILED", "detail": "GITHUB_TOKEN=ghp_abcdefghijklmnop"}
+    )
     assert "ghp_" not in clean["detail"]
     with pytest.raises(WorkOrderError, match="terminal_status"):
         sanitize_receipt({"terminal_status": "agent says done"})
@@ -166,23 +180,29 @@ def test_timeout_and_killed_process_have_mechanical_failed_receipts(tmp_path):
 def test_secretless_attempt_uses_disposable_worktree_and_cleans_it(tmp_path):
     repo = tmp_path / "repo"
     repo.mkdir()
-    for command in (["git", "init"], ["git", "config", "user.email", "runner@example.invalid"], ["git", "config", "user.name", "runner"], ["git", "commit", "--allow-empty", "-m", "fixture"]):
+    for command in (
+        ["git", "init"],
+        ["git", "config", "user.email", "runner@example.invalid"],
+        ["git", "config", "user.name", "runner"],
+        ["git", "commit", "--allow-empty", "-m", "fixture"],
+    ):
         __import__("subprocess").run(command, cwd=repo, check=True, capture_output=True)
-    sha = __import__("subprocess").check_output(["git", "rev-parse", "HEAD"], cwd=repo, text=True).strip()
+    sha = __import__("subprocess").check_output(
+        ["git", "rev-parse", "HEAD"], cwd=repo, text=True
+    ).strip()
     receipt = dispatch_secretless_attempt(
-        order(starting_ref=sha), ledger=ledger(), policy=policy(), repo_root=repo, base_dir=tmp_path / "worktrees", command=[sys.executable, "-c", "print('ok')"]
+        order(starting_ref=sha),
+        ledger=ledger(),
+        policy=policy(),
+        repo_root=repo,
+        base_dir=tmp_path / "worktrees",
+        command=[sys.executable, "-c", "print('ok')"],
     )
     assert receipt["terminal_status"] == "PASS"
     assert list((tmp_path / "worktrees").iterdir()) == []
 
 
-def test_trusted_local_workflow_is_default_branch_dispatch_only_and_secretless():
-    workflow = (Path(__file__).resolve().parents[1] / ".github" / "workflows" / "trusted-local-workorder.yml").read_text(encoding="utf-8")
-    assert "workflow_dispatch:" in workflow
-    assert "pull_request:" not in workflow
-    assert "pull_request_target" not in workflow
-    assert "repository_dispatch" not in workflow
-    assert "runs-on: [self-hosted, trusted-local]" in workflow
-    assert "issues: read" in workflow
-    assert "persist-credentials: false" in workflow
-    assert "secrets." not in workflow
+def test_public_repo_has_no_self_hosted_workflow_trigger_for_local_pc():
+    root = Path(__file__).resolve().parents[1]
+    assert not (root / ".github" / "workflows" / "trusted-local-workorder.yml").exists()
+    assert (root / "scripts" / "run_trusted_local_broker.py").exists()
