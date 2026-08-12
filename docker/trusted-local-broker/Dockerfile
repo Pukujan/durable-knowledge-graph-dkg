@@ -14,7 +14,11 @@ COPY contracts ./contracts
 COPY src ./src
 COPY scripts ./scripts
 RUN python3 -m venv /opt/fossil-venv \
-    && /opt/fossil-venv/bin/pip install --no-cache-dir '.[test]'
+    && /opt/fossil-venv/bin/pip install --no-cache-dir \
+        '.[test]' \
+        'fastapi>=0.115,<1' \
+        'httpx>=0.27,<1' \
+        'pyyaml'
 
 COPY docker/trusted-local-broker/worker-codex /usr/local/bin/worker-codex
 RUN chmod 0755 /usr/local/bin/worker-codex

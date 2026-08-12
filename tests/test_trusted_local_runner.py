@@ -206,3 +206,20 @@ def test_public_repo_has_no_self_hosted_workflow_trigger_for_local_pc():
     root = Path(__file__).resolve().parents[1]
     assert not (root / ".github" / "workflows" / "trusted-local-workorder.yml").exists()
     assert (root / "scripts" / "run_trusted_local_broker.py").exists()
+
+
+def test_broker_image_supplies_bounded_secretless_cross_repo_check_runtime():
+    root = Path(__file__).resolve().parents[1]
+    dockerfile = (root / "docker" / "trusted-local-broker" / "Dockerfile").read_text(
+        encoding="utf-8"
+    )
+    for requirement in ("fastapi>=0.115,<1", "httpx>=0.27,<1", "pyyaml"):
+        assert requirement in dockerfile
+    assert 'ENTRYPOINT ["/opt/fossil-venv/bin/python", "scripts/run_trusted_local_broker.py"]' in dockerfile
+
+
+def test_independent_check_command_remains_literal_argv():
+    root = Path(__file__).resolve().parents[1]
+    broker = (root / "src" / "dkg" / "trusted_local_broker.py").read_text(encoding="utf-8")
+    assert "list(command)" in broker
+    assert "shell=True" not in broker
