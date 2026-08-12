@@ -1,8 +1,7 @@
-"""Entry point for the trusted default-branch local-worker workflow.
+"""Explicit local WorkOrder harness for deterministic secretless checks.
 
-This intentionally supports only the secretless worker.  The privileged verifier
-is a separately installed local command that injects its reviewed credential
-loader after exact-SHA authorization; it is never called by this workflow.
+The autonomous path is `run_trusted_local_broker.py`. This command remains a
+small manual/debug harness and is not triggered by GitHub Actions.
 """
 
 from __future__ import annotations
@@ -16,43 +15,55 @@ from dkg.trusted_local_runner import (
     DispatchPolicy,
     WorkOrderError,
     dispatch_secretless_attempt,
-    sanitize_receipt,
     read_github_claim_ledger,
+    sanitize_receipt,
+)
+
+ALLOWED_REPOS = frozenset(
+    {
+        "Pukujan/fossil-core",
+        "Pukujan/cortex-v4",
+        "Pukujan/litellm-ckff-ops",
+    }
 )
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     source = parser.add_mutually_exclusive_group(required=True)
-    source.add_argument("--work-order", help="JSON WorkOrder supplied by trusted workflow_dispatch")
+    source.add_argument("--work-order", help="JSON WorkOrder")
     source.add_argument("--work-order-env", help="environment variable holding the JSON WorkOrder")
-    parser.add_argument("--check-profile", choices=["pytest"], default="pytest")
-    parser.add_argument("--repo-root", default=".")
+    parser.add_argument("--repo-root", required=True)
     parser.add_argument("--worktree-root", default=".trusted-local-worktrees")
     parser.add_argument("--agent", required=True, help="expected winning #94 claim owner")
-    parser.add_argument("--trusted-dispatch-ref", required=True, help="immutable reviewed SHA of this dispatcher")
     args = parser.parse_args()
-    work_order_json = args.work_order if args.work_order is not None else os.environ.get(args.work_order_env, "")
+
+    raw = args.work_order if args.work_order is not None else os.environ.get(args.work_order_env, "")
     try:
-        work_order = json.loads(work_order_json)
+        work_order = json.loads(raw)
     except json.JSONDecodeError:
         print(json.dumps({"version": "trusted-local-receipt-v1", "terminal_status": "BLOCKED", "detail": "MALFORMED: WorkOrder is not valid JSON"}, sort_keys=True))
         return 1
+
+    task_id = str(work_order.get("task_id", ""))
+    repo = str(work_order.get("repo", ""))
     ledger = read_github_claim_ledger("Pukujan/fossil-core", token=os.environ.get("GITHUB_TOKEN"))
     policy = DispatchPolicy(
-        repo_allowlist=frozenset({"Pukujan/fossil-core"}),
-        task_allowlist=frozenset({"INFRA-03"}),
+        repo_allowlist=ALLOWED_REPOS,
+        task_allowlist=frozenset({task_id}) if task_id else frozenset(),
         local_agent=args.agent,
-        trusted_dispatch_refs=frozenset({args.trusted_dispatch_ref}),
+        allowed_roles=frozenset({"terra", "luna"}),
     )
     try:
+        if repo not in ALLOWED_REPOS:
+            raise WorkOrderError("UNAUTHORIZED_REPOSITORY", "repo is outside explicit local allowlist")
         receipt = dispatch_secretless_attempt(
             work_order,
             ledger=ledger,
             policy=policy,
             repo_root=Path(args.repo_root).resolve(),
             base_dir=Path(args.worktree_root).resolve(),
-            command=["python", "-m", "pytest", "-q"] if args.check_profile == "pytest" else [],
+            command=["python", "-m", "pytest", "-q"],
         )
     except WorkOrderError as exc:
         receipt = sanitize_receipt(
