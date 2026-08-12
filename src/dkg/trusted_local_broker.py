@@ -10,7 +10,6 @@ from __future__ import annotations
 import json
 import os
 import re
-import shutil
 import subprocess
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -463,6 +462,7 @@ def reconcile_before_publication(
         repo_allowlist=DEFAULT_REPOS,
         task_allowlist=frozenset({task.task_id}),
         local_agent=agent,
+        trusted_dispatch_refs=frozenset(),
         allowed_roles=frozenset(MODEL_BY_ROLE),
         now=lambda: current,
     )
@@ -489,6 +489,7 @@ def run_local_codex_task(
         repo_allowlist=DEFAULT_REPOS,
         task_allowlist=frozenset({task.task_id}),
         local_agent=agent,
+        trusted_dispatch_refs=frozenset(),
         allowed_roles=frozenset(MODEL_BY_ROLE),
     )
     if authorize_work_order(work_order, ledger=ledger, policy=policy) != "secretless":
@@ -517,8 +518,6 @@ def run_local_codex_task(
             check_receipt["detail"] = "independent check failed\n" + str(check_receipt.get("detail", ""))
             return sanitize_receipt(check_receipt), None
 
-        # Critical late-result fence: do not publish based on authorization that may
-        # have become stale while the model/check process was running.
         reconcile_before_publication(task, work_order, agent=agent, github=github)
 
         pr_url = publish_checked_changes(
