@@ -1,0 +1,16 @@
+version: task-trigger-matrix-v1
+risk_facets:
+  new-service: [api-service, deployment-release, observability]
+  cross-service-call: [api-service, timeout-retry, observability]
+  durable-write: [durability, timeout-retry, recovery]
+  database-or-schema-change: [durability, migration, recovery]
+  async-or-background-work: [async-delivery, timeout-retry, recovery]
+  queue-or-event-stream: [async-delivery, timeout-retry, recovery]
+  external-dependency: [dependency-provider, timeout-retry]
+  auth-security-sensitive: [security]
+  ai-agent-or-model-call: [ai-semantic-success, timeout-retry, observability]
+  deployment-or-infrastructure: [deployment-release, security, observability]
+  migration-or-backfill: [migration, durability, recovery]
+  performance-or-capacity: [performance-capacity]
+  observability-change: [observability]
+  cross-repo-contract-change: [cross-repo-contract]

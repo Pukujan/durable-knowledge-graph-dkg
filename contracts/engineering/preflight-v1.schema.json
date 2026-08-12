@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fossil.local/contracts/engineering/preflight-v1.schema.json",
+  "type": "object",
+  "required": ["version", "task", "risk_facets", "kernel", "sources", "unresolved_assumptions", "required_closeout_evidence"],
+  "properties": {
+    "version": {"const": "preflight-v1"},
+    "task": {"type": "object", "required": ["outcome", "behavior_owner", "state_classification", "public_contract_impact", "semantic_success", "mechanical_success_and_failure", "evidence_and_tests", "recovery_and_rollback"], "additionalProperties": true},
+    "risk_facets": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "kernel": {"type": "object"},
+    "sources": {"type": "array", "items": {"type": "object", "required": ["stable_id", "status", "provenance"]}},
+    "unresolved_assumptions": {"type": "array", "items": {"type": "object", "required": ["id", "material", "status"]}},
+    "required_closeout_evidence": {"type": "array", "items": {"type": "string"}}
+  },
+  "additionalProperties": true
+}
