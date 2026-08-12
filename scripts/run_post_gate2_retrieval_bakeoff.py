@@ -4,7 +4,6 @@ import argparse
 import hashlib
 import json
 import platform
-import resource
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -33,6 +32,11 @@ from dkg.real_retrieval import (
 )
 from dkg.semantic_retriever import SemanticEmbeddingRetriever
 from dkg.services import BM25Retriever
+
+try:
+    import resource
+except ModuleNotFoundError:  # Windows has no POSIX resource module.
+    resource = None
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_PLAN = ROOT / "benchmarks" / "post-gate2" / "retrieval-bakeoff-v1.json"
@@ -208,6 +212,49 @@ def _audit_route(retriever: Any, retrieval_cases: list[Any], *, limit: int) -> d
     }
 
 
+def _route_eligibility(
+    *,
+    route_name: str,
+    route_spec: dict[str, Any],
+    answer_report: dict[str, Any],
+    audit: dict[str, Any],
+) -> dict[str, Any]:
+    """Keep candidate disqualification evidence explicit and mechanically stable.
+
+    This is intentionally stricter than a transport/process result. A candidate
+    may be useful evaluation evidence while still being ineligible to replace
+    D021. Current-query leakage remains distinct from end-to-end answer safety
+    so the report neither hides the leak nor falsely calls it a safe promotion.
+    """
+    metrics = dict(answer_report.get("metrics", {}))
+    reasons: list[str] = []
+    if metrics.get("final_answer_correctness_rate") != 1.0:
+        reasons.append("final_answer_correctness_below_1.0")
+    if metrics.get("citation_correctness_rate") != 1.0:
+        reasons.append("citation_correctness_below_1.0")
+    if metrics.get("mean_unsupported_claim_rate") != 0.0:
+        reasons.append("unsupported_claim_rate_above_0.0")
+    pack_safe = bool(audit.get("pack_isolation_preserved"))
+    if not pack_safe:
+        reasons.append("pack_isolation_violation")
+    leakage_free = int(audit.get("current_query_top1_superseded_leakage_count", 0)) == 0
+    if not leakage_free:
+        reasons.append("current_query_top1_superseded_leakage")
+    end_to_end_guardrails_pass = all(
+        reason not in {"final_answer_correctness_below_1.0", "citation_correctness_below_1.0", "unsupported_claim_rate_above_0.0", "pack_isolation_violation"}
+        for reason in reasons
+    )
+    return {
+        "route_name": route_name,
+        "route_role": str(route_spec.get("role", "unknown")),
+        "end_to_end_guardrails_pass": end_to_end_guardrails_pass,
+        "pack_isolation_preserved": pack_safe,
+        "retrieval_leakage_free": leakage_free,
+        "eligible_for_promotion": end_to_end_guardrails_pass and leakage_free,
+        "disqualifying_reasons": reasons,
+    }
+
+
 def _answer_receipts(
     *,
     route_name: str,
@@ -341,22 +388,31 @@ def main() -> int:
             projection=projection,
             run_ref=args.run_ref,
         )
+        eligibility = _route_eligibility(
+            route_name=route_name,
+            route_spec=specs[route_name],
+            answer_report=answer_report,
+            audit=audit,
+        )
         route_reports[route_name] = {
             "role": str(specs[route_name]["role"]),
             "retrieval": retrieval_report,
             "safety_audit": audit,
             "answer_reliability": answer_report,
+            "promotion_eligibility": eligibility,
         }
 
-    max_rss_kib = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    max_rss_kib = (
+        int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
+        if resource is not None
+        else None
+    )
     all_pack_safe = all(
         bool(report["safety_audit"]["pack_isolation_preserved"])
         for report in route_reports.values()
     )
     all_answers_safe = all(
-        report["answer_reliability"]["metrics"]["final_answer_correctness_rate"] == 1.0
-        and report["answer_reliability"]["metrics"]["citation_correctness_rate"] == 1.0
-        and report["answer_reliability"]["metrics"]["mean_unsupported_claim_rate"] == 0.0
+        bool(report["promotion_eligibility"]["end_to_end_guardrails_pass"])
         for report in route_reports.values()
     )
     report = {
@@ -378,7 +434,7 @@ def main() -> int:
             "platform": platform.platform(),
             "machine": platform.machine(),
             "processor": platform.processor(),
-            "process_max_rss_kib": int(max_rss_kib),
+            "process_max_rss_kib": max_rss_kib,
         },
         "routes": route_reports,
         "stage_gate": {
