@@ -1,4 +1,5 @@
 #!/bin/sh
 # Parent broker runs as root inside its narrow container. The model process is
 # deliberately demoted to the separate unprivileged worker identity.
+find . -path './.git' -prune -o -exec chown --no-dereference codexworker:codexworker {} \;
 exec setpriv --reuid=codexworker --regid=codexworker --init-groups "$@"

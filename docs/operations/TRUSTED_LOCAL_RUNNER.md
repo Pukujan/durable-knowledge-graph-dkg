@@ -99,9 +99,9 @@ Build it from the repository root:
 docker build --tag fossil-trusted-local-broker:local --file docker/trusted-local-broker/Dockerfile .
 ```
 
-Keep all mounted runtime state under a dedicated `D:` directory (for example `D:\FossilBrokerWorker`): a Codex-auth directory, a root-only GitHub CLI directory for the parent, allowlisted disposable repository clones, worktree directory, and the local configuration JSON. Mount **only** those directories. Do not mount `C:\Users\<owner>`, the Docker socket, provider credentials, browser data, or an inbound port. Configure `codex_executable` as `/usr/local/bin/worker-codex`, and use container paths in the config.
+Keep broker credentials, clones, and worktrees in named Docker volumes. Docker Desktop stores those volumes in its managed WSL data location; on this PC that location is `D:\DockerDesktopWSL`. Use a separate volume for the unprivileged Codex authentication, a root-only volume for the parent GitHub CLI authentication, and volumes for allowlisted clones and disposable worktrees. A single read-only local config-file mount may provide non-secret paths/policy. Do not mount `C:\Users\<owner>`, a broad `D:` directory, the Docker socket, provider credentials, browser data, or an inbound port. Configure `codex_executable` as `/usr/local/bin/worker-codex`, and use container paths in the config.
 
-The GitHub CLI parent login is performed as container root and stored only in its dedicated GitHub mount. The Codex device login is performed as `codexworker` and stored only in the dedicated Codex mount. Never copy either auth material between the two directories.
+The GitHub CLI parent login is performed as container root and stored only in its dedicated GitHub volume. The Codex device login is performed as `codexworker` and stored only in the dedicated Codex volume. Never copy either auth material between the two volumes. The worker wrapper gives `codexworker` ownership of the new disposable worktree while deliberately leaving its `.git` pointer and the parent clone metadata root-owned.
 
 ## Start and stop
 
