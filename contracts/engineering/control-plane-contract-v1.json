@@ -1,0 +1,27 @@
+{
+  "version": "control-plane-contract-v1",
+  "authority": "fossil-core#86 current architecture boundary",
+  "owners": {
+    "fossil": "durable semantic evidence, lifecycle, lineage, and provenance",
+    "cortex": "execution policy, attempts, recovery, and evidence",
+    "litellm_ckff_ops": "provider/model/route/capability/timeout/observed-health factual transport"
+  },
+  "routing_policy_owner": "caller",
+  "shared_contracts": {
+    "build_context": "build-context-packet-v1",
+    "preflight": "preflight-v1",
+    "closeout": "closeout-v1"
+  },
+  "correlation_fields": [
+    "project_issue_id",
+    "work_order_id",
+    "task_id",
+    "attempt_id",
+    "generation",
+    "request_id",
+    "trace_id",
+    "checkpoint_id",
+    "commit_sha",
+    "deployment_id"
+  ]
+}

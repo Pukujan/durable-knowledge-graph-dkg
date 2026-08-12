@@ -1,0 +1,8 @@
+{
+  "version": "closeout-v1",
+  "outcome": "Corrected one documentation typo.",
+  "changed_files": ["docs/example.md"],
+  "tests": [{"name": "targeted text assertion", "result": "PASS"}],
+  "terminal_status": "PASS",
+  "evidence": [{"kind": "test", "ref": "fixture:targeted-text-assertion"}]
+}
