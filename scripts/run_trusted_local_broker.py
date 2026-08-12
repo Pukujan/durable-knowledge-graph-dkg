@@ -11,10 +11,16 @@ import argparse
 import json
 import os
 import subprocess
+import sys
 import time
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Mapping
+
+# Keep the documented direct invocation usable from a clean source checkout.
+_SOURCE_ROOT = Path(__file__).resolve().parents[1] / "src"
+if str(_SOURCE_ROOT) not in sys.path:
+    sys.path.insert(0, str(_SOURCE_ROOT))
 
 from dkg.trusted_local_broker import (
     GitHubQueueClient,
