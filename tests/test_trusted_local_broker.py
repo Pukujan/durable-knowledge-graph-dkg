@@ -93,6 +93,8 @@ def test_codex_command_is_fresh_ephemeral_workspace_write_and_role_mapped():
     assert MODEL_BY_ROLE["terra"] in terra
     assert MODEL_BY_ROLE["luna"] in luna
     assert terra[-1] == "-"
+    outer = build_codex_command("luna", sandbox="danger-full-access")
+    assert outer[outer.index("--sandbox") + 1] == "danger-full-access"
 
 
 def test_parent_git_command_trusts_only_the_exact_disposable_worktree(tmp_path):

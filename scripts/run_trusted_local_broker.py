@@ -53,7 +53,7 @@ def load_token() -> str:
     return completed.stdout.strip()
 
 
-def load_config(path: Path) -> tuple[str, Path, Path, dict[str, RepoPolicy], str]:
+def load_config(path: Path) -> tuple[str, Path, Path, dict[str, RepoPolicy], str, str]:
     raw = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(raw, Mapping):
         raise WorkOrderError("MALFORMED_CONFIG", "broker config must be a JSON object")
@@ -61,6 +61,9 @@ def load_config(path: Path) -> tuple[str, Path, Path, dict[str, RepoPolicy], str
     worker_home = Path(str(raw.get("worker_home", ""))).expanduser().resolve()
     codex_home = Path(str(raw.get("codex_home", ""))).expanduser().resolve()
     codex_executable = str(raw.get("codex_executable", "codex")).strip() or "codex"
+    codex_sandbox = str(raw.get("codex_sandbox", "workspace-write")).strip()
+    if codex_sandbox not in {"workspace-write", "danger-full-access"}:
+        raise WorkOrderError("MALFORMED_CONFIG", "codex_sandbox must be workspace-write or danger-full-access")
     repos_raw = raw.get("repos")
     if not agent or not isinstance(repos_raw, Mapping):
         raise WorkOrderError("MALFORMED_CONFIG", "agent and repos mapping are required")
@@ -80,7 +83,7 @@ def load_config(path: Path) -> tuple[str, Path, Path, dict[str, RepoPolicy], str
             Path(str(value.get("path", ""))).expanduser().resolve(),
             tuple(check),
         )
-    return agent, worker_home, codex_home, repos, codex_executable
+    return agent, worker_home, codex_home, repos, codex_executable, codex_sandbox
 
 
 def closeout(
@@ -119,6 +122,7 @@ def run_once(
     codex_home: Path,
     repos: Mapping[str, RepoPolicy],
     codex_executable: str,
+    codex_sandbox: str,
     worktree_root: Path,
 ) -> bool:
     comments = client.comments()
@@ -157,6 +161,7 @@ def run_once(
             codex_home=codex_home,
             github=client,
             codex_executable=codex_executable,
+            codex_sandbox=codex_sandbox,
         )
     except WorkOrderError as exc:
         receipt = sanitize_receipt(
@@ -192,7 +197,7 @@ def main() -> int:
     if args.poll_seconds < 15:
         raise SystemExit("--poll-seconds must be >= 15")
 
-    agent, worker_home, codex_home, repos, codex_executable = load_config(args.config)
+    agent, worker_home, codex_home, repos, codex_executable, codex_sandbox = load_config(args.config)
     client = GitHubQueueClient(load_token())
     worktree_root = args.worktree_root.expanduser().resolve()
 
@@ -205,6 +210,7 @@ def main() -> int:
                 codex_home=codex_home,
                 repos=repos,
                 codex_executable=codex_executable,
+                codex_sandbox=codex_sandbox,
                 worktree_root=worktree_root,
             )
         except WorkOrderError as exc:
