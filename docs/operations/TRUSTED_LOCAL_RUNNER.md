@@ -109,7 +109,7 @@ Docker Desktop may prohibit Codex's nested Linux `workspace-write` namespace. On
 
 ### Privileged verifier setup (separate container)
 
-The secret file belongs in a **third**, root-only named volume. On this PC the volume data is held by Docker Desktop's WSL store on `D:\DockerDesktopWSL`; it is not in GitHub, the repository, the Codex volume, or the broker container. The original source file remains yours to rotate/delete after verifying the copy. The unprivileged Codex worker must be unable to read this volume.
+The secret file belongs in a **third**, root-only named volume. The verifier also gets its own root-only GitHub CLI-auth volume; it does not reuse the broker's authentication volume. On this PC the volume data is held by Docker Desktop's WSL store on `D:\DockerDesktopWSL`; it is not in GitHub, the repository, the Codex volume, or the broker container. The original source file remains yours to rotate/delete after verifying the copy. The unprivileged Codex worker must be unable to read this volume.
 
 Build the separate image:
 
