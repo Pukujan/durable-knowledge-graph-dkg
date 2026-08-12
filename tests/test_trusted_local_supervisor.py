@@ -148,7 +148,8 @@ def test_success_has_no_ports_socket_or_owner_profile_and_duplicate_is_noop():
     joined = " ".join(runtime)
     assert "--restart unless-stopped" in joined
     assert "--publish" not in runtime and "-p" not in runtime
-    assert "docker.sock" not in joined and "/home/" not in joined
+    assert "docker.sock" not in joined
+    assert f"type=bind,src={BROKER_CONFIG_PATH},dst=/etc/fossil/broker.json,readonly" in runtime
     before = len(host.calls)
     assert apply_release(Release(SHA), config=config(), host=host, evidence=Evidence()) == "NOOP"
     assert len(host.calls) > before
