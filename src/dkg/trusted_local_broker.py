@@ -40,6 +40,7 @@ DEFAULT_REPOS = frozenset(
     }
 )
 MODEL_BY_ROLE = {"terra": "gpt-5.6-terra", "luna": "gpt-5.6-luna"}
+CODEX_SANDBOXES = frozenset({"workspace-write", "danger-full-access"})
 _TASK_START = re.compile(r"^TASK\s+task=(?P<task>[^\s]+)$", re.MULTILINE)
 _FIELD = re.compile(r"^(?P<key>[A-Za-z_][A-Za-z0-9_-]*)=(?P<value>.*)$", re.MULTILINE)
 _WORKORDER = re.compile(
@@ -213,15 +214,19 @@ def build_codex_prompt(task: QueueTask, work_order: Mapping[str, Any]) -> str:
     )
 
 
-def build_codex_command(role: str, *, executable: str = "codex") -> list[str]:
+def build_codex_command(
+    role: str, *, executable: str = "codex", sandbox: str = "workspace-write"
+) -> list[str]:
     if role not in MODEL_BY_ROLE:
         raise WorkOrderError("BLOCKED_POLICY", f"unsupported local role: {role}")
+    if sandbox not in CODEX_SANDBOXES:
+        raise WorkOrderError("BLOCKED_POLICY", f"unsupported Codex sandbox: {sandbox}")
     return [
         executable,
         "exec",
         "--ephemeral",
         "--sandbox",
-        "workspace-write",
+        sandbox,
         "--json",
         "--ignore-user-config",
         "-m",
@@ -490,6 +495,7 @@ def run_local_codex_task(
     codex_home: Path,
     github: GitHubQueueClient,
     codex_executable: str = "codex",
+    codex_sandbox: str = "workspace-write",
 ) -> tuple[dict[str, Any], str | None]:
     """Run fresh Codex, independent checks, reconcile live state, then publish."""
     policy = DispatchPolicy(
@@ -506,7 +512,9 @@ def run_local_codex_task(
     environment = codex_worker_environment(worker_home=worker_home, codex_home=codex_home)
     try:
         codex_receipt = run_bounded_process(
-            build_codex_command(task.role, executable=codex_executable),
+            build_codex_command(
+                task.role, executable=codex_executable, sandbox=codex_sandbox
+            ),
             worktree=worktree,
             work_order=work_order,
             environment=environment,

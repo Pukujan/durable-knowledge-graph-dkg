@@ -103,6 +103,9 @@ Keep broker credentials, clones, and worktrees in named Docker volumes. Docker D
 
 The GitHub CLI parent login is performed as container root and stored only in its dedicated GitHub volume. The Codex device login is performed as `codexworker` and stored only in the dedicated Codex volume. Never copy either auth material between the two volumes. The worker wrapper gives `codexworker` ownership of the new disposable worktree while deliberately leaving its `.git` pointer and the parent clone metadata root-owned.
 
+Docker Desktop may prohibit Codex's nested Linux `workspace-write` namespace. Only in the checked-in Docker topology, set `codex_sandbox` to `danger-full-access`: Docker's named-volume mount set and `codexworker` identity are then the enforcement boundary. The worker has no owner profile, parent GitHub volume, provider credentials, Docker socket, or inbound port. Keep the default `workspace-write` sandbox for non-container deployments.
+
+
 ## Start and stop
 
 One cycle:
