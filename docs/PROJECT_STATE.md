@@ -5,7 +5,13 @@
 **Completed:** **Milestone 0 / Gate 1; Gate 2; Issue #48 research ingestion; Issue #48 Workstreams A, B, C, and F**  
 **Active work:** **Issue #48 Workstream D / Issue #47 — retrieval/reranking/model bakeoff**  
 **Control plane:** GitHub issues + durable repository docs  
-**Last updated:** 2026-08-10
+**Last updated:** 2026-08-11
+
+## Issue #79 integration lane
+
+Draft PR [#80](https://github.com/Pukujan/fossil-core/pull/80) implements the narrow GitHub-hosted Actions + ephemeral Tailscale control plane for Fossil/Gravebuster. It adds private health probes, Langfuse synthetic-trace verification, false-success inference detection, cross-repo contract checks, and the required bootstrap/runbook contract. No cluster, Kubernetes, mandatory self-hosted runner, SSC runtime dependency, or Fossil KG redesign was added.
+
+The live acceptance gate is not yet proven: discovery found the remote Gravebuster host and Fossil source checkout, but no running Fossil health/API service or durable Fossil database endpoint, and no separate Gravebuster GitHub source repository identity. GitHub/Tailscale variables, secrets, tags/ACLs, and service endpoints remain to be configured. The new contract tests pass 12/12. Existing repository CI still has four unrelated retrieval-bakeoff failures (`_route_eligibility` absent on `main`); that work remains outside this lane.
 
 ## Repository family
 

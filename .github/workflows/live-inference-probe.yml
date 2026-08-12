@@ -1,0 +1,56 @@
+name: Live inference false-success probe
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      LITELLM_BASE_URL: ${{ vars.LITELLM_BASE_URL }}
+      LITELLM_MODEL: ${{ vars.LITELLM_MODEL }}
+      LITELLM_CHAT_PATH: ${{ vars.LITELLM_CHAT_PATH }}
+      LITELLM_API_KEY: ${{ secrets.LITELLM_API_KEY }}
+      OPENCODE_BASE_URL: ${{ vars.OPENCODE_BASE_URL }}
+      OPENCODE_MODEL: ${{ vars.OPENCODE_MODEL }}
+      OPENCODE_CHAT_PATH: ${{ vars.OPENCODE_CHAT_PATH }}
+      OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate gateway configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$LITELLM_BASE_URL"
+          test -n "$LITELLM_MODEL"
+      - name: Probe direct LiteLLM path
+        run: |
+          python scripts/probe_inference.py \
+            --name litellm \
+            --base-url "$LITELLM_BASE_URL" \
+            --path "${LITELLM_CHAT_PATH:-/v1/chat/completions}" \
+            --model "$LITELLM_MODEL" \
+            --api-key-env LITELLM_API_KEY \
+            --output "$RUNNER_TEMP/litellm-inference-probe.json"
+      - name: Probe OpenCode path when configured
+        if: ${{ env.OPENCODE_BASE_URL != '' }}
+        run: |
+          test -n "$OPENCODE_MODEL"
+          python scripts/probe_inference.py \
+            --name opencode \
+            --base-url "$OPENCODE_BASE_URL" \
+            --path "${OPENCODE_CHAT_PATH:-/v1/chat/completions}" \
+            --model "$OPENCODE_MODEL" \
+            --api-key-env OPENCODE_API_KEY \
+            --output "$RUNNER_TEMP/opencode-inference-probe.json"
+      - name: Upload sanitized inference evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-inference-probe-${{ github.run_id }}
+          path: ${{ runner.temp }}/*-inference-probe.json
+          if-no-files-found: warn

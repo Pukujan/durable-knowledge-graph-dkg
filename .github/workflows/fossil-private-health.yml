@@ -1,0 +1,56 @@
+name: Fossil private health
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 * * * *"
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: fossil-private-health
+  cancel-in-progress: false
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      FOSSIL_TAILSCALE_HOST: ${{ vars.FOSSIL_TAILSCALE_HOST }}
+      FOSSIL_HEALTH_URL: ${{ vars.FOSSIL_HEALTH_URL }}
+      FOSSIL_HEALTH_JSON_KEY: ${{ vars.FOSSIL_HEALTH_JSON_KEY }}
+      FOSSIL_HEALTH_TOKEN: ${{ secrets.FOSSIL_HEALTH_TOKEN }}
+      FOSSIL_PROBE_OUTPUT: ${{ runner.temp }}/fossil-private-health.json
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate private endpoint configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$FOSSIL_TAILSCALE_HOST"
+          test -n "$FOSSIL_HEALTH_URL"
+          case "$FOSSIL_HEALTH_URL" in
+            *\?*|*\#*) echo 'FOSSIL_HEALTH_URL must not contain query or fragment data'; exit 1 ;;
+          esac
+
+      - name: Join tailnet ephemerally
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          ping: ${{ vars.FOSSIL_TAILSCALE_HOST }}
+
+      - name: Probe Fossil without mutating durable state
+        run: bash scripts/probe-fossil.sh
+
+      - name: Upload sanitized probe evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fossil-private-health-${{ github.run_id }}
+          path: ${{ runner.temp }}/fossil-private-health.json
+          if-no-files-found: warn

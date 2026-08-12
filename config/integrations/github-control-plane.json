@@ -1,0 +1,30 @@
+{
+  "schema_version": "fossil.github-control-plane.v1",
+  "control_plane": "github-hosted-actions",
+  "runner": "github-hosted-ubuntu-latest",
+  "private_network": "tailscale",
+  "runner_identity": {
+    "mode": "ephemeral-workload-identity",
+    "action": "tailscale/github-action@v4",
+    "tag": "tag:ci"
+  },
+  "ownership": {
+    "github_actions": ["orchestration", "validation", "sync", "evidence"],
+    "tailscale": ["private-reachability"],
+    "fossil": ["persistent-semantic-memory", "knowledge-graph", "lineage"],
+    "gravebuster": ["required-persistent-runtime", "minimal-observability"],
+    "cortex_v4": ["execution", "routing", "lifecycle"],
+    "litellm_ckff": ["inference-transport", "actual-provider-facts"],
+    "langfuse_otel": ["observability-only"]
+  },
+  "forbidden_dependencies": ["ssc-runtime", "kubernetes", "cluster", "self-hosted-runner"],
+  "required_private_variables": [
+    "FOSSIL_TAILSCALE_HOST",
+    "FOSSIL_HEALTH_URL",
+    "GRAVEBUSTER_TAILSCALE_HOST",
+    "GRAVEBUSTER_HEALTH_URL"
+  ],
+  "required_tailscale_secrets": ["TS_OAUTH_CLIENT_ID", "TS_AUDIENCE"],
+  "durable_state": "outside-github-actions",
+  "routine_health_checks_mutate_knowledge_graph": false
+}
