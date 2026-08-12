@@ -1,0 +1,17 @@
+version: engineering-constitution-v1
+authority: versioned-git-contract
+universal_kernel:
+  - outcome
+  - behavior_owner
+  - state_classification
+  - public_contract_impact
+  - semantic_success
+  - mechanical_success_and_failure
+  - evidence_and_tests
+  - recovery_and_rollback
+  - unresolved_assumptions
+rules:
+  - Retrieval rank never establishes current authority.
+  - Historical material is useful lineage but cannot silently drive implementation.
+  - A material unresolved current-state conflict blocks an implementation WorkOrder.
+  - Operational telemetry is evidence, not canonical FOSSIL truth.

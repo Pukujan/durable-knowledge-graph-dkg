@@ -1,0 +1,18 @@
+{
+  "version": "preflight-v1",
+  "task": {
+    "outcome": "Correct one documentation typo.",
+    "behavior_owner": "repository documentation",
+    "state_classification": "source text only",
+    "public_contract_impact": "none",
+    "semantic_success": "the intended text is present",
+    "mechanical_success_and_failure": "targeted check passes; unrelated files are unchanged",
+    "evidence_and_tests": ["targeted text assertion"],
+    "recovery_and_rollback": "revert the one-file commit"
+  },
+  "risk_facets": [],
+  "kernel": {"scope": "trivial"},
+  "sources": [{"stable_id": "github:issue:84", "status": "CURRENT_AUTHORITY", "provenance": "live GitHub issue"}],
+  "unresolved_assumptions": [],
+  "required_closeout_evidence": ["targeted assertion"]
+}
