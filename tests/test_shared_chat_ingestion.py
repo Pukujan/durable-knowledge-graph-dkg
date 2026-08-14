@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "examples" / "shared-chat-ingestion" / "2026-08-14.json"
 
 
-def test_both_shared_chat_checkpoints_ingest_as_reconstructed_and_idempotent(tmp_path):
+def test_shared_chat_checkpoints_ingest_as_reconstructed_and_idempotent(tmp_path):
     first = ingest_manifest(MANIFEST, tmp_path / "run", repo_root=ROOT)
     second = ingest_manifest(MANIFEST, tmp_path / "run", repo_root=ROOT)
 
@@ -21,10 +21,11 @@ def test_both_shared_chat_checkpoints_ingest_as_reconstructed_and_idempotent(tmp
     assert {item["conversation_id"] for item in first} == {
         "conv_shared_chat_llm_bias_20260814",
         "conv_shared_chat_p001_eval_20260814",
+        "conv_shared_chat_experiment_comparison_20260814",
     }
-    assert len(list((tmp_path / "run" / "events").rglob("evt_*.json"))) == 2
-    assert len(list((tmp_path / "run" / "conversations").rglob("conv_*.json"))) == 2
-    assert len(list((tmp_path / "run" / "lineages").glob("lin_*.json"))) == 2
+    assert len(list((tmp_path / "run" / "events").rglob("evt_*.json"))) == 3
+    assert len(list((tmp_path / "run" / "conversations").rglob("conv_*.json"))) == 3
+    assert len(list((tmp_path / "run" / "lineages").glob("lin_*.json"))) == 3
 
     artifact_store = ArtifactStore(tmp_path / "run" / "artifacts")
     event_store = DurableEventStore(
@@ -55,6 +56,7 @@ def test_shared_chat_lineages_keep_current_verdicts_and_reconstructed_citations(
     expected_labels = {
         "conv_shared_chat_llm_bias_20260814": "Prototype verdict",
         "conv_shared_chat_p001_eval_20260814": "Research-only verdict",
+        "conv_shared_chat_experiment_comparison_20260814": "Three-firewall architecture",
     }
     for result in results:
         envelope = json.loads(Path(result["conversation_path"]).read_text(encoding="utf-8"))

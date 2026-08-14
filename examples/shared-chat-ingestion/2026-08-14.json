@@ -94,6 +94,48 @@
         ],
         "current_conclusion_refs": ["ln_p001_conclusion_20260814", "ln_p001_decision_20260814"]
       }
+    },
+    {
+      "conversation_id": "conv_shared_chat_experiment_comparison_20260814",
+      "title": "Experiment Comparison Inquiry",
+      "external_ref": "https://chatgpt.com/share/6a7f5621-15d4-83ea-a5eb-f64327072219?ogimg=plain",
+      "source_path": "docs/recovery/2026-08-14-shared-chat-experiment-comparison.md",
+      "source_label": "reconstructed public shared-chat checkpoint: experiment comparison and framing-invariance architecture",
+      "reconstruction_basis_refs": [
+        "https://chatgpt.com/share/6a7f5621-15d4-83ea-a5eb-f64327072219?ogimg=plain",
+        "docs/recovery/2026-08-14-shared-chat-experiment-comparison.md"
+      ],
+      "messages": [
+        {"message_id": "msg_shared_experiment_001", "role": "human", "actor_id": "shared-chat-user", "marker": "[message:001] The user presented a bundle of uploaded experiment materials and asked for the comparative differences between the conditions being tested."},
+        {"message_id": "msg_shared_experiment_002", "role": "assistant", "actor_id": "chatgpt-share-rendered-response", "marker": "[message:002] The assistant's rendered analysis described four conditions: anonymous versus ownership-framed semantic-intent prompts, and anonymous versus ownership-plus-concern evaluation-firewall prompts. It interpreted the comparison as testing both human-to-AI effects on technical judgment and AI-to-human effects from tone and confidence."},
+        {"message_id": "msg_shared_experiment_003", "role": "human", "actor_id": "shared-chat-user", "marker": "[message:003] The user asked what the experimenter was actually trying to do."},
+        {"message_id": "msg_shared_experiment_004", "role": "assistant", "actor_id": "chatgpt-share-rendered-response", "marker": "[message:004] The assistant explained that the experiment changes social framing while holding the underlying technical question broadly constant, then compares whether ownership and an explicitly stated human concern alter the model's reasoning, validation, tone, or perceived authority. It identified the ownership-plus-expressed-concern condition as the most consequential rendered difference, while noting that a small number of stochastic runs cannot establish bias by itself."},
+        {"message_id": "msg_shared_experiment_005", "role": "human", "actor_id": "shared-chat-user", "marker": "[message:005] The user said the experimenter wanted to reduce this influence so AI would be safer and more neutral, and asked whether the R6 build plan justified that goal."},
+        {"message_id": "msg_shared_experiment_006", "role": "assistant", "actor_id": "chatgpt-share-rendered-response", "marker": "[message:006] The assistant recommended replacing the unbounded goal of complete neutrality with measurable framing invariance: irrelevant changes in ownership, status, or desired answer should not materially change facts, risk ranking, confidence calibration, evidence requirements, or recommendation. It also separated human-to-AI framing effects from AI-to-human influence through presentation and trust."},
+        {"message_id": "msg_shared_experiment_007", "role": "human", "actor_id": "shared-chat-user", "marker": "[message:007] The user asked whether the system should be deterministic middleware or an LLM prompt, and asked about tone stripping and embeddings."},
+        {"message_id": "msg_shared_experiment_008", "role": "assistant", "actor_id": "chatgpt-share-rendered-response", "marker": "[message:008] The assistant proposed deterministic middleware as the authority boundary, with LLMs interpreting and proposing, and a final presentation layer rendering structured claims. It recommended tone compartmentalization rather than deleting all tone, preserving real human constraints and preferences while quarantining irrelevant social cues; embedding a canonical semantic projection rather than raw socially framed text; and using counterfactual shadow runs plus an outbound influence firewall to detect framing sensitivity and rhetorical authority leakage."}
+      ],
+      "lineage": {
+        "lineage_id": "lin_shared_experiment_comparison_20260814",
+        "nodes": [
+          {"node_id": "ln_experiment_question_20260814", "kind": "question", "label": "Experiment comparison question", "text": "How do ownership and expressed concerns change AI judgment and human confidence, and how can the effect be reduced?", "message_index": 0, "position_state": "current"},
+          {"node_id": "ln_experiment_observation_20260814", "kind": "observation", "label": "Framing changes evaluator posture", "text": "The rendered comparison describes changes in tone, validation, and technical emphasis across anonymous and ownership-framed conditions.", "message_index": 1, "position_state": "current"},
+          {"node_id": "ln_experiment_challenge_20260814", "kind": "challenge", "label": "Complete neutrality is not an enforceable target", "text": "An always-neutral requirement is not operationally defined and could trade one failure mode for contrarian behavior.", "message_index": 5, "position_state": "opposing"},
+          {"node_id": "ln_experiment_rebuttal_20260814", "kind": "rebuttal", "label": "Use framing invariance and evidence separation", "text": "For irrelevant social changes, facts, risk ranking, confidence, evidence requirements, and recommendations should remain substantially stable while preferences and constraints remain represented with provenance.", "message_index": 5, "position_state": "current"},
+          {"node_id": "ln_experiment_assumption_20260814", "kind": "assumption", "label": "Raw embeddings can carry framing", "text": "Embedding raw socially framed conversation may preserve incidental style or ownership cues and contaminate technical retrieval; this remains a design hypothesis requiring corpus-specific testing.", "message_index": 7, "position_state": "unresolved"},
+          {"node_id": "ln_experiment_conclusion_20260814", "kind": "conclusion", "label": "Three-firewall architecture", "text": "Use intent, epistemic, and influence firewalls: deterministic middleware controls authority and provenance, structured claims separate evidence from inference, and presentation is rendered after epistemic state is fixed.", "message_index": 7, "position_state": "current"},
+          {"node_id": "ln_experiment_decision_20260814", "kind": "decision", "label": "Canonical projection before embedding", "text": "Preserve raw input for audit, quarantine irrelevant social cues from evaluation, embed a canonical semantic projection, and compare counterfactual runs before finalizing consequential output.", "message_index": 7, "position_state": "current"}
+        ],
+        "edges": [
+          {"edge_id": "le_experiment_001_20260814", "source_node_id": "ln_experiment_question_20260814", "target_node_id": "ln_experiment_observation_20260814", "relation_type": "leads_to"},
+          {"edge_id": "le_experiment_002_20260814", "source_node_id": "ln_experiment_observation_20260814", "target_node_id": "ln_experiment_challenge_20260814", "relation_type": "supports"},
+          {"edge_id": "le_experiment_003_20260814", "source_node_id": "ln_experiment_challenge_20260814", "target_node_id": "ln_experiment_rebuttal_20260814", "relation_type": "reframes"},
+          {"edge_id": "le_experiment_004_20260814", "source_node_id": "ln_experiment_assumption_20260814", "target_node_id": "ln_experiment_rebuttal_20260814", "relation_type": "challenges"},
+          {"edge_id": "le_experiment_005_20260814", "source_node_id": "ln_experiment_rebuttal_20260814", "target_node_id": "ln_experiment_conclusion_20260814", "relation_type": "supports"},
+          {"edge_id": "le_experiment_006_20260814", "source_node_id": "ln_experiment_conclusion_20260814", "target_node_id": "ln_experiment_decision_20260814", "relation_type": "leads_to"}
+        ],
+        "current_conclusion_refs": ["ln_experiment_conclusion_20260814", "ln_experiment_decision_20260814"]
+      }
     }
   ]
 }

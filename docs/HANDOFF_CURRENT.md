@@ -1,6 +1,6 @@
 # Current Handoff
 
-**Date:** 2026-08-12  
+**Date:** 2026-08-14
 **Project:** **FOSSIL — Fault-tolerant Open Semantic Store for Intellectual Lineage**  
 **Repository:** `Pukujan/fossil-core`  
 **Current architecture authority:** Issue #86  
@@ -19,6 +19,21 @@ The current subsystem boundary is:
 > **Cortex owns execution. FOSSIL owns durable knowledge/evidence. GitHub owns coordination/review. LiteLLM/CKFF owns provider/model/route factual transport. Infrastructure is replaceable.**
 
 The owner's PC may act as a **trusted self-hosted execution/credential bridge**, but it is not semantic authority and is not required for ordinary secretless PR CI.
+
+## Latest ingestion continuation — 2026-08-14
+
+Draft PR #113 (`agent/ingest-shared-chat-reconstructions`) now carries three
+reconstructed public shared-chat checkpoints in the shared-chat ingestion
+manifest. The third checkpoint is `Experiment Comparison Inquiry` and records
+the rendered proposal for intent, epistemic, and influence firewalls, including
+canonical semantic projection before embedding. The public page exposed a
+rendered conversation and unnamed uploaded files only; no uploaded file or
+external paper mentioned in the chat was promoted to captured source evidence.
+
+The importer and lineage tests pass with `180 passed`. The checkpoints remain
+explicitly `reconstructed`, with immutable artifact/span/event handling and
+idempotent replay. If raw exports become available, ingest them as separate
+verbatim sources rather than replacing these checkpoints.
 
 ## Read first
 
