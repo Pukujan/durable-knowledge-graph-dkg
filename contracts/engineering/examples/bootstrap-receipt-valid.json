@@ -6,22 +6,25 @@
   "health": {
     "fossil_health_url": {
       "url": "https://fossil.internal:8443/healthz",
-      "json_key": "status"
+      "json_key": "status",
+      "outcome": "success"
     },
     "gravebuster_health_url": {
       "url": "https://gravebuster.internal:9090/health",
-      "json_key": "alive"
+      "json_key": "alive",
+      "outcome": "success"
     }
   },
   "tailscale": {
     "host": "gravebuster.tailnet.ts.net",
     "reachable": true
   },
-  "variables": {
-    "names": ["FOSSIL_API_KEY", "GRAVEBUSTER_TOKEN", "TAILSCALE_AUTH_KEY"],
-    "present": [true, true, true],
-    "optional": ["DEBUG_LEVEL"]
-  },
+  "variables": [
+    {"name": "FOSSIL_API_KEY", "required": true, "present": true},
+    {"name": "GRAVEBUSTER_TOKEN", "required": true, "present": true},
+    {"name": "TAILSCALE_AUTH_KEY", "required": true, "present": true},
+    {"name": "DEBUG_LEVEL", "required": false, "present": false}
+  ],
   "correlation": {
     "project_issue_id": "PROJ-4217",
     "work_order_id": "WO-20250101-003",
