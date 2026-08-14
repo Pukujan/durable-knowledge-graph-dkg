@@ -30,9 +30,11 @@ jobs:
       - name: Clean reproducible install
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e '.[test]'
+          python -m pip install -e '.[test,graphiti]'
       - name: Check installed metadata consistency
         run: python -m pip check
+      - name: Verify Graphiti import contract
+        run: python -c "from graphiti_core import Graphiti; print(Graphiti.__name__)"
       - name: Verify package metadata parses and name/version match
         run: |
           python -c "import tomllib; d=tomllib.load(open('pyproject.toml','rb')); assert d['project']['name']=='fossil-core'; assert d['project']['version']; print('pyproject consistent')"
