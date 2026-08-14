@@ -8,9 +8,9 @@ from typing import Any, Mapping
 
 from jsonschema import Draft202012Validator, FormatChecker
 
-from dkg.event_store import DurableEventStore
-from dkg.pack import PackAccess
-from dkg.promotion import build_promotion_event
+from fossil_core.event_store import DurableEventStore
+from fossil_core.pack import PackAccess
+from fossil_core.promotion import build_promotion_event
 
 
 class CapabilityError(PermissionError):

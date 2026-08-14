@@ -2,15 +2,15 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from dkg.benchmark import (
+from fossil_core.benchmark import (
     BenchmarkValidator,
     ModelBenchmark,
     ModelBenchmarkCase,
     RetrievalBenchmark,
     RetrievalBenchmarkCase,
 )
-from dkg.event_store import DurableEventStore
-from dkg.services import (
+from fossil_core.event_store import DurableEventStore
+from fossil_core.services import (
     BM25Retriever,
     BudgetedContextProvider,
     CallableCandidateModelService,

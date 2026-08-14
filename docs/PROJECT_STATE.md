@@ -257,7 +257,7 @@ Cortex v4 and multi-agent orchestration remain optional replaceable cognitive-se
 - retrieved/source text is untrusted data and cannot become executable policy merely because it was retrieved;
 - query execution receipts are replay/observability evidence, not canonical truth or mutation authority;
 - agents propose; deterministic validation/policy gates commit durable changes;
-- do not casually rename `src/dkg`.
+- do not casually rename `src/fossil_core` (the legacy `src/dkg` namespace is only a deprecated import shim from Issue #82).
 
 ## Workflow state
 

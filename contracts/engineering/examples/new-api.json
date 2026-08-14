@@ -1,0 +1,78 @@
+{
+  "version": "preflight-v1",
+  "contract_version": "preflight-v1",
+  "identifiers": {
+    "repo": "Pukujan/fossil-core",
+    "issue": 90,
+    "task_id": "FOSSIL-API"
+  },
+  "task": {
+    "outcome": "Add a new read-only HTTP API endpoint with versioned response envelope.",
+    "behavior_owner": "FOSSIL service layer",
+    "state_classification": "new source contract and service surface",
+    "public_contract_impact": "new opt-in public API contract pinned to v1",
+    "semantic_success": "a caller can retrieve the requested semantic payload without a transport-only success",
+    "mechanical_success_and_failure": "contract test returns 200 with the envelope; unknown route returns 404; otherwise the change is blocked",
+    "evidence_and_tests": ["openapi contract test", "404 on unknown route", "response envelope schema test"],
+    "recovery_and_rollback": "revert the isolated API commit and remove the route"
+  },
+  "risk_facets": ["new-service", "observability-change"],
+  "risk_facets_rationale": {
+    "new-service": "introduces a new HTTP service surface",
+    "observability-change": "adds request metrics and structured logs for the endpoint"
+  },
+  "selected_risk_packs": ["api-service", "deployment-release", "observability"],
+  "kernel": {
+    "outcome": "Add a new read-only HTTP API endpoint with versioned response envelope.",
+    "behavior_owner": "FOSSIL service layer",
+    "state_classification": "new source contract and service surface",
+    "public_contract_impact": "new opt-in public API contract pinned to v1",
+    "semantic_success": "a caller can retrieve the requested semantic payload without a transport-only success",
+    "mechanical_success_and_failure": "contract test returns 200 with the envelope; unknown route returns 404; otherwise the change is blocked",
+    "evidence_and_tests": ["openapi contract test", "404 on unknown route", "response envelope schema test"],
+    "recovery_and_rollback": "revert the isolated API commit and remove the route"
+  },
+  "required_checks": [
+    {
+      "id": "api-contract",
+      "pack": "api-service",
+      "question": "Is the public API contract versioned, pinned, and backward compatible?",
+      "answer": "answered",
+      "answer_rationale": "response envelope pinned to v1 with explicit additive fields only"
+    },
+    {
+      "id": "deploy-rollback",
+      "pack": "deployment-release",
+      "question": "Is the deployment reversible with a single revert?",
+      "answer": "answered",
+      "answer_rationale": "route is additive and reverts with the isolated commit"
+    },
+    {
+      "id": "observability-coverage",
+      "pack": "observability",
+      "question": "Are request metrics and structured logs emitted for the new endpoint?",
+      "answer": "answered",
+      "answer_rationale": "metrics and structured logs added for the endpoint"
+    }
+  ],
+  "sources": [
+    {
+      "stable_id": "github:Pukujan/fossil-core:issue:90",
+      "status": "CURRENT_AUTHORITY",
+      "provenance": "live-github-read",
+      "kind": "approved_current_standard",
+      "freshness": "live-read",
+      "material": true
+    },
+    {
+      "stable_id": "fossil:api:envelope-v1",
+      "status": "CURRENT_AUTHORITY",
+      "provenance": "fixture",
+      "kind": "approved_current_standard",
+      "material": true
+    }
+  ],
+  "unresolved_assumptions": [],
+  "planned_tests_and_fault_probes": ["openapi contract test", "404 on unknown route", "timeout probe on slow upstream"],
+  "required_closeout_evidence": ["contract test", "404 test", "observability dashboards"]
+}

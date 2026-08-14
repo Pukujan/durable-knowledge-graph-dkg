@@ -6,13 +6,13 @@ from types import SimpleNamespace
 
 import pytest
 
-from dkg.event_store import (
+from fossil_core.event_store import (
     DurableEventStore,
     EventRedactedError,
     EventRedactionConflict,
 )
-from dkg.projection.graphiti import GraphitiProjectionAdapter
-from dkg.projection.ledger import ProjectionLedger
+from fossil_core.projection.graphiti import GraphitiProjectionAdapter
+from fossil_core.projection.ledger import ProjectionLedger
 
 
 PACK_ID = "pack_269099f7b2ba43b7a99b9427d64092de"

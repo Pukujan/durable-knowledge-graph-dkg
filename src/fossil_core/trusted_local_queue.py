@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 from typing import Any, Iterable, Mapping
 
-from dkg.trusted_local_broker import QueueTask, parse_ready_local_tasks
+from fossil_core.trusted_local_broker import QueueTask, parse_ready_local_tasks
 
 _TERMINAL_TASK = re.compile(r"^(?:DONE|BLOCKED)\s+task=(?P<task>[^\s]+)", re.MULTILINE)
 _TASK_DIRECTIVE = re.compile(r"^TASK\s+task=(?P<task>[^\s]+)$", re.MULTILINE)

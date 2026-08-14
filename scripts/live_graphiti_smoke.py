@@ -17,9 +17,9 @@ from graphiti_core.llm_client.openai_generic_client import OpenAIGenericClient
 from graphiti_core.nodes import EpisodeType
 from neo4j import AsyncGraphDatabase
 
-from dkg.event_store import DurableEventStore
-from dkg.projection.graphiti import GraphitiProjectionAdapter
-from dkg.projection.ledger import ProjectionLedger
+from fossil_core.event_store import DurableEventStore
+from fossil_core.projection.graphiti import GraphitiProjectionAdapter
+from fossil_core.projection.ledger import ProjectionLedger
 
 
 PACK_ID = "pack_269099f7b2ba43b7a99b9427d64092de"

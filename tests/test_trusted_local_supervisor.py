@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from dkg.trusted_local_supervisor import (
+from fossil_core.trusted_local_supervisor import (
     REPOSITORY,
     Release,
     SupervisorConfig,
@@ -164,7 +164,7 @@ def test_mount_config_rejects_socket_owner_profile_or_provider_secret_names():
 
 
 def test_module_has_no_shell_eval_or_exec_surface():
-    source = Path("src/dkg/trusted_local_supervisor.py").read_text(encoding="utf-8")
+    source = Path("src/fossil_core/trusted_local_supervisor.py").read_text(encoding="utf-8")
     assert "shell=True" not in source
     assert "eval(" not in source
     assert "exec(" not in source

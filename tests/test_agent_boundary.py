@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from dkg.agent import (
+from fossil_core.agent import (
     AgentContext,
     AgentProvenanceError,
     CapabilityError,
@@ -12,8 +12,8 @@ from dkg.agent import (
     SkillRegistry,
     ThinMCPAdapter,
 )
-from dkg.event_store import DurableEventStore
-from dkg.pack import PackAccess, PackBoundaryError
+from fossil_core.event_store import DurableEventStore
+from fossil_core.pack import PackAccess, PackBoundaryError
 
 
 COMMON = "pack_269099f7b2ba43b7a99b9427d64092de"

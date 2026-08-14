@@ -6,8 +6,8 @@ import json
 import sys
 from pathlib import Path
 
-from dkg.engineering_assurance import load_control_plane_contract, validate_control_plane_contract
-from dkg.engineering_preflight import validate_closeout, validate_preflight
+from fossil_core.engineering_assurance import load_control_plane_contract, validate_control_plane_contract
+from fossil_core.engineering_preflight import validate_closeout, validate_preflight
 
 
 ROOT = Path(__file__).resolve().parents[1]

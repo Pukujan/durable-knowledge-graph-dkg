@@ -4,8 +4,8 @@ on:
   pull_request:
     paths:
       - "contracts/engineering/**"
-      - "src/dkg/engineering_preflight.py"
-      - "src/dkg/engineering_assurance.py"
+      - "src/fossil_core/engineering_preflight.py"
+      - "src/fossil_core/engineering_assurance.py"
       - "scripts/validate_engineering_assurance.py"
       - "tests/test_engineering_preflight.py"
       - "tests/test_engineering_assurance.py"
@@ -15,8 +15,8 @@ on:
     branches: [main]
     paths:
       - "contracts/engineering/**"
-      - "src/dkg/engineering_preflight.py"
-      - "src/dkg/engineering_assurance.py"
+      - "src/fossil_core/engineering_preflight.py"
+      - "src/fossil_core/engineering_assurance.py"
       - "scripts/validate_engineering_assurance.py"
       - "tests/test_engineering_preflight.py"
       - "tests/test_engineering_assurance.py"

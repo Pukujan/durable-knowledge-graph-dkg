@@ -6,20 +6,20 @@ import json
 import subprocess
 from pathlib import Path
 
-from dkg.answer_eval import (
+from fossil_core.answer_eval import (
     AnswerReliabilityCase,
     DeterministicEvidenceAnswerService,
     evaluate_answer_candidate,
 )
-from dkg.answer_pipeline import LineageResolvedModelService
-from dkg.context_security import UntrustedContextModelService
-from dkg.execution_receipt import (
+from fossil_core.answer_pipeline import LineageResolvedModelService
+from fossil_core.context_security import UntrustedContextModelService
+from fossil_core.execution_receipt import (
     compare_query_execution_receipts,
     execute_query_with_receipt,
 )
-from dkg.pack_corpus import retrieval_documents_from_pack_fixtures
-from dkg.real_retrieval import LifecycleIntentReranker, RerankedRetriever
-from dkg.services import BM25Retriever
+from fossil_core.pack_corpus import retrieval_documents_from_pack_fixtures
+from fossil_core.real_retrieval import LifecycleIntentReranker, RerankedRetriever
+from fossil_core.services import BM25Retriever
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_PLAN = ROOT / "benchmarks" / "post-gate2" / "answer-reliability-v1.json"

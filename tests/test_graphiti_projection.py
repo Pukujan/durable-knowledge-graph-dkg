@@ -1,8 +1,8 @@
 import asyncio
 import json
 
-from dkg.projection.graphiti import GraphitiProjectionAdapter
-from dkg.projection.ledger import ProjectionLedger
+from fossil_core.projection.graphiti import GraphitiProjectionAdapter
+from fossil_core.projection.ledger import ProjectionLedger
 
 
 class FakeGraphiti:
