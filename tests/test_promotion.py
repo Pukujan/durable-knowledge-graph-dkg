@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from dkg.event_store import DurableEventStore
-from dkg.promotion import build_promotion_event
+from fossil_core.event_store import DurableEventStore
+from fossil_core.promotion import build_promotion_event
 
 ROOT = Path(__file__).parents[1]
 SCHEMA = ROOT / "schemas/events/v1.schema.json"

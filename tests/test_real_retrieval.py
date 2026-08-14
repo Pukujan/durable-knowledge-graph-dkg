@@ -5,7 +5,7 @@ import json
 
 import pytest
 
-from dkg.real_retrieval import (
+from fossil_core.real_retrieval import (
     DEFAULT_BGE_MODEL,
     DEFAULT_BGE_REVISION,
     DEFAULT_CROSS_ENCODER_MODEL,
@@ -17,7 +17,7 @@ from dkg.real_retrieval import (
     SentenceTransformerCrossEncoderReranker,
     SentenceTransformerEmbeddingProvider,
 )
-from dkg.semantic_retriever import SemanticEmbeddingRetriever
+from fossil_core.semantic_retriever import SemanticEmbeddingRetriever
 
 
 PACK = "pack_f024177f89a5442db84171c3dd7f58e5"

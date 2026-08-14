@@ -11,7 +11,7 @@ _SOURCE_ROOT = Path(__file__).resolve().parents[1] / "src"
 if str(_SOURCE_ROOT) not in sys.path:
     sys.path.insert(0, str(_SOURCE_ROOT))
 
-from dkg.trusted_local_supervisor import GitHubChecks, SubprocessHost, apply_release, load_config, parse_release_directives
+from fossil_core.trusted_local_supervisor import GitHubChecks, SubprocessHost, apply_release, load_config, parse_release_directives
 
 
 def main() -> int:

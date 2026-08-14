@@ -16,8 +16,8 @@ from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 from uuid import uuid4
 
-from dkg.trusted_local_broker import QueueTask, choose_unclaimed_task, claim_text, make_work_order, parse_broker_ledger, terminal_text
-from dkg.trusted_local_runner import (
+from fossil_core.trusted_local_broker import QueueTask, choose_unclaimed_task, claim_text, make_work_order, parse_broker_ledger, terminal_text
+from fossil_core.trusted_local_runner import (
     PRIVILEGED_ACCESS_CLASSES,
     DispatchLedger,
     DispatchPolicy,

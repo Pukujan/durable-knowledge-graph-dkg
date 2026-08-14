@@ -6,10 +6,10 @@ from dataclasses import replace
 
 import pytest
 
-from dkg.contracts import ProjectionReceipt
-from dkg.projection.graphiti import GraphitiProjectionAdapter
-from dkg.projection.ledger import ProjectionLedger
-from dkg.projection.migration import (
+from fossil_core.contracts import ProjectionReceipt
+from fossil_core.projection.graphiti import GraphitiProjectionAdapter
+from fossil_core.projection.ledger import ProjectionLedger
+from fossil_core.projection.migration import (
     ProjectionComparator,
     ProjectionMigrationHarness,
     ProjectionSwitchLedger,

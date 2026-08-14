@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from dkg.benchmark import RetrievalBenchmarkCase
-from dkg.benchmark_compare import classify_context_probe, classify_retrieval_result, comparative_summary
+from fossil_core.benchmark import RetrievalBenchmarkCase
+from fossil_core.benchmark_compare import classify_context_probe, classify_retrieval_result, comparative_summary
 
 
 PACK = "pack_f024177f89a5442db84171c3dd7f58e5"

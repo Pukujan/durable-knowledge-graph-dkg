@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from dkg.contracts import ProjectionReceipt
+from fossil_core.contracts import ProjectionReceipt
 
 
 class NullProjection:

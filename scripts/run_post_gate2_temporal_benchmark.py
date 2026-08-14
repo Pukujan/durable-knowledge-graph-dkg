@@ -6,7 +6,7 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from dkg.temporal_benchmark import TemporalPhase, run_temporal_evolution_benchmark
+from fossil_core.temporal_benchmark import TemporalPhase, run_temporal_evolution_benchmark
 
 
 def _git_head(root: Path) -> str:

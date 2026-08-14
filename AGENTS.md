@@ -63,7 +63,7 @@ The research trace under `docs/research/2026-08-10-production-rag-hardening-rese
 - Reconstructed evidence can never silently become verbatim evidence.
 - Do not add infrastructure because it is fashionable. New technology must beat the existing adapter/benchmark contract on corpus-specific evidence.
 - Prefer a simpler retrieval/context pipeline when a complex one does not win under a matched quality/resource budget.
-- Do not casually rename the internal `src/dkg` module/API namespace.
+- Do not casually rename the internal `src/fossil_core` module/API namespace. The legacy `src/dkg` namespace was deliberately and only temporarily retained as a deprecated import shim by Issue #82.
 
 ## Repository family invariants
 

@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from dkg.answer_eval import (
+from fossil_core.answer_eval import (
     AnswerReliabilityCase,
     DeterministicEvidenceAnswerService,
     run_answer_reliability_benchmark,
 )
-from dkg.answer_pipeline import LineageResolvedModelService, expand_context_with_lineage
+from fossil_core.answer_pipeline import LineageResolvedModelService, expand_context_with_lineage
 
 PACK = "pack_lineage_answer"
 

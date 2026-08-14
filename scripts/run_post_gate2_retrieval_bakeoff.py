@@ -8,18 +8,18 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from dkg.answer_eval import (
+from fossil_core.answer_eval import (
     AnswerReliabilityCase,
     DeterministicEvidenceAnswerService,
     evaluate_answer_candidate,
 )
-from dkg.answer_pipeline import LineageResolvedModelService
-from dkg.benchmark import RetrievalBenchmark
-from dkg.benchmark_cases import load_benchmark_case_set, retrieval_cases_from_case_set
-from dkg.context_security import UntrustedContextModelService
-from dkg.execution_receipt import execute_query_with_receipt
-from dkg.pack_corpus import retrieval_documents_from_pack_fixtures
-from dkg.real_retrieval import (
+from fossil_core.answer_pipeline import LineageResolvedModelService
+from fossil_core.benchmark import RetrievalBenchmark
+from fossil_core.benchmark_cases import load_benchmark_case_set, retrieval_cases_from_case_set
+from fossil_core.context_security import UntrustedContextModelService
+from fossil_core.execution_receipt import execute_query_with_receipt
+from fossil_core.pack_corpus import retrieval_documents_from_pack_fixtures
+from fossil_core.real_retrieval import (
     DEFAULT_BGE_MODEL,
     DEFAULT_BGE_REVISION,
     DEFAULT_CROSS_ENCODER_MODEL,
@@ -30,8 +30,8 @@ from dkg.real_retrieval import (
     SentenceTransformerCrossEncoderReranker,
     SentenceTransformerEmbeddingProvider,
 )
-from dkg.semantic_retriever import SemanticEmbeddingRetriever
-from dkg.services import BM25Retriever
+from fossil_core.semantic_retriever import SemanticEmbeddingRetriever
+from fossil_core.services import BM25Retriever
 
 try:
     import resource

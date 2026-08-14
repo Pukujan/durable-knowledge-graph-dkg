@@ -4,13 +4,13 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from dkg.privileged_local_verifier import (
+from fossil_core.privileged_local_verifier import (
     active_ready_privileged_tasks,
     parse_actions,
     read_selected_dotenv,
     verifier_environment,
 )
-from dkg.trusted_local_runner import WorkOrderError
+from fossil_core.trusted_local_runner import WorkOrderError
 
 SHA = "a" * 40
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dkg.trusted_local_queue import active_ready_local_tasks
+from fossil_core.trusted_local_queue import active_ready_local_tasks
 
 
 SHA = "a" * 40

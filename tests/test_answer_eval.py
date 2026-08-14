@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dkg.answer_eval import (
+from fossil_core.answer_eval import (
     AnswerReliabilityCase,
     DeterministicEvidenceAnswerService,
     evaluate_answer_candidate,

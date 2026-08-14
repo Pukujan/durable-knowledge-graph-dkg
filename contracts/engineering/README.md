@@ -3,7 +3,7 @@
 This is a deliberately small, Git-versioned contract for bounded implementation
 work. It validates offline and never requires a live FOSSIL service, a model, or
 a secret. FOSSIL retrieval and the live GitHub read are supplied as evidence to
-`dkg.engineering_preflight.build_context_packet`.
+`fossil_core.engineering_preflight.build_context_packet`.
 
 `CURRENT_AUTHORITY` establishes the current authority set only when supplied by
 an explicit lifecycle/authority source or the bounded live GitHub read. Retrieval

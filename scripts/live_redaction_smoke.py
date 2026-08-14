@@ -16,9 +16,9 @@ from graphiti_core.llm_client.openai_generic_client import OpenAIGenericClient
 from graphiti_core.nodes import EpisodeType
 from neo4j import AsyncGraphDatabase
 
-from dkg.event_store import DurableEventStore, EventRedactedError
-from dkg.projection.graphiti import GraphitiProjectionAdapter
-from dkg.projection.ledger import ProjectionLedger
+from fossil_core.event_store import DurableEventStore, EventRedactedError
+from fossil_core.projection.graphiti import GraphitiProjectionAdapter
+from fossil_core.projection.ledger import ProjectionLedger
 from live_graphiti_smoke import required_env, software_commit, wait_for_neo4j
 
 

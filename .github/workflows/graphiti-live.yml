@@ -8,8 +8,8 @@ on:
       - ".github/workflows/graphiti-live.yml"
       - "scripts/live_graphiti_smoke.py"
       - "scripts/live_redaction_smoke.py"
-      - "src/dkg/event_store.py"
-      - "src/dkg/projection/**"
+      - "src/fossil_core/event_store.py"
+      - "src/fossil_core/projection/**"
       - "schemas/events/**"
       - "pyproject.toml"
   pull_request:
@@ -17,8 +17,8 @@ on:
       - ".github/workflows/graphiti-live.yml"
       - "scripts/live_graphiti_smoke.py"
       - "scripts/live_redaction_smoke.py"
-      - "src/dkg/event_store.py"
-      - "src/dkg/projection/**"
+      - "src/fossil_core/event_store.py"
+      - "src/fossil_core/projection/**"
       - "schemas/events/**"
       - "pyproject.toml"
 

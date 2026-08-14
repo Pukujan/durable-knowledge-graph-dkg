@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from dkg.benchmark_cases import load_benchmark_case_set, retrieval_cases_from_case_set
+from fossil_core.benchmark_cases import load_benchmark_case_set, retrieval_cases_from_case_set
 
 
 COMMON = "pack_269099f7b2ba43b7a99b9427d64092de"
