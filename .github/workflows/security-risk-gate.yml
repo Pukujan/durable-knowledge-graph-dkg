@@ -38,6 +38,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Install minimal validation dependency
+        run: python -m pip install --quiet jsonschema
       - name: Scan tracked sources for secret-bearing values
         shell: bash
         run: |
