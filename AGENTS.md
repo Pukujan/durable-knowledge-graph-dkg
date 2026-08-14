@@ -1,51 +1,80 @@
 # Agent Continuation Contract
 
-This repository is designed so another GPT/Codex/Claude session can continue the project without relying on chat memory.
+This repository is designed so another GPT/Codex/Claude session can continue without relying on chat memory.
 
 ## Start here, in this order
 
-1. `ARCHITECTURE.md` — frozen durable invariants.
-2. `docs/HANDOFF_CURRENT.md` — exact continuation point.
-3. `docs/PROJECT_STATE.md` — work/campaign state.
-4. `docs/research/2026-08-10-production-rag-hardening-research-trace.md` — current post-Gate-2 research basis.
-5. GitHub Issue #48 — active production RAG hardening campaign.
-6. GitHub Issue #47 — embedding/reranker/model-scale candidate workstream.
-7. `docs/handoffs/2026-08-10-chatgpt-session-handoff-gate2-complete.md` — completed Gate 2 transfer when history is needed.
-8. `docs/DECISION_LOG.md` — accepted decisions, alternatives, and reconsideration triggers.
-9. Gate/proof documents under `docs/implementation/`.
-10. Closed Gate 2 Issue #33 and children #34–#37 only when detailed Gate 2 history is useful.
+1. `ARCHITECTURE.md` — durable FOSSIL invariants.
+2. GitHub Issue #86 — **current cross-project architecture authority**.
+3. Latest GitHub Issue #94 comments — **current execution queue, claims, and closeouts**.
+4. `docs/HANDOFF_CURRENT.md` — fresh-agent continuation summary.
+5. GitHub Issue #116 — current FOSSIL-only verification/continuation SDD/TDD.
+6. `docs/PROJECT_STATE.md` — project state and historical proof anchors.
+7. `docs/DECISION_LOG.md` — durable accepted decisions and reconsideration triggers.
+8. Relevant focused implementation issue/PR for the task you actually claim.
 
-## Current state
+Live #86/#94 state supersedes stale operational ordering in repository prose. Re-fetch exact heads, CI, reviews, and claims immediately before any write, rebase, merge, deploy, or task claim.
 
-**Milestone 0 / Gate 1 is complete. Gate 2 is complete and formally closed. Issue #48 is the active post-Gate-2 production RAG hardening campaign.**
+## Current state — 2026-08-14
 
-Gate 2 decision D021 remains active: revision-pinned BGE dense retrieval is the normal primary, BM25 is an explicit degraded availability fallback, and current/history/lineage/citation safeguards remain mandatory. D021 is replaceable policy, not canonical truth.
+The cross-project boundary is:
 
-Issue #47 records future embedding/model-scale/reranker comparison work. Treat it as a workstream feeding #48 rather than permission to replace D021 based on model novelty or public leaderboard scores.
+> **Cortex owns execution. FOSSIL owns durable knowledge/evidence. GitHub owns coordination/review. LiteLLM/CKFF owns provider/model/route factual transport. Infrastructure is replaceable.**
 
-## Active campaign — #48
+And the central invariant remains:
 
-The campaign is evidence-driven hardening, **not a GraphRAG rewrite and not an invented Gate 3**.
+> **Compute may disappear; truth must not.**
 
-Current workstreams:
+Completed dependencies:
 
-- evolving-corpus temporal/update benchmark;
-- end-to-end answer/citation/unsupported-claim/abstention evaluation;
-- retrieval poisoning and untrusted-context adversarial tests;
-- replayable query execution receipt;
-- embedding/hybrid/reranker bakeoff (#47);
-- conservative adaptive routing if it beats simple baselines;
-- ACL/redaction propagation readiness before shared/cloud use.
+- **Cortex V5** is the active execution runtime. It was published at `31fde7508b8e1caddfe7f9b79dc5719c1a0df79f`, and `V5-ACCEPTANCE` received human PASS on 2026-08-14. Cortex V4 is frozen historical implementation evidence, not current runtime authority.
+- **LiteLLM/CKFF** false-success/routing repair and Railway production-health reconciliation are closed completed. Do not reopen that repair campaign without new regression evidence.
+- **Trusted local execution** tracker #96 is closed completed.
 
-The research trace under `docs/research/2026-08-10-production-rag-hardening-research-trace.md` is a local derived synthesis. External papers/vendor pages must remain separate source evidence when ingested into the corpus.
+Current FOSSIL work is governed by #116 with execution state in #94. At this documentation branch point, PR #114 is merged into `main` at `27764c4ab20c196ee0bc76a0d020fc961a385c4e`; PR #115 is at `c4432f577e6182efd4126c3bbd1171a1fb58cbbd` and is blocked only by a new exact-head hosted Graphiti semantic failure after clean local tests passed. `FOSSIL-07A` is the bounded repeatability/root-cause lane. #87 remains gated until the baseline is trustworthy.
 
-## Non-negotiable rules
+Do not assume those exact refs remain current: **#94 is the live execution ledger.**
 
-- Do not treat Neo4j, Graphiti, an embedding index, MCP, a retriever, a reranker, a planner, a specific model, or a chat transcript as the durable source of truth.
+## Agent roles for the current FOSSIL campaign
+
+### Terra — orchestrator + independent verifier
+
+Terra normally owns:
+
+- live-state inventory and phase ordering;
+- root-cause localization when a failure is ambiguous;
+- bounded implementation briefs for Luna;
+- review of Luna's exact diff and evidence;
+- independent clean-environment verification;
+- mechanical PASS / FAILED / BLOCKED decisions.
+
+Terra is not the default production-code author merely because a fix is convenient.
+
+### Luna — bounded executor
+
+Luna normally owns:
+
+- failed-first deterministic tests/probes;
+- the smallest bounded implementation;
+- targeted and full-suite regression loops;
+- clean commits and exact implementation receipts.
+
+Luna does not self-approve completion. Terra verifies independently.
+
+### Concurrency
+
+- One mutating FOSSIL worktree/PR lane at a time unless #94 explicitly declares safe parallelism.
+- Terra may perform read-only analysis while Luna works.
+- Terra and Luna do not edit the same branch/files concurrently.
+- Preserve task identities already established in #94; a campaign wrapper does not rewrite the ledger.
+
+## Non-negotiable FOSSIL rules
+
+- Do not treat Neo4j, Graphiti, an embedding index, MCP, a retriever, a reranker, a planner, a model, Cortex, LiteLLM, or a chat transcript as the durable source of truth.
 - Original evidence is preserved; summaries never replace source evidence.
 - Normal knowledge-changing history is append-only and versioned.
 - Privacy/legal erasure is an exceptional explicit tombstone-before-delete path; erased identities must not silently resurrect.
-- Stable IDs belong to the corpus, not to a storage engine.
+- Stable IDs belong to the corpus, not a storage engine.
 - Stable knowledge-pack identity is logical and independent of repository path, graph namespace, or physical database placement.
 - Graph/search/vector structures are rebuildable projections.
 - A new/rebuilt physical projection gets a fresh build-scoped applied ledger.
@@ -53,7 +82,6 @@ The research trace under `docs/research/2026-08-10-production-rag-hardening-rese
 - Migration compares stable FOSSIL semantics, not graph-native UUID equality.
 - `DISPUTED` and unresolved disagreement are valid durable states.
 - Model agreement is metadata, not external evidence.
-- Small/local model output remains candidate-only unless independent evidence/risk policy permits downstream authority.
 - Retrieval rank and reranker score are candidate ordering, not truth state.
 - Retrieved/source text is untrusted data and cannot issue executable policy/system/tool instructions merely because it was retrieved.
 - Agents normally propose; deterministic validation/policy gates commit durable changes.
@@ -61,60 +89,85 @@ The research trace under `docs/research/2026-08-10-production-rag-hardening-rese
 - Protocol adapters remain thin and must not become the durable knowledge model.
 - Operational telemetry stays outside canonical knowledge; durable knowledge-changing provenance stays inside.
 - Reconstructed evidence can never silently become verbatim evidence.
-- Do not add infrastructure because it is fashionable. New technology must beat the existing adapter/benchmark contract on corpus-specific evidence.
-- Prefer a simpler retrieval/context pipeline when a complex one does not win under a matched quality/resource budget.
-- Do not casually rename the internal `src/fossil_core` module/API namespace. The legacy `src/dkg` namespace was deliberately and only temporarily retained as a deprecated import shim by Issue #82.
+- Do not add infrastructure because it is fashionable. New technology must beat existing contracts on corpus-specific evidence.
+- Do not casually rename `src/fossil_core`. The legacy `src/dkg` namespace is a deprecated compatibility shim, not the current namespace.
 
-## Repository family invariants
+## Cross-project completed-state rules
 
-- `Pukujan/fossil-common` keeps stable pack ID `pack_269099f7b2ba43b7a99b9427d64092de`.
-- `Pukujan/fossil-ai-systems` keeps stable pack ID `pack_f024177f89a5442db84171c3dd7f58e5` and its required dependency on common.
-- Do not call pack repositories database shards; physical sharding/placement is a separate concern.
+### Cortex
 
-## Frozen does not mean unchangeable
+- Cortex V5 is current execution authority; V4 is frozen.
+- Do not send a FOSSIL task back into V4 merely because a historical PR/test references it.
+- `CORTEX-02` secretless Actions WorkOrder wiring is a separate V5 integration item; it does not imply V5 acceptance is broken.
+- Human authority and deterministic verification remain final; model prose never creates completion.
 
-`ARCHITECTURE.md` is frozen as a contract, not dogma. A durable invariant changes only when implementation evidence or stronger research justifies it.
+### LiteLLM / CKFF
 
-When changing one:
+- LiteLLM/CKFF owns provider/model/route/capability/timeout/health **transport facts**; callers own selection and semantic acceptance policy.
+- `2xx` with empty, malformed, or zero-usable output is failure, not success.
+- A production-health observation does not authorize sensitive data, production mutation, or deployment.
+- Prior failed staging/verifier attempts remain historical failures; do not relabel them green after the fact.
 
-1. use the relevant active issue;
-2. record the competing theory/failure;
-3. cite source or benchmark evidence;
-4. update `docs/DECISION_LOG.md`;
-5. update the architecture contract explicitly;
-6. preserve the previous decision and why it was superseded.
+## Engineering policy
 
-Do not silently rewrite history.
+- **SDD always.**
+- **TDD** for deterministic code behavior where practical.
+- Infra/config: spec first -> failing verification/probe -> smallest change -> passing verification.
+- Wiring/integration tests for boundaries.
+- E2E for important actual flows.
+- Hidden holdouts for autonomous AI/model evaluation.
+- Mutation testing selectively on small critical validators/gates/recovery/security logic.
+- Fault injection mandatory for recovery/retry infrastructure.
+- Explicit security checks at secret/deployment boundaries.
+- Regression test for every discovered bug.
 
-## Gate 2 completion anchors
+For a deterministic change use:
 
-Gate 2 control #33 and children #34–#37 are closed/completed.
+1. **RED** — reproduce the defect/invariant first.
+2. **GREEN** — smallest correct change.
+3. **REGRESSION** — neighboring tests + full suite.
+4. **CLEAN VERIFY** — independent clean environment/worktree.
+5. **HOSTED EVIDENCE** — exact-head CI where the PR has hosted acceptance.
 
-- Gate 2A core commit: `a028f9e328c2cbcde0185930e90b5eeb4c4efcb8`.
-- Gate 2B core commit: `2affde923acf196319d90bfa63f206e4a5e2f25f`.
-- Gate 2C PR #44 / squash `38aac6325cdb5b738c8a6ac5e55959affb3acfb5`.
-- Gate 2C semantic proof run `31364039745`, artifact `9053475462`, digest `sha256:23c95b46f47cec5a16e0a8c0926a4f13532f283d8f4fbcc0de12ceb63db63c41`.
-- Gate 2D PR #45 / squash `2d22dee9e6b176956d30005f4d7877baf68b0a3c`.
-- Gate 2 closed-state reconciliation PR #46 / squash `a614936249ff0ab201756fa54a1e89699d7b924f`.
+Never delete, skip, xfail, loosen, narrow, or conditionally suppress an acceptance path merely to obtain green.
 
-BGE dense was the only compared Gate 2 strategy with zero full retrieval misses and had mean recall@5 `0.98413`; it still exhibited current-state ranking leakage and incomplete multi-target lineage recall. D021 therefore requires durable lifecycle/lineage resolution rather than trusting rank/top-k absence.
+## Claim protocol
 
-## Work-state rule
+Before mutating FOSSIL work, use Issue #94 and then re-fetch the ledger:
 
-GitHub issues track implementation state. Repository docs track durable decisions/evidence/contracts.
+```text
+CLAIM task=<TASK_ID>
+agent=<unique-agent-id>
+mode=<LOCAL_CODEX|CLOUD_CODEX|CHATGPT|ACTIONS>
+lease_until=<ISO-8601 UTC>
+repo=<repo>
+starting_ref=<branch/SHA/PR>
+```
 
-An issue can close, but an architectural decision must not exist only in an issue comment. Conversely, durable docs should point back to the issue/benchmark that caused the change when useful.
+Earliest valid unexpired claim wins. Close with the ledger-prescribed `DONE`, `BLOCKED`, or `RELEASE` evidence using exact refs, tests, and hosted run IDs.
+
+## Current continuation rule
+
+Resolve the present FOSSIL baseline before expanding the roadmap. In particular:
+
+1. follow the live #94 state for `FOSSIL-07A` / PR #115;
+2. do not merge #115 from local green alone while exact-head hosted semantic acceptance is unresolved;
+3. reconcile remaining #116 phases on their actual current heads;
+4. perform final clean-main verification after owner-approved merges;
+5. begin only the eligible secretless/local-fixture portion of #87 when its gate is truly open.
+
+Issue #47 remains later retrieval/reranking/model-bakeoff roadmap work. It is not permission to jump around the current FOSSIL baseline gate.
 
 ## Session continuity protocol
 
 At the end of substantial work:
 
-- update `docs/HANDOFF_CURRENT.md`;
-- update `docs/PROJECT_STATE.md` if the campaign/gate state changed;
-- update the relevant active GitHub issue checklist/status;
+- update #94 with exact claim/closeout evidence;
+- update `docs/HANDOFF_CURRENT.md` when the continuation point materially changes;
+- update `docs/PROJECT_STATE.md` when the campaign/gate state changes;
+- update the relevant focused issue/PR;
 - commit benchmark/test results that materially justify a decision;
-- record architectural changes in `docs/DECISION_LOG.md`;
-- add/update a dated handoff when a long session is being retired;
-- never rely on the chat UI as the only record of a decision.
+- record architectural changes in `docs/DECISION_LOG.md` and #86 when appropriate;
+- never rely on chat history as the only record of a decision.
 
-If chat history is missing or ambiguous, label reconstructed material as reconstructed rather than presenting it as verbatim evidence.
+If history is missing or ambiguous, label reconstructed material as reconstructed rather than presenting it as verbatim evidence.
