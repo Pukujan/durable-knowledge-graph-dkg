@@ -1,24 +1,23 @@
 # Current Handoff
 
-**Date:** 2026-08-12  
+**Date:** 2026-08-14  
 **Project:** **FOSSIL — Fault-tolerant Open Semantic Store for Intellectual Lineage**  
 **Repository:** `Pukujan/fossil-core`  
 **Current architecture authority:** Issue #86  
-**Current execution queue / claim ledger:** Issue #94
+**Current execution queue / claim ledger:** Issue #94  
+**Current focused FOSSIL campaign:** Issue #116
 
 ## Current status
 
-The project has moved from a local-machine-centered architecture to **disposable ordinary compute + durable truth**, with one narrow trusted-local exception for credentials that currently exist only on the owner's PC.
-
-The current invariant is:
-
-> **Compute may disappear; truth must not.**
-
-The current subsystem boundary is:
+The active cross-project architecture is:
 
 > **Cortex owns execution. FOSSIL owns durable knowledge/evidence. GitHub owns coordination/review. LiteLLM/CKFF owns provider/model/route factual transport. Infrastructure is replaceable.**
 
-The owner's PC may act as a **trusted self-hosted execution/credential bridge**, but it is not semantic authority and is not required for ordinary secretless PR CI.
+The central invariant remains:
+
+> **Compute may disappear; truth must not.**
+
+This handoff is intentionally subordinate to live #86/#94 state. Re-fetch both before any write, claim, rebase, merge, deployment, or acceptance conclusion.
 
 ## Read first
 
@@ -26,202 +25,118 @@ For a fresh autonomous session, read in this order:
 
 1. `AGENTS.md`
 2. `ARCHITECTURE.md`
-3. this file
-4. Issue #86 — current architecture reconciliation
-5. Issue #94 — current execution queue and append-only claim ledger
-6. `docs/DECISION_LOG.md`
-7. `docs/architecture/2026-08-12-trusted-local-runner-boundary.md`
-8. `docs/architecture/2026-08-10-cortex-fossil-ownership-boundary.md`
-9. `docs/architecture/2026-08-10-context-construction-compression-boundary.md`
-10. Issue #96 — trusted local autonomous WorkOrder runner
-11. Cortex issue #1 / current Cortex queue refs
-12. LiteLLM issue #11 / current LiteLLM queue refs
+3. Issue #86 — current architecture authority
+4. latest Issue #94 comments — current queue, claims, and closeouts
+5. this file
+6. Issue #116 — current visible FOSSIL SDD/TDD campaign
+7. `docs/PROJECT_STATE.md`
+8. `docs/DECISION_LOG.md`
+9. the focused issue/PR for the currently eligible task
 
-Verify live GitHub state immediately before any write, merge, rebase, deploy or task claim.
+## Completed dependencies — do not reopen without regression evidence
 
-## Frozen authority rules
+### Cortex V5
 
-- Retrieval rank is candidate ordering, not truth.
-- Reranker score is not truth.
-- Model confidence is not truth.
-- Multi-model agreement is not external evidence.
-- GitHub Actions artifacts/caches are not canonical FOSSIL truth.
-- FOSSIL durable evidence/events, stable IDs, provenance, lifecycle, lineage and accepted contracts remain semantic authority.
-- Cortex owns task/execution policy, WorkOrder lifecycle, retries, fencing, fan-out/fan-in, deadlines and closeout.
-- LiteLLM/CKFF owns provider/model/route/capability/timeout/health factual transport state; callers own selection policy.
+- Cortex V5 is the active execution runtime.
+- Published/accepted baseline: `31fde7508b8e1caddfe7f9b79dc5719c1a0df79f`.
+- `V5-ACCEPTANCE` received **HUMAN PASS / CLOSED COMPLETED** on 2026-08-14.
+- Mechanical acceptance evidence recorded in #94: public HumanEval/0 through the V5 HTTP API, executable verification `20/20`, `attempt_count=1`, plus local, Gravebuster HTTP 200, and Langfuse HTTP 207 observation.
+- Cortex V4 is preserved/frozen historical implementation evidence. It is not current runtime authority.
+- `CORTEX-02` secretless GitHub Actions WorkOrder wiring is now unblocked on V5, but it is a separate integration item. Its existence does not mean V5 acceptance is incomplete.
+
+### LiteLLM / CKFF
+
+- Production gateway false-success/routing repairs are merged and the repair tracker is **CLOSED COMPLETED**.
+- Railway `litellm` production was reconciled healthy on 2026-08-14: liveliness 200, readiness 200 with database connected, Postgres online.
+- Prior failed LIVE_STAGING/verifier attempts remain historical failures; do not retroactively call them `STAGING_GREEN`.
+- Formal automated live-inference semantic probing is optional follow-up evidence unless a future gate makes it mandatory again.
+- `2xx + empty/malformed/zero-usable-output` remains failure, never semantic success.
+- No production authority or sensitive-data authorization is created by the health closeout.
+
+### Trusted local execution
+
+- Exact-SHA disposable broker path, Luna/Terra policy, fencing/cancellation, independent checks, sanitized receipts, low-privilege worker, and separate privileged verifier are complete.
+- Issue #96 is closed completed.
+- The local PC remains a replaceable trusted execution/credential bridge only where local-only access is genuinely required; it is not semantic authority.
+
+## Current FOSSIL baseline
+
+At the point this documentation branch was created:
+
+- `main` = `27764c4ab20c196ee0bc76a0d020fc961a385c4e`.
+- PR #114 was owner-merged into that baseline after the Graphiti dependency/import repair and fan-in verification.
+- PR #115 was rebased/hardened at `c4432f577e6182efd4126c3bbd1171a1fb58cbbd`.
+- Clean declared `[test,graphiti]` install, `pip check`, Graphiti import, receipt tests `63/63`, focused verification `91/91`, full pytest `262/262`, and `git diff --check` passed independently for #115.
+- Fresh hosted Graphiti run `31850284986` nevertheless failed because the live smoke produced zero entities. This is a **new semantic live-integration failure**, not the inherited missing-`httpx` dependency issue.
+- `FOSSIL-07` therefore closed BLOCKED rather than weakening acceptance; closeout comment ID `5299204005`.
+- `FOSSIL-07A` is the currently claimed bounded repeatability/root-cause investigation on #115. It must distinguish reproducible failure from nondeterministic live-model/smoke behavior without accepting “rerun until green.”
+- PR #115 is not merged from this state.
+- #87 secretless/local-fixture work remains NOT_READY until the FOSSIL baseline permits it.
+
+**Do not use this paragraph as a live queue.** Re-fetch #94 because Terra may have moved `FOSSIL-07A` since this handoff was written.
+
+## Current FOSSIL campaign contract
+
+Issue #116 is the visible implementation/verification spec. It is **not** architecture authority and does not replace #94 task identities.
+
+Current campaign intent:
+
+1. establish exact live state before mutation;
+2. repair/verify the currently open FOSSIL branches without weakening acceptance;
+3. require failed-first evidence and exact-head hosted verification where applicable;
+4. prove integration on the actual merge baseline;
+5. only then continue into the eligible secretless/local-fixture portion of #87.
+
+No production deployment, secret access, automatic merge, or automatic issue closure is authorized by #116.
+
+## Roles
+
+### Terra — orchestrator + independent verifier
+
+Terra owns live-state inventory, phase ordering, ambiguous root-cause localization, bounded briefs to Luna, exact-diff review, clean independent verification, and mechanical PASS / FAILED / BLOCKED decisions.
+
+Terra does not normally become the implementation author simply because a patch is convenient.
+
+### Luna — bounded executor
+
+Luna owns failed-first tests/probes, the smallest bounded implementation, targeted/full regression, clean commits, and exact implementation evidence. Luna cannot self-approve completion.
+
+### Concurrency
+
+- one mutating FOSSIL lane at a time unless #94 explicitly declares safe parallelism;
+- read-only Terra analysis may overlap Luna implementation;
+- never edit the same branch/files concurrently;
+- preserve existing #94 task identities.
+
+## Engineering policy
+
+- SDD always.
+- TDD for deterministic behavior where practical.
+- Integration/wiring tests where there is actual wiring.
+- E2E for important real flows.
+- Clean independent verification after implementation.
+- Exact-head hosted CI where the PR has hosted acceptance.
+- Fault injection for recovery/retry infrastructure.
+- Hidden holdouts for autonomous AI/model evaluation.
+- Selective mutation testing on small critical validators/gates/security/recovery logic.
+- Regression test for every discovered bug.
+
+Shorthand:
+
+> **RED -> GREEN -> REGRESSION -> CLEAN VERIFY -> HOSTED exact-head evidence.**
+
+Never delete, skip, xfail, loosen, suppress, or narrow a semantic gate merely to obtain green.
+
+## Access / authority boundaries
+
 - Ordinary PR CI remains secretless.
-- Production promotion requires a separate explicit authorization.
-
-## Legacy SSC — RETIRED / SUPERSEDED
-
-Legacy `stupidly-simple-cortex` (SSC) is **not a current runtime, memory, RAG, ontology/current-state, project-state, orchestration or Cortex authority**.
-
-Cortex V4 must operate with SSC absent.
-
-Do not use as current authority:
-
-- SSC living ontology/current-state values;
-- SSC BM25/vector ranking output;
-- generated conclusions/summaries;
-- historical project/task state;
-- model consensus/judge conclusions;
-- old SSC research prose merely because SSC labeled it accepted/current;
-- private-SSC compatibility tests as a merge/runtime requirement.
-
-The retirement is evidence-backed by known noisy/false-positive corpus behavior and historical retrieval/index/stale-artifact failures. Treating those outputs as authority can degrade decisions by turning retrieval/system errors into apparent truth.
-
-Potentially useful old eval/checker assets may survive only after **independent standalone extraction and revalidation** with exact source revision/path, bytes/hash, actual row counts, provenance/license, checker/test dependencies and holdout/leakage controls.
-
-Do not revive SSC runtime merely to preserve an old asset.
-
-Durable retirement decision: D023 in `docs/DECISION_LOG.md`.
-
-## Trusted local autonomous runner
-
-Manual per-session Terra/Luna/Codex dispatch is superseded as the normal local operating model.
-
-Current plan: Issue #96 / #94 `INFRA-03`.
-
-The local PC may run a dedicated self-hosted GitHub Actions runner because some Railway/provider/telemetry credentials currently remain local-only.
-
-### Security invariant
-
-> **A pull request must never be able to cause its own mutable code or workflow definition to execute on the credential-bearing local runner.**
-
-Therefore:
-
-- ordinary `pull_request` workflows do not target the trusted-local runner;
-- do not use `pull_request_target` to run PR-controlled code with secrets;
-- trusted-local dispatch comes from reviewed/default-branch-controlled workflow/dispatcher code;
-- credential-bearing verification requires an exact reviewed SHA;
-- local `.env` values are never uploaded, printed or copied into GitHub/FOSSIL receipts;
-- Terra/Luna role names never imply secret access.
-
-### Local lanes
-
-**Secretless local engineering worker**
-
-- disposable worktree/process per attempt;
-- code/test/lint/mutation/fault work;
-- credentials unloaded;
-- mechanical PASS/FAILED/BLOCKED closeout;
-- Git commit + structured receipt checkpoint where sufficient.
-
-**Privileged verifier**
-
-- exact reviewed SHA only;
-- local env may be loaded only for the explicitly authorized credential set;
-- isolated Railway staging / protected telemetry / future object-store verification;
-- sanitized receipts only;
-- no implicit production promotion.
-
-The verifier is deliberately a separate model-free Docker service. `fossil-privileged-secrets` is a root-only Docker volume in the local Docker Desktop WSL data store (`D:\DockerDesktopWSL`) containing the owner-provided SSC `.env` copy; `codexworker` access was mechanically denied. Queue records select only a locally owned `verifier_action`; they cannot supply commands, secret names, or values. See D026 and `docs/operations/TRUSTED_LOCAL_RUNNER.md` before configuring a staging action.
-
-### Agent roles
-
-- **Terra:** complex/root-cause, architecture-sensitive, and explicitly trusted local/infra tasks.
-- **Luna:** cheaper/mechanical regressions, reproductions, lint/test loops, evidence collection and bounded implementation.
-
-Roles are execution policy, not authority.
-
-Durable runner decision: D022 in `docs/DECISION_LOG.md`.
-
-## Completed foundation
-
-### FOSSIL
-
-- FOSSIL-01 merged PR #93 — baseline repair; GitHub DKG 112/112.
-- FOSSIL-02 merged PR #92 — status-aware build-context/preflight packet; GitHub DKG 119/119.
-- FOSSIL-03 merged PR #91 — disposable rebuild proof; GitHub DKG 122/122.
-- FOSSIL-04 merged PR #95 — reusable assurance; GitHub DKG + engineering assurance green.
-
-Build-context v1 now fails closed on unresolved authority/current-state conflict and retrieval rank never creates authority.
-
-### Study OS
-
-- STUDY-01 merged private-study-log PR #56; validation green; no transcript duplication.
-
-### LiteLLM / Railway
-
-- Secretless catalog + semantic-contract work on LiteLLM PR #12 reached code-green before live staging.
-- Isolated Railway staging exists and was proven separately from production.
-- Production was independently restored/verified on its intended main revision after a source-connection action briefly showed shared-source risk; no production semantic request occurred during the incident.
-- Live staging found two real semantic failures:
-  1. Chat streaming can return HTTP 200 with zero usable bytes.
-  2. Forced-tool Responses can fail with HTTP 502.
-
-These are tracked by `LITELLM-05` and must remain fail-closed.
-
-### Cortex
-
-- WorkOrder recovery PR #12 has targeted recovery tests 10/10 green.
-- The old full-suite blocker was polluted by remaining SSC-dependent tests/adapters.
-- `CORTEX-03` SSC-compatibility CI plan was explicitly released/superseded.
-- `CORTEX-04` is the current Cortex task: remove SSC from the normal Cortex runtime/merge-critical path and replace legacy tests only with equivalent V4-owned invariants.
-- PR #13 must not be merged merely to preserve SSC compatibility.
-
-## Current READY / active task order
-
-### P0 — LITELLM-05
-
-Repair the two live gateway failures:
-
-- HTTP 200 empty/zero-usable stream;
-- forced-tool Responses failure.
-
-Requirements:
-
-- failed-first deterministic regressions;
-- smallest code/config fix;
-- secretless ordinary PR CI;
-- baseline Chat/Responses/embeddings/rerank unchanged;
-- requested-vs-actual model/route and usage preserved;
-- exact-reviewed-SHA isolated staging verification before merge/promotion claims;
-- production untouched.
-
-### P1 — CORTEX-04
-
-Make Cortex V4 fully independent of SSC:
-
-- Cortex starts/runs with SSC unavailable;
-- remove legacy SSC runtime/corpus dependency from normal execution;
-- classify SSC adapters/tests as migration debt;
-- replace/remove legacy assertions with V4-owned invariant tests, never skip to fake green;
-- preserve WorkOrder recovery/fencing/idempotency semantics;
-- hosted secretless full suite green.
-
-### P1.5 — INFRA-03 / Issue #96
-
-Build the trusted local autonomous WorkOrder runner:
-
-1. WorkOrder schema/validator;
-2. claim/repo/access/generation/deadline validation;
-3. disposable worktree/process per attempt;
-4. Terra/Luna role selection;
-5. secretless worker wrapper;
-6. fault tests for death/duplicate/stale/malformed/timeout/cancel/late result;
-7. trusted/default-branch dispatch workflow;
-8. local runner registration/runbook;
-9. no-secret end-to-end WorkOrder proof;
-10. separate privileged exact-SHA verifier;
-11. exact-SHA isolated staging proof with sanitized receipts.
-
-### Next after those gates
-
-- finish/land Cortex WorkOrder recovery chain;
-- wire disposable GitHub Actions WorkOrders using validated build-context v1;
-- run CAMPAIGN-01: first bounded real-model campaign, flat max parallel <=4, objective tests, deliberate kill/retry, no production deploy;
-- only after campaign evidence consider matched executor bakeoff (OpenCode vs Aider vs direct/simple).
-
-## Access classes
-
-- `CLOUD_SECRETLESS` — ordinary code/test/PR CI, no protected credentials.
-- `LOCAL_INFRA` — trusted local PC required.
-- `TRUSTED_SECRET_WORKFLOW` — reviewed/trusted workflow only, never arbitrary PR code.
-- `LIVE_STAGING` — isolated non-production endpoint.
-- `OBJECT_STORE_LIVE` — narrowly scoped non-production object-store credential.
-
-A task's role does not widen its access class.
+- Production promotion requires separate explicit human authorization.
+- Role names do not widen access class.
+- LiteLLM/CKFF transport health does not decide FOSSIL truth.
+- Cortex execution success does not decide FOSSIL truth.
+- GitHub Actions artifacts/caches are not canonical FOSSIL truth.
+- Retrieval rank, reranker score, model confidence, and multi-model agreement do not create evidence authority.
+- FOSSIL durable evidence/events, stable IDs, provenance, lifecycle, lineage, and accepted contracts remain semantic authority.
 
 ## Claim protocol
 
@@ -236,51 +151,30 @@ repo=<repo>
 starting_ref=<branch/SHA/PR>
 ```
 
-Immediately re-fetch #94 comments. Earliest valid unexpired claim wins. One active mutating owner per repo lane unless the task explicitly declares safe parallelism.
+Immediately re-fetch #94. Earliest valid unexpired claim wins. Close with exact `DONE`, `BLOCKED`, or `RELEASE` evidence as required by the live ledger/task contract.
 
-Close with `DONE`, `BLOCKED` or `RELEASE` using exact refs/tests/evidence.
+## Do not do these things
 
-Do not invent architecture or bypass dependencies when no eligible READY task exists.
-
-## Engineering policy
-
-- SDD always.
-- TDD for deterministic code behavior where practical.
-- Infra/config: spec first -> failing verification/probe -> smallest change -> passing verification.
-- Wiring/integration tests for boundaries.
-- E2E for important actual flows.
-- Hidden holdouts for autonomous AI/model evaluation.
-- Mutation testing selectively on small critical validators/gates/recovery/security logic.
-- Fault injection mandatory for recovery/retry infrastructure.
-- Explicit security checks at secret/deployment boundaries.
-- Regression test for every discovered bug.
-
-Shorthand:
-
-> **SDD always, TDD for code behavior, wiring/E2E when there is actual wiring, hidden holdouts for AI evaluation, and mutants only on the small pieces where a false green would hurt us.**
-
-## Forbidden premature conclusions
-
-Do not select without matched evidence:
-
-- OpenCode vs Aider vs direct/simple executor;
-- R2 vs S3;
-- final Spec Kit vs V4 methodology boundary;
-- persistent-service topology;
-- large model matrix.
-
-Do not promote production from the current queue.
+- Do not reopen Cortex V4 as runtime authority.
+- Do not rerun the completed LiteLLM repair campaign absent actual new regression evidence.
+- Do not merge #115 because local tests are green while the exact-head hosted semantic gate is unresolved.
+- Do not classify a flaky live gate as PASS by retrying until one attempt happens to succeed.
+- Do not weaken Graphiti/entity acceptance to hide model/smoke nondeterminism.
+- Do not begin #87 because it is attractive; wait until the current baseline gate is truly open.
+- Do not select R2 vs S3 from local-fixture results.
+- Do not authorize production from agent/task text.
+- Do not disclose or reverse-engineer an independent hidden holdout/mutation oracle.
 
 ## Immediate fresh-agent behavior
 
-1. Read #86 and #94 live.
-2. Confirm SSC retirement / D023.
-3. Confirm trusted-local boundary / #96 / D022.
-4. Find an eligible READY task matching access.
-5. Claim and re-fetch ledger.
+1. Read #86 and live #94.
+2. Confirm current exact FOSSIL main/PR heads and hosted conclusions.
+3. Confirm whether `FOSSIL-07A` is still active, completed, released, or blocked.
+4. Follow the next eligible #94 task and the visible SDD/TDD in #116/focused issue.
+5. Claim before mutation and re-fetch the ledger.
 6. Work on an isolated branch/worktree.
-7. Test mechanically and fault-inject where required.
+7. Test mechanically without weakening acceptance.
 8. Post exact closeout evidence.
-9. Re-read queue and take the next eligible task.
+9. Re-read #94 before taking the next item.
 
 If no eligible task exists, stop with explicit idle/BLOCKED evidence rather than inventing work.
