@@ -1,0 +1,99 @@
+{
+  "schema_version": "fossil.shared-chat-import.v1",
+  "import_id": "shared-chat-import-2026-08-14",
+  "pack_id": "pack_f024177f89a5442db84171c3dd7f58e5",
+  "observed_at": "2026-08-14T00:00:00Z",
+  "actor": {
+    "actor_id": "shared-chat-reconstruction-importer",
+    "harness_version": "shared-chat-import-v1",
+    "skill_id": "skill_research-ingestion",
+    "skill_version": "1.0.0"
+  },
+  "conversations": [
+    {
+      "conversation_id": "conv_shared_chat_llm_bias_20260814",
+      "title": "Research on LLM bias — bias-resistant evaluation harness",
+      "external_ref": "https://chatgpt.com/share/6a7f2a03-f38c-83ea-b364-402c11090417?ogimg=plain",
+      "source_path": "docs/recovery/2026-08-14-shared-chat-llm-bias-evaluation.md",
+      "source_label": "reconstructed public shared-chat checkpoint: bias-resistant evaluation harness",
+      "reconstruction_basis_refs": [
+        "https://chatgpt.com/share/6a7f2a03-f38c-83ea-b364-402c11090417?ogimg=plain",
+        "docs/recovery/2026-08-14-shared-chat-llm-bias-evaluation.md"
+      ],
+      "messages": [
+        {"message_id": "msg_shared_bias_001", "role": "human", "actor_id": "shared-chat-user", "marker": "[message:001] The user asked for an independent, evidence-first evaluation of an anonymous proposal for a bias-resistant multi-model evaluation harness."},
+        {"message_id": "msg_shared_bias_002", "role": "assistant", "actor_id": "chatgpt-share-rendered-response", "marker": "[message:002] The assistant reported that LLM judges can agree with humans at useful rates while still exhibiting systematic position, framing, self-preference, sycophancy, inconsistency, and correlated errors."},
+        {"message_id": "msg_shared_bias_003", "role": "assistant", "actor_id": "chatgpt-share-rendered-response", "marker": "[message:003] The assistant concluded that an unrestricted orchestrator which rewrites, ranks, filters, or reconciles reviewer outputs becomes another fallible epistemic decision-maker; deterministic routing and mechanical gates are safer V0 hypotheses."},
+        {"message_id": "msg_shared_bias_004", "role": "assistant", "actor_id": "chatgpt-share-rendered-response", "marker": "[message:004] The assistant concluded that nominal model count, vendor count, majority voting, debate, and a fixed 100-times critique ratio do not establish independent or truthful evidence; independence, validated defect yield, and stopping behavior must be measured."},
+        {"message_id": "msg_shared_bias_005", "role": "assistant", "actor_id": "chatgpt-share-rendered-response", "marker": "[message:005] The assistant recommended immutable raw reviews, blinded isolated first-pass reviewers, claim-level evidence aggregation, deterministic resolution for mechanically decidable claims, qualified semantic adjudication only for unresolved claims, abstention, escalation, and preserved minority dissent."},
+        {"message_id": "msg_shared_bias_006", "role": "human", "actor_id": "shared-chat-user", "marker": "[message:006] The rendered conversation included a follow-up where the user asked whether the evaluation had finished after an interrupted run."},
+        {"message_id": "msg_shared_bias_007", "role": "assistant", "actor_id": "chatgpt-share-rendered-response", "marker": "[message:007] The completed verdict was `PROTOTYPE`: build a small deterministic experimental measurement apparatus, not a production truth machine, and compare it against a simpler calibrated-judge plus mechanical-tests baseline."}
+      ],
+      "lineage": {
+        "lineage_id": "lin_shared_bias_eval_20260814",
+        "nodes": [
+          {"node_id": "ln_bias_question_20260814", "kind": "question", "label": "Bias-resistant harness evaluation question", "text": "Should a bias-resistant multi-model evaluation harness be built as a deterministic prototype?", "message_index": 0, "position_state": "current"},
+          {"node_id": "ln_bias_observation_20260814", "kind": "observation", "label": "Evaluator effects are real", "text": "The rendered evaluation reports systematic evaluator effects and correlated model errors.", "message_index": 1, "position_state": "current"},
+          {"node_id": "ln_bias_challenge_20260814", "kind": "challenge", "label": "Nominal diversity is not independence", "text": "Model count, vendor count, majority votes, debate, and fixed critique ratios do not establish independent evidence.", "message_index": 3, "position_state": "opposing"},
+          {"node_id": "ln_bias_rebuttal_20260814", "kind": "rebuttal", "label": "Control-plane safeguards", "text": "Immutable reviews, isolated first passes, mechanical gates, qualified adjudication, abstention, and dissent preservation are proposed safeguards.", "message_index": 4, "position_state": "current"},
+          {"node_id": "ln_bias_assumption_20260814", "kind": "assumption", "label": "Critique scaling is empirical", "text": "A fixed 100-times critique ratio has no intrinsic epistemic significance; marginal validated defect yield must be measured.", "message_index": 3, "position_state": "unresolved"},
+          {"node_id": "ln_bias_conclusion_20260814", "kind": "conclusion", "label": "Prototype verdict", "text": "The correct status is PROTOTYPE, not production candidate.", "message_index": 6, "position_state": "current"},
+          {"node_id": "ln_bias_decision_20260814", "kind": "decision", "label": "Build the measurement apparatus first", "text": "Start with a small deterministic experimental harness and compare it with a simpler calibrated-judge plus mechanical-tests baseline.", "message_index": 6, "position_state": "current"}
+        ],
+        "edges": [
+          {"edge_id": "le_bias_001_20260814", "source_node_id": "ln_bias_question_20260814", "target_node_id": "ln_bias_observation_20260814", "relation_type": "leads_to"},
+          {"edge_id": "le_bias_002_20260814", "source_node_id": "ln_bias_observation_20260814", "target_node_id": "ln_bias_challenge_20260814", "relation_type": "supports"},
+          {"edge_id": "le_bias_003_20260814", "source_node_id": "ln_bias_challenge_20260814", "target_node_id": "ln_bias_rebuttal_20260814", "relation_type": "rebuts"},
+          {"edge_id": "le_bias_004_20260814", "source_node_id": "ln_bias_challenge_20260814", "target_node_id": "ln_bias_assumption_20260814", "relation_type": "reframes"},
+          {"edge_id": "le_bias_005_20260814", "source_node_id": "ln_bias_rebuttal_20260814", "target_node_id": "ln_bias_conclusion_20260814", "relation_type": "supports"},
+          {"edge_id": "le_bias_006_20260814", "source_node_id": "ln_bias_conclusion_20260814", "target_node_id": "ln_bias_decision_20260814", "relation_type": "leads_to"}
+        ],
+        "current_conclusion_refs": ["ln_bias_conclusion_20260814", "ln_bias_decision_20260814"]
+      }
+    },
+    {
+      "conversation_id": "conv_shared_chat_p001_eval_20260814",
+      "title": "Proposal Evaluation Request — P-001 quantitative research system",
+      "external_ref": "https://chatgpt.com/share/6a7f2a88-c364-83ea-bad5-a349542bb937?ogimg=plain",
+      "source_path": "docs/recovery/2026-08-14-shared-chat-proposal-p001-evaluation.md",
+      "source_label": "reconstructed public shared-chat checkpoint: Proposal P-001 evaluation",
+      "reconstruction_basis_refs": [
+        "https://chatgpt.com/share/6a7f2a88-c364-83ea-bad5-a349542bb937?ogimg=plain",
+        "docs/recovery/2026-08-14-shared-chat-proposal-p001-evaluation.md"
+      ],
+      "messages": [
+        {"message_id": "msg_shared_p001_001", "role": "human", "actor_id": "shared-chat-user", "marker": "[message:001] The user asked whether the uploaded Proposal P-001 contained an evaluator instruction and system prompt."},
+        {"message_id": "msg_shared_p001_002", "role": "assistant", "actor_id": "chatgpt-share-rendered-response", "marker": "[message:002] The assistant confirmed that the uploaded file contained a substantial evaluator prompt instructing independent claim-by-claim review, disconfirming evidence search, six review roles, adjudication, and required closing questions; those file instructions were distinguished from platform-level system instructions."},
+        {"message_id": "msg_shared_p001_003", "role": "human", "actor_id": "shared-chat-user", "marker": "[message:003] The user instructed the evaluator to proceed."},
+        {"message_id": "msg_shared_p001_004", "role": "assistant", "actor_id": "chatgpt-share-rendered-response", "marker": "[message:004] The evaluation classified point-in-time provenance, immutable experiment tracking, strong simple baselines, mandatory ablations, deterministic risk and execution separation, and forward paper-to-live validation as the strongest supported controls."},
+        {"message_id": "msg_shared_p001_005", "role": "assistant", "actor_id": "chatgpt-share-rendered-response", "marker": "[message:005] The evaluation classified LLM-generated factors, graph features, social state, specialist brains, and the full incremental-alpha claim as speculative or unknown; it identified research-selection leakage, adaptive holdout mining, correlated models, historical LLM contamination, and realistic-cost failure as fatal risks."},
+        {"message_id": "msg_shared_p001_006", "role": "assistant", "actor_id": "chatgpt-share-rendered-response", "marker": "[message:006] The evaluation directly contradicted the assumption that historical anonymization reliably prevents frontier models from using memorized information; masking identifiers was not accepted as sufficient protection for retrospective forecasting."},
+        {"message_id": "msg_shared_p001_007", "role": "assistant", "actor_id": "chatgpt-share-rendered-response", "marker": "[message:007] The evaluation recommended an immutable point-in-time raw archive, source-specific availability logic, simple point-in-time features, linear and LightGBM controls, a trial ledger with multiplicity correction, realistic cost-aware walk-forward evaluation, deterministic risk, and forward paper execution before expansion."},
+        {"message_id": "msg_shared_p001_008", "role": "assistant", "actor_id": "chatgpt-share-rendered-response", "marker": "[message:008] The final status was `RESEARCH_ONLY`: authorize the research-integrity core and boring baseline, but do not build or promote the complete trading architecture without sealed prospective evidence of incremental net economic value."}
+      ],
+      "lineage": {
+        "lineage_id": "lin_shared_p001_eval_20260814",
+        "nodes": [
+          {"node_id": "ln_p001_question_20260814", "kind": "question", "label": "P-001 evaluation question", "text": "Does the full quantitative research and trading architecture add implementable value beyond simpler baselines?", "message_index": 0, "position_state": "current"},
+          {"node_id": "ln_p001_instruction_20260814", "kind": "observation", "label": "Evaluator prompt is part of the uploaded proposal", "text": "The uploaded file was reported to contain evaluator instructions, distinct from the platform system prompt.", "message_index": 1, "position_state": "current"},
+          {"node_id": "ln_p001_controls_20260814", "kind": "claim", "label": "Research-integrity controls are strongest", "text": "Point-in-time provenance, immutable tracking, baselines, ablations, deterministic risk, and forward validation are the strongest supported components.", "message_index": 3, "position_state": "current"},
+          {"node_id": "ln_p001_challenge_20260814", "kind": "challenge", "label": "Retrospective LLM blinding fails", "text": "Historical anonymization was not accepted as sufficient protection against memorized information in retrospective forecasting.", "message_index": 5, "position_state": "opposing"},
+          {"node_id": "ln_p001_assumption_20260814", "kind": "assumption", "label": "Complex components must earn expansion", "text": "Graph, social, LLM, specialist-brain, and meta-model branches require residual information under sealed tests; they are not justified by architecture novelty.", "message_index": 4, "position_state": "unresolved"},
+          {"node_id": "ln_p001_rebuttal_20260814", "kind": "rebuttal", "label": "Boring baseline before expansion", "text": "A point-in-time baseline with realistic costs and forward paper execution is the required comparator.", "message_index": 6, "position_state": "current"},
+          {"node_id": "ln_p001_conclusion_20260814", "kind": "conclusion", "label": "Research-only verdict", "text": "The complete architecture is RESEARCH_ONLY and unsupported for production promotion.", "message_index": 7, "position_state": "current"},
+          {"node_id": "ln_p001_decision_20260814", "kind": "decision", "label": "Authorize phases 0–2 only", "text": "Build the research-integrity core and boring point-in-time baseline; add one expensive component at a time under predeclared tests.", "message_index": 7, "position_state": "current"}
+        ],
+        "edges": [
+          {"edge_id": "le_p001_001_20260814", "source_node_id": "ln_p001_question_20260814", "target_node_id": "ln_p001_instruction_20260814", "relation_type": "leads_to"},
+          {"edge_id": "le_p001_002_20260814", "source_node_id": "ln_p001_instruction_20260814", "target_node_id": "ln_p001_controls_20260814", "relation_type": "supports"},
+          {"edge_id": "le_p001_003_20260814", "source_node_id": "ln_p001_controls_20260814", "target_node_id": "ln_p001_challenge_20260814", "relation_type": "challenges"},
+          {"edge_id": "le_p001_004_20260814", "source_node_id": "ln_p001_challenge_20260814", "target_node_id": "ln_p001_assumption_20260814", "relation_type": "reframes"},
+          {"edge_id": "le_p001_005_20260814", "source_node_id": "ln_p001_assumption_20260814", "target_node_id": "ln_p001_rebuttal_20260814", "relation_type": "rebuts"},
+          {"edge_id": "le_p001_006_20260814", "source_node_id": "ln_p001_rebuttal_20260814", "target_node_id": "ln_p001_conclusion_20260814", "relation_type": "supports"},
+          {"edge_id": "le_p001_007_20260814", "source_node_id": "ln_p001_conclusion_20260814", "target_node_id": "ln_p001_decision_20260814", "relation_type": "leads_to"}
+        ],
+        "current_conclusion_refs": ["ln_p001_conclusion_20260814", "ln_p001_decision_20260814"]
+      }
+    }
+  ]
+}
