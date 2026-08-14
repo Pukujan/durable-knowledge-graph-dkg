@@ -1,0 +1,65 @@
+name: Cross-repo contracts
+
+on:
+  workflow_call:
+  pull_request:
+    paths:
+      - "contracts/engineering/control-plane-contract-v1.json"
+      - "contracts/engineering/assurance-v1.schema.json"
+      - "src/dkg/engineering_assurance.py"
+      - ".github/workflows/cross-repo-contracts.yml"
+  push:
+    branches: [main]
+    paths:
+      - "contracts/engineering/control-plane-contract-v1.json"
+      - "contracts/engineering/assurance-v1.schema.json"
+      - "src/dkg/engineering_assurance.py"
+      - ".github/workflows/cross-repo-contracts.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  cross-repo-contract-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install jsonschema
+        run: python -m pip install --quiet jsonschema
+      - name: Validate shared control-plane and correlation contract
+        run: python scripts/validate_engineering_assurance.py
+      - name: Validate assurance-v1 schema with a passing fixture
+        shell: bash
+        run: |
+          python - <<'PY'
+          import sys
+          sys.path.insert(0, "scripts/assurance")
+          from assurance_gate import validate_assurance_receipt, validate_correlation_spine
+          import json
+          receipt = json.load(open("contracts/engineering/examples/assurance-receipt.json", encoding="utf-8"))
+          errors = validate_assurance_receipt(receipt) + validate_correlation_spine(receipt.get("correlation", {}))
+          if errors:
+              print("\n".join(errors), file=sys.stderr)
+              sys.exit(1)
+          print("cross-repo contract validation passed")
+          PY
+      - name: Emit compact correlated receipt
+        shell: bash
+        run: |
+          {
+            echo "## Cross-repo contracts receipt"
+            echo "- project_issue_id: #88"
+            echo "- work_order_id: not_applicable"
+            echo "- task_id: FOSSIL-04"
+            echo "- attempt_id: ${{ github.run_id }}.${{ github.run_attempt }}"
+            echo "- request_id: not_applicable"
+            echo "- trace_id: not_applicable"
+            echo "- checkpoint_id: ${{ github.sha }}"
+            echo "- commit_sha: ${{ github.sha }}"
+            echo "- deployment_id: not_applicable"
+            echo "- shared: build_context=build-context-packet-v1 preflight=preflight-v1 closeout=closeout-v1"
+          } >> "$GITHUB_STEP_SUMMARY"
