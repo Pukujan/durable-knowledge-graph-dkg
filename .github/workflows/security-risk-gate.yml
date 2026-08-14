@@ -67,10 +67,12 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
+          forbidden_pr = "pull_request_" + "target"
+          forbidden_sec = "secrets" + ":"
           for wf in Path(".github/workflows").glob("*.yml"):
               text = wf.read_text(encoding="utf-8")
-              assert "pull_request_target" not in text, f"{wf.name} uses pull_request_target"
-              assert "secrets:" not in text, f"{wf.name} references secrets"
+              assert forbidden_pr not in text, f"{wf.name} uses {forbidden_pr}"
+              assert forbidden_sec not in text, f"{wf.name} references {forbidden_sec}"
           print("least-privilege workflow surface confirmed")
           PY
       - name: Emit secretless receipt
