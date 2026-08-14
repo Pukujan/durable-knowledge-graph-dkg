@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bootstrap-receipt-v1.schema.json",
+  "title": "FOSSIL Bootstrap Receipt v1",
+  "description": "Control-plane deployment-proof lane bootstrap/deployment receipt contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "host",
+    "health",
+    "tailscale",
+    "variables",
+    "correlation",
+    "status",
+    "timestamp"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "host": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["node"],
+      "properties": {
+        "node": {
+          "type": "string"
+        }
+      }
+    },
+    "health": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fossil_health_url", "gravebuster_health_url"],
+      "properties": {
+        "fossil_health_url": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["url", "json_key"],
+          "properties": {
+            "url": {
+              "type": "string"
+            },
+            "json_key": {
+              "type": "string"
+            }
+          }
+        },
+        "gravebuster_health_url": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["url", "json_key"],
+          "properties": {
+            "url": {
+              "type": "string"
+            },
+            "json_key": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "tailscale": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["host", "reachable"],
+      "properties": {
+        "host": {
+          "type": "string"
+        },
+        "reachable": {
+          "type": "boolean"
+        }
+      }
+    },
+    "variables": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["names", "present"],
+      "properties": {
+        "names": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "present": {
+          "type": "array",
+          "items": {
+            "type": "boolean"
+          }
+        },
+        "optional": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "correlation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "project_issue_id",
+        "work_order_id",
+        "task_id",
+        "attempt_id",
+        "request_id",
+        "trace_id",
+        "checkpoint_id",
+        "commit_sha",
+        "deployment_id"
+      ],
+      "properties": {
+        "project_issue_id": {
+          "type": "string"
+        },
+        "work_order_id": {
+          "type": "string"
+        },
+        "task_id": {
+          "type": "string"
+        },
+        "attempt_id": {
+          "type": "string"
+        },
+        "request_id": {
+          "type": "string"
+        },
+        "trace_id": {
+          "type": "string"
+        },
+        "checkpoint_id": {
+          "type": "string"
+        },
+        "commit_sha": {
+          "type": "string"
+        },
+        "deployment_id": {
+          "type": "string"
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["operational", "fail_closed", "degraded"]
+    },
+    "timestamp": {
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0.0",
+  "host": {
+    "node": "gravebuster"
+  },
+  "health": {
+    "fossil_health_url": {
+      "url": "https://fossil.internal:8443/healthz",
+      "json_key": "status"
+    },
+    "gravebuster_health_url": {
+      "url": "https://gravebuster.internal:9090/health",
+      "json_key": "alive"
+    }
+  },
+  "tailscale": {
+    "host": "gravebuster.tailnet.ts.net",
+    "reachable": true
+  },
+  "variables": {
+    "names": ["FOSSIL_API_KEY", "GRAVEBUSTER_TOKEN", "TAILSCALE_AUTH_KEY"],
+    "present": [true, true, true],
+    "optional": ["DEBUG_LEVEL"]
+  },
+  "correlation": {
+    "project_issue_id": "PROJ-4217",
+    "work_order_id": "WO-20250101-003",
+    "task_id": "TASK-DEPLOY-CP-001",
+    "attempt_id": "ATT-001",
+    "request_id": "REQ-7f3a9b2c-1d4e-4f6a-8b0c-2e3d4f5a6b7c",
+    "trace_id": "TRACE-00112233445566778899aabbccddeeff",
+    "checkpoint_id": "CHK-20250101T000000Z",
+    "commit_sha": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0",
+    "deployment_id": "DEPL-20250101-001"
+  },
+  "status": "operational",
+  "timestamp": "2025-01-01T00:00:00Z"
+}
