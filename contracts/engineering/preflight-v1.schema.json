@@ -1,16 +1,111 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://fossil.local/contracts/engineering/preflight-v1.schema.json",
+  "title": "Engineering preflight receipt v1",
   "type": "object",
-  "required": ["version", "task", "risk_facets", "kernel", "sources", "unresolved_assumptions", "required_closeout_evidence"],
+  "additionalProperties": true,
+  "required": [
+    "version",
+    "task",
+    "risk_facets",
+    "kernel",
+    "sources",
+    "unresolved_assumptions",
+    "required_closeout_evidence"
+  ],
   "properties": {
     "version": {"const": "preflight-v1"},
-    "task": {"type": "object", "required": ["outcome", "behavior_owner", "state_classification", "public_contract_impact", "semantic_success", "mechanical_success_and_failure", "evidence_and_tests", "recovery_and_rollback"], "additionalProperties": true},
+    "contract_version": {"const": "preflight-v1"},
+    "identifiers": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "repo": {"type": "string", "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"},
+        "issue": {"type": "integer", "minimum": 1},
+        "pull_request": {"type": "integer", "minimum": 1},
+        "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "work_order_id": {"type": "string", "minLength": 1},
+        "task_id": {"type": "string", "minLength": 1},
+        "attempt_id": {"type": "string", "minLength": 1}
+      }
+    },
+    "task": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "outcome",
+        "behavior_owner",
+        "state_classification",
+        "public_contract_impact",
+        "semantic_success",
+        "mechanical_success_and_failure",
+        "evidence_and_tests",
+        "recovery_and_rollback"
+      ]
+    },
     "risk_facets": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
-    "kernel": {"type": "object"},
-    "sources": {"type": "array", "items": {"type": "object", "required": ["stable_id", "status", "provenance"]}},
-    "unresolved_assumptions": {"type": "array", "items": {"type": "object", "required": ["id", "material", "status"]}},
-    "required_closeout_evidence": {"type": "array", "items": {"type": "string"}}
-  },
-  "additionalProperties": true
+    "risk_facets_rationale": {
+      "type": "object",
+      "additionalProperties": {"type": "string", "minLength": 1}
+    },
+    "selected_risk_packs": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "kernel": {"type": "object", "additionalProperties": true},
+    "required_checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["id", "question", "answer", "answer_rationale"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "pack": {"type": "string", "minLength": 1},
+          "question": {"type": "string", "minLength": 1},
+          "answer": {"enum": ["answered", "not_applicable"]},
+          "answer_rationale": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["stable_id", "status", "provenance"],
+        "properties": {
+          "stable_id": {"type": "string", "minLength": 1},
+          "status": {"type": "string", "minLength": 1},
+          "provenance": {"type": "string", "minLength": 1},
+          "kind": {
+            "enum": [
+              "approved_current_standard",
+              "explanatory_reference",
+              "historical",
+              "incident_evidence",
+              "proposed_lesson",
+              "stale_or_unverified"
+            ]
+          },
+          "freshness": {"type": "string", "minLength": 1},
+          "version": {"type": "string", "minLength": 1},
+          "material": {"type": "boolean"},
+          "conflict": {"type": "boolean"}
+        }
+      }
+    },
+    "unresolved_assumptions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["id", "material", "status"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "material": {"type": "boolean"},
+          "status": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "planned_tests_and_fault_probes": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "required_closeout_evidence": {"type": "array", "items": {"type": "string", "minLength": 1}}
+  }
 }

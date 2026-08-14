@@ -1,4 +1,16 @@
 version: task-trigger-matrix-v1
+principle: >
+  Progressive disclosure, not a giant checklist. A trivial edit answers only the
+  universal kernel; a classifier selects additional risk-triggered check packs only
+  when the task touches the corresponding facet. An unchecked facet does not mean the
+  work is free of risk, it means the agent must explicitly mark it not_applicable with
+  a rationale instead of silently skipping it.
+trivial_edit:
+  label: universal-kernel-only
+  selected_packs: []
+  rationale: >
+    No risk facet is engaged; the receipt is the universal kernel plus an explicit
+    statement that no additional pack applies.
 risk_facets:
   new-service: [api-service, deployment-release, observability]
   cross-service-call: [api-service, timeout-retry, observability]
@@ -14,3 +26,17 @@ risk_facets:
   performance-or-capacity: [performance-capacity]
   observability-change: [observability]
   cross-repo-contract-change: [cross-repo-contract]
+check_packs:
+  api-service: public API contract versioning, backward compatibility, route behavior
+  deployment-release: reversible single-revert deployment and release
+  observability: metrics, structured logs, and trace coverage
+  timeout-retry: bounded timeouts, capped retries, idempotency under replay
+  durability: durable commit before acknowledgment and explicit transaction boundary
+  migration: reversible schema migration and backfill ordering
+  recovery: partial-failure detection, convergence, and rebuild/rollback proof
+  async-delivery: delivery guarantees, ordering, and duplicate handling
+  dependency-provider: external provider contract and outage/fallback behavior
+  security: auth/authz boundary and least-privilege access
+  ai-semantic-success: semantic-success criteria beyond transport completion
+  performance-capacity: latency and capacity envelope under matched budget
+  cross-repo-contract: stable cross-repository contract identity and version pinning
