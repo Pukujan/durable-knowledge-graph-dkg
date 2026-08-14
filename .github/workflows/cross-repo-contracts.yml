@@ -6,14 +6,14 @@ on:
     paths:
       - "contracts/engineering/control-plane-contract-v1.json"
       - "contracts/engineering/assurance-v1.schema.json"
-      - "src/dkg/engineering_assurance.py"
+      - "src/fossil_core/engineering_assurance.py"
       - ".github/workflows/cross-repo-contracts.yml"
   push:
     branches: [main]
     paths:
       - "contracts/engineering/control-plane-contract-v1.json"
       - "contracts/engineering/assurance-v1.schema.json"
-      - "src/dkg/engineering_assurance.py"
+      - "src/fossil_core/engineering_assurance.py"
       - ".github/workflows/cross-repo-contracts.yml"
 
 permissions:

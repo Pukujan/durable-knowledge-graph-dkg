@@ -11,8 +11,8 @@ on:
   pull_request:
     paths:
       - "contracts/engineering/**"
-      - "src/dkg/engineering_assurance.py"
-      - "src/dkg/engineering_preflight.py"
+      - "src/fossil_core/engineering_assurance.py"
+      - "src/fossil_core/engineering_preflight.py"
       - "scripts/assurance/**"
       - "policies/**"
       - ".github/workflows/security-risk-gate.yml"
@@ -20,8 +20,8 @@ on:
     branches: [main]
     paths:
       - "contracts/engineering/**"
-      - "src/dkg/engineering_assurance.py"
-      - "src/dkg/engineering_preflight.py"
+      - "src/fossil_core/engineering_assurance.py"
+      - "src/fossil_core/engineering_preflight.py"
       - "scripts/assurance/**"
       - "policies/**"
       - ".github/workflows/security-risk-gate.yml"
