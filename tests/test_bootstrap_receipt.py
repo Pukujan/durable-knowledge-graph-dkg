@@ -31,10 +31,59 @@ CORRELATION_KEYS = {
     "deployment_id",
 }
 
+# Exercise each required declaration independently so a mutant that drops one
+# declaration cannot hide behind another missing field in the same receipt.
+REQUIRED_PATHS = [
+    ("schema_version",),
+    ("host",),
+    ("host", "node"),
+    ("health",),
+    ("health", "fossil_health_url"),
+    ("health", "fossil_health_url", "url"),
+    ("health", "fossil_health_url", "json_key"),
+    ("health", "fossil_health_url", "outcome"),
+    ("health", "gravebuster_health_url"),
+    ("health", "gravebuster_health_url", "url"),
+    ("health", "gravebuster_health_url", "json_key"),
+    ("health", "gravebuster_health_url", "outcome"),
+    ("tailscale",),
+    ("tailscale", "host"),
+    ("tailscale", "reachable"),
+    ("variables",),
+    ("variables", 0, "name"),
+    ("variables", 0, "required"),
+    ("variables", 0, "present"),
+    ("correlation",),
+    *(('correlation', key) for key in sorted(CORRELATION_KEYS)),
+    ("status",),
+    ("timestamp",),
+]
+
+CLOSED_ENUM_MUTATIONS = [
+    (("schema_version",), "9.9.9"),
+    (("status",), "unknown"),
+    (("health", "fossil_health_url", "outcome"), "unknown"),
+    (("health", "gravebuster_health_url", "outcome"), "unknown"),
+]
+
 
 def _load(path: Path) -> dict:
     with path.open(encoding="utf-8") as handle:
         return json.load(handle)
+
+
+def _set_path(document: dict, path: tuple[object, ...], value: object) -> None:
+    target = document
+    for part in path[:-1]:
+        target = target[part]  # type: ignore[index]
+    target[path[-1]] = value  # type: ignore[index]
+
+
+def _remove_path(document: dict, path: tuple[object, ...]) -> None:
+    target = document
+    for part in path[:-1]:
+        target = target[part]  # type: ignore[index]
+    del target[path[-1]]  # type: ignore[index]
 
 
 @pytest.fixture(scope="module")
@@ -58,6 +107,22 @@ def test_schema_requires_deployment_proof_facts(validator) -> None:
         "status",
         "timestamp",
     } <= required
+
+
+@pytest.mark.parametrize("path", REQUIRED_PATHS)
+def test_each_required_field_rejects_independent_removal(validator, path) -> None:
+    receipt = _load(VALID)
+    _remove_path(receipt, path)
+
+    assert list(validator.iter_errors(receipt))
+
+
+@pytest.mark.parametrize(("path", "value"), CLOSED_ENUM_MUTATIONS)
+def test_each_closed_enum_rejects_unknown_value(validator, path, value) -> None:
+    receipt = _load(VALID)
+    _set_path(receipt, path, value)
+
+    assert list(validator.iter_errors(receipt))
 
 
 def test_schema_version_is_exactly_v1(validator) -> None:
