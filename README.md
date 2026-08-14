@@ -16,27 +16,49 @@ The durable substrate is **DICS — Durable Intellectual Corpus System**.
 
 Repository names, graph namespaces, and physical database placement are operational details. Knowledge-pack identity remains the stable `pack_id`.
 
-## Status
+## Current coordination state — 2026-08-14
 
-**Milestone 0 is complete. Gate 1 executable durability proof is 15/15, and child Issues #2–#10 are complete.**
+FOSSIL's durable architecture is stable; current work is a **FOSSIL-only verification and continuation campaign**.
 
-FOSSIL has executable proof for:
+Use these sources in this order for live project state:
+
+1. **Issue #86** — current cross-project architecture authority.
+2. **Issue #94** — append-only execution queue, claims, and closeout ledger.
+3. **Issue #116** — visible SDD/TDD for the current FOSSIL verification campaign.
+4. `docs/HANDOFF_CURRENT.md` — fresh-agent handoff; it must defer to live #86/#94 when state has moved.
+
+Completed dependencies must not be reopened without actual regression evidence:
+
+- **Cortex V5** is the active execution runtime. `V5-ACCEPTANCE` received human PASS on 2026-08-14. Cortex V4 is preserved/frozen historical implementation evidence, not runtime authority.
+- **LiteLLM/CKFF** gateway repair and Railway production-health reconciliation are closed completed. Transport/model/route health remains LiteLLM/CKFF-owned factual state; caller policy remains outside the gateway.
+- The **trusted-local broker/verifier** foundation is closed completed under #96.
+
+Current FOSSIL baseline at this documentation branch point:
+
+- `main` is `27764c4ab20c196ee0bc76a0d020fc961a385c4e`, containing the merged PR #114 Graphiti/dependency repair and #82/#84/#88 fan-in.
+- PR #115 is rebased at `c4432f577e6182efd4126c3bbd1171a1fb58cbbd`. Clean local verification passes, but exact-head hosted Graphiti integration exposed a new zero-entity semantic failure. `FOSSIL-07` therefore stopped BLOCKED rather than weakening acceptance.
+- `FOSSIL-07A` is the bounded repeatability/root-cause lane for that live Graphiti failure. Do not treat rerun-until-green as acceptance.
+- #87 secretless/local-fixture storage work remains gated until the current baseline is trustworthy.
+
+Always re-fetch #94 before acting; the exact heads above are historical anchors, not a substitute for live claim/CI state.
+
+## Proven foundation
+
+Milestone 0 / Gate 1 and Gate 2 are complete. FOSSIL has executable proof for:
 
 - immutable validated durable events and content-addressed evidence;
 - deterministic idempotency;
 - portable knowledge-pack boundaries and provenance-preserving promotion;
 - disagreement, lifecycle, supersession, and stale dependency replay;
-- real Graphiti + Neo4j materialization with retry/failure history;
+- Graphiti + Neo4j materialization behind a replaceable projection boundary;
 - destructive rebuild and guarded blue/green migration;
 - conversation ingestion with explicit verbatim-vs-reconstructed provenance and intellectual-lineage reconstruction;
 - a protocol-independent safe Agent Skill/API/MCP boundary;
 - immutable source snapshots, exact byte-span citations, anti-laundering source roles, source quality dimensions, lifecycle, and exceptional privacy/legal redaction;
-- real active Graphiti redaction plus fresh-rebuild non-resurrection;
-- versioned pluggable retrieval/context/model/verification interfaces and a benchmark contract covering quality, latency, memory, estimated cost, and domain-specific failure rates.
+- active Graphiti redaction plus fresh-rebuild non-resurrection;
+- versioned pluggable retrieval/context/model/verification interfaces and benchmark contracts.
 
 The current operational graph implementation is **Graphiti + Neo4j**, but neither is the deepest source of truth. Graphs, embeddings, retrieval indexes, dashboards, models, Skills, and protocol adapters remain rebuildable/replaceable around the durable corpus.
-
-The included BM25/hash-embedding/token-overlap/model fixtures are **benchmark controls, not production winners**. A future provider must win a corpus-specific benchmark behind the interfaces rather than become architecture by default.
 
 ## Core layers
 
@@ -51,17 +73,14 @@ The included BM25/hash-embedding/token-overlap/model fixtures are **benchmark co
 
 ## Start here
 
-- [`ARCHITECTURE.md`](ARCHITECTURE.md) — architectural contract and non-goals.
-- [`docs/HANDOFF_CURRENT.md`](docs/HANDOFF_CURRENT.md) — exact continuation point.
-- [`docs/PROJECT_STATE.md`](docs/PROJECT_STATE.md) — milestone/gate state.
+- [`AGENTS.md`](AGENTS.md) — fresh-agent continuation contract and non-negotiable engineering rules.
+- [`ARCHITECTURE.md`](ARCHITECTURE.md) — durable architectural contract and non-goals.
+- [`docs/HANDOFF_CURRENT.md`](docs/HANDOFF_CURRENT.md) — current continuation point.
+- [`docs/PROJECT_STATE.md`](docs/PROJECT_STATE.md) — current project state plus historical proof anchors.
 - [`docs/DECISION_LOG.md`](docs/DECISION_LOG.md) — durable architectural decisions.
-- [`docs/implementation/2026-08-10-gate1-source-provenance-redaction-proof.md`](docs/implementation/2026-08-10-gate1-source-provenance-redaction-proof.md) — source/citation/redaction proof.
-- [`docs/implementation/2026-08-10-retrieval-model-benchmark-contract-proof.md`](docs/implementation/2026-08-10-retrieval-model-benchmark-contract-proof.md) — cognitive-service/benchmark proof.
-- [`docs/research/2026-08-09-final-research-synthesis.md`](docs/research/2026-08-09-final-research-synthesis.md) — frozen research synthesis.
-- [`docs/research/2026-08-09-evidence-ledger.md`](docs/research/2026-08-09-evidence-ledger.md) — primary/official source ledger.
+- [`docs/operations/LITELLM-GATEWAY.md`](docs/operations/LITELLM-GATEWAY.md) — gateway boundary and current completed-repair posture.
 - [`schemas/knowledge-pack/v1.schema.json`](schemas/knowledge-pack/v1.schema.json) — portable pack contract.
 - [`schemas/events/v1.schema.json`](schemas/events/v1.schema.json) — durable event envelope.
-- [`schemas/benchmark/v1.schema.json`](schemas/benchmark/v1.schema.json) — retrieval/model benchmark result contract.
 
 ## Important terminology
 
@@ -73,6 +92,6 @@ A **projection** is a rebuildable representation optimized for a workload. Neo4j
 
 **Model output is not evidence merely because models agree.** Small/local models may propose bounded candidates; downstream truth-changing authority requires the separate evidence/risk policy.
 
-## Natural next campaign
+## Current continuation
 
-The next useful phase is corpus-scale provider comparison using representative `fossil-common` and `fossil-ai-systems` material: compare the current controls against selected real semantic/vector/graph/long-context providers under the existing benchmark contract. Open a new tracked gate before expanding that campaign.
+Resolve the current FOSSIL baseline mechanically before expanding the roadmap: exact-head verification of the open FOSSIL work, no weakened gates, owner-approved merges only, then the eligible secretless/local-fixture portion of #87. Workstream #47 remains later retrieval/model-bakeoff roadmap work and is not the current execution authority.
