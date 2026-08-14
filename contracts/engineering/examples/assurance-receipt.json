@@ -1,0 +1,25 @@
+{
+  "version": "assurance-v1",
+  "task": {
+    "outcome": "trivial path-scoped workflow edit",
+    "behavior_owner": "FOSSIL engineering assurance",
+    "state_classification": "versioned source contract"
+  },
+  "risk_facets": ["not_applicable"],
+  "not_applicable_rationale": "No new service, durable write, schema change, security surface, or deployment is touched; only a path-scoped CI edit.",
+  "semantic_success": "an unrelated change does not run the heavy assurance jobs; the receipt validates offline.",
+  "sources": [
+    {"stable_id": "fossil:issue:88", "status": "CURRENT_AUTHORITY", "provenance": "caller-supplied"}
+  ],
+  "correlation": {
+    "project_issue_id": "#88",
+    "work_order_id": "not_applicable",
+    "task_id": "FOSSIL-04",
+    "attempt_id": "run.attempt",
+    "request_id": "not_applicable",
+    "trace_id": "not_applicable",
+    "checkpoint_id": "sha",
+    "commit_sha": "sha",
+    "deployment_id": "not_applicable"
+  }
+}

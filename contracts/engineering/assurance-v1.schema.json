@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fossil.local/contracts/engineering/assurance-v1.schema.json",
+  "title": "assurance-v1 receipt",
+  "description": "Issue #88 correlated assurance receipt. Distinct from issue #84's contract files to avoid merge conflict. Requires explicit risk facets (with a not_applicable rationale when none apply), rejects stale/historical material as current authority, and preserves the shared correlation spine.",
+  "type": "object",
+  "required": [
+    "version",
+    "task",
+    "risk_facets",
+    "not_applicable_rationale",
+    "semantic_success",
+    "sources",
+    "correlation"
+  ],
+  "properties": {
+    "version": {"const": "assurance-v1"},
+    "task": {"type": "object", "required": ["outcome", "behavior_owner", "state_classification"], "additionalProperties": true},
+    "risk_facets": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string"}
+    },
+    "not_applicable_rationale": {
+      "type": "string",
+      "description": "Required justification when risk_facets is empty or states not_applicable."
+    },
+    "semantic_success": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit, verifiable criteria that must hold for the work to count as a semantic success."
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["stable_id", "status", "provenance"],
+        "properties": {
+          "stable_id": {"type": "string"},
+          "status": {"type": "string"},
+          "provenance": {"type": "string"}
+        }
+      }
+    },
+    "correlation": {
+      "type": "object",
+      "required": [
+        "project_issue_id",
+        "work_order_id",
+        "task_id",
+        "attempt_id",
+        "request_id",
+        "trace_id",
+        "checkpoint_id",
+        "commit_sha",
+        "deployment_id"
+      ]
+    }
+  },
+  "additionalProperties": true
+}

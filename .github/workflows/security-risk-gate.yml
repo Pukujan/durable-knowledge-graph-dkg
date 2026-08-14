@@ -1,0 +1,89 @@
+name: Security risk gate
+
+on:
+  workflow_call:
+    inputs:
+      artifact-name:
+        description: Optional name of an uploaded artifact to scan.
+        type: string
+        required: false
+        default: ""
+  pull_request:
+    paths:
+      - "contracts/engineering/**"
+      - "src/dkg/engineering_assurance.py"
+      - "src/dkg/engineering_preflight.py"
+      - "scripts/assurance/**"
+      - "policies/**"
+      - ".github/workflows/security-risk-gate.yml"
+  push:
+    branches: [main]
+    paths:
+      - "contracts/engineering/**"
+      - "src/dkg/engineering_assurance.py"
+      - "src/dkg/engineering_preflight.py"
+      - "scripts/assurance/**"
+      - "policies/**"
+      - ".github/workflows/security-risk-gate.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  risk-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Scan tracked sources for secret-bearing values
+        shell: bash
+        run: |
+          python - <<'PY'
+          import sys
+          from pathlib import Path
+          sys.path.insert(0, "scripts/assurance")
+          from assurance_gate import scan_for_secrets
+          findings = []
+          for path in sorted(Path("contracts").rglob("*")):
+              if path.is_file():
+                  try:
+                      text = path.read_text(encoding="utf-8", errors="ignore")
+                  except OSError:
+                      continue
+                  for finding in scan_for_secrets(text):
+                      findings.append(f"{path}: {finding}")
+          if findings:
+              print("\n".join(findings), file=sys.stderr)
+              sys.exit(1)
+          print("no secret-bearing values found")
+          PY
+      - name: Assert least-privilege permission surface
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          for wf in Path(".github/workflows").glob("*.yml"):
+              text = wf.read_text(encoding="utf-8")
+              assert "pull_request_target" not in text, f"{wf.name} uses pull_request_target"
+              assert "secrets:" not in text, f"{wf.name} references secrets"
+          print("least-privilege workflow surface confirmed")
+          PY
+      - name: Emit secretless receipt
+        shell: bash
+        run: |
+          {
+            echo "## Security risk gate receipt"
+            echo "- project_issue_id: #88"
+            echo "- work_order_id: not_applicable"
+            echo "- task_id: FOSSIL-04"
+            echo "- attempt_id: ${{ github.run_id }}.${{ github.run_attempt }}"
+            echo "- request_id: not_applicable"
+            echo "- trace_id: not_applicable"
+            echo "- checkpoint_id: ${{ github.sha }}"
+            echo "- commit_sha: ${{ github.sha }}"
+            echo "- deployment_id: not_applicable"
+            echo "- security: secretless; contents:read; privileged PR trigger absent"
+          } >> "$GITHUB_STEP_SUMMARY"
