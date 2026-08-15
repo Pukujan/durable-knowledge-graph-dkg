@@ -14,10 +14,10 @@ import json
 from pathlib import Path
 from typing import Any
 
-from dkg.artifact_store import ArtifactStore
-from dkg.conversation import ConversationLineage, ConversationStore
-from dkg.event_store import DurableEventStore
-from dkg.io import publish_immutable
+from fossil_core.artifact_store import ArtifactStore
+from fossil_core.conversation import ConversationLineage, ConversationStore
+from fossil_core.event_store import DurableEventStore
+from fossil_core.io import publish_immutable
 
 
 def _canonical(value: Any) -> bytes:
