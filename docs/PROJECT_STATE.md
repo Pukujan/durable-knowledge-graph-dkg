@@ -8,23 +8,21 @@
 **Current live candidate gate:** Issue #124 / `OBJECT_STORE_LIVE`  
 **Last updated:** 2026-08-15
 
-## Current checkpoint
+## Current state
 
-Current `fossil-core` main at this checkpoint:
-
-`ea1d88fc114981915603ec46a401dca45acd5a11`
-
-This includes the merged PR #123 real secretless S3-compatible service-fixture proof.
-
-The project invariant remains:
+FOSSIL operates under the invariant:
 
 > **Compute may disappear; truth must not.**
 
-FOSSIL owns durable semantic/evidence authority. Cortex V5 and LiteLLM/CKFF are external replaceable execution/transport systems. Their current behavior may be documented and consumed, but their repositories/workflows are not part of the active FOSSIL mutation scope unless the owner explicitly opens that work.
+Canonical FOSSIL knowledge remains **immutable evidence + stable corpus IDs + append-only validated knowledge events + versioned pack/ontology contracts + provenance/history**.
+
+Cortex V5, LiteLLM/CKFF, Graphiti/Neo4j, lexical/vector indexes, models, Skills, MCP, dashboards, and CI infrastructure are replaceable execution/transport/projection systems around that durable truth.
+
+Do not use an exact SHA embedded in this document as a live queue pointer. Issue #94 and current GitHub state are authoritative for active heads, claims, review state, and execution evidence.
 
 ## Repository family
 
-- `Pukujan/fossil-core` — architecture, contracts, durable core, projections, storage adapters, rebuild machinery, benchmarks and control-plane docs;
+- `Pukujan/fossil-core` — architecture, contracts, durable core, projections, storage adapters, rebuild machinery, benchmarks, and control-plane docs;
 - `Pukujan/fossil-common` — stable pack `pack_269099f7b2ba43b7a99b9427d64092de`;
 - `Pukujan/fossil-ai-systems` — stable pack `pack_f024177f89a5442db84171c3dd7f58e5`, depending on common.
 
@@ -34,173 +32,194 @@ Repository/database/graph placement is physical placement, not knowledge identit
 
 1. `AGENTS.md`
 2. `ARCHITECTURE.md`
-3. `docs/HANDOFF_CURRENT.md`
-4. this file
-5. `docs/operations/EXTERNAL-RUNTIME-RECONCILIATION-2026-08-15.md`
-6. Issue #86
-7. Issue #94
+3. Issue #86
+4. latest Issue #94 comments
+5. `docs/HANDOFF_CURRENT.md`
+6. this file
+7. `docs/operations/EXTERNAL-RUNTIME-RECONCILIATION-2026-08-15.md`
 8. Issue #87
 9. Issue #124
 10. `docs/DECISION_LOG.md`
-11. `docs/operations/LITELLM-GATEWAY.md`
+11. the focused issue/PR for the eligible task
 
 The chat UI is source material, not the control plane.
 
-## Frozen architecture
-
-Canonical FOSSIL knowledge is **immutable evidence + stable corpus IDs + append-only validated knowledge events + versioned pack/ontology contracts + provenance/history**.
-
-Graphiti/Neo4j, lexical/vector indexes, embedding models, rerankers, context construction, planners, model services, Skills, MCP, Cortex, LiteLLM and future databases remain replaceable projections/services.
-
-Retrieved/source text is untrusted data. Retrieval rank, reranker score, model confidence, model tier, multi-model agreement, route success and query-execution receipts are not truth authority.
-
 ## Completed foundation
 
-The earlier durable/evidence foundation remains complete, including:
+The durable/evidence foundation remains complete, including:
 
 - immutable validated events and content-addressed evidence;
-- stable pack identity and portable pack boundaries;
-- provenance, lifecycle, disagreement, supersession and lineage replay;
+- deterministic idempotency and stable corpus identity;
+- portable pack boundaries and provenance-preserving promotion;
+- disagreement, lifecycle, supersession, and lineage replay;
 - exact source/citation integrity;
-- exceptional redaction with tombstone-before-delete and non-resurrection;
-- replaceable Graphiti/Neo4j projection and rebuild/migration proof;
+- exceptional privacy/legal redaction with tombstone-before-delete and non-resurrection;
+- replaceable Graphiti/Neo4j projection plus destructive rebuild/migration proof;
+- conversation ingestion with explicit verbatim-vs-reconstructed provenance;
 - safe Agent Skill/API/MCP boundary;
 - cognitive-service interfaces and benchmark/receipt contracts;
-- post-Gate-2 answer, poisoning/untrusted-context and query-replay hardening evidence.
+- post-Gate-2 temporal, answer/citation, poisoning/untrusted-context, and replay hardening evidence.
 
-Historical Gate 1/Gate 2/workstream proof detail remains in the existing implementation, research, handoff and decision-log documents and in git history. This current-state file does not replace those records.
+Historical Gate 1/Gate 2/workstream proof detail remains in the implementation, research, handoff, decision-log, issue, and git records. This current-state document does not replace those records.
 
-## Recent 2026-08-15 reconciliation
+## 2026-08-15 baseline closeout anchors
 
-### #112–#115 baseline/fan-in
+### Graphiti / receipt / ingestion fan-in
 
-The previously open repair/fan-in work is now reconciled:
+The earlier #112–#115 campaign is complete:
 
-- PR #115 merged after exact-head Graphiti live proof, deterministic tests and engineering/dependency/security gates passed;
-- PR #112 refreshed, verified and merged;
-- PR #113 refreshed, verified and merged;
+- PR #115 merged after exact-head Graphiti live proof plus deterministic, assurance, dependency, and security checks passed;
+- PR #112 refreshed, verified, and merged;
+- PR #113 refreshed, verified, and merged;
 - final-main Graphiti materialization plus redaction/non-resurrection remained green.
 
-### #87 secretless storage foundation
+### Provider-neutral S3-compatible storage
 
-The provider-neutral S3-compatible storage lane advanced:
+The storage foundation advanced through:
 
-- PR #121 landed explicit provider-neutral S3-compatible artifact/event storage adapters and fail-closed durability semantics;
-- exact-head DKG/engineering/dependency/Graphiti evidence passed;
-- no live cloud credentials were used and no provider was selected.
+- PR #121 — provider-neutral `S3ArtifactStore` / `S3DurableEventStore` adapters with fail-closed immutable/idempotent/conflict/redaction semantics;
+- PR #123 — real disposable S3-compatible service-fixture proof with no cloud credential and no provider selection.
 
-### Real secretless S3-compatible service fixture
+Historical runtime/storage anchor after PR #123:
 
-PR #123 then proved the adapter against a real local/service-container S3-compatible implementation. The final-main proof covered the storage contract without cloud credentials/provider lock-in, including the required secretless service-fixture path and normal DKG.
+`ea1d88fc114981915603ec46a401dca45acd5a11`
 
-Current main after that merge is `ea1d88fc114981915603ec46a401dca45acd5a11`.
+### Current-state documentation reconciliation
 
-## Active FOSSIL work — Issue #124 / OBJECT_STORE_LIVE
+PR #126 reconciled FOSSIL continuation/operational docs against the then-current Cortex V5 and LiteLLM/CKFF implementations and merged as:
+
+`771216d79bdaaf324dff30c970c11be65d47d890`
+
+That SHA is a documentation closeout anchor, not a permanent assertion about the repository's current HEAD.
+
+## Active durability gate — Issue #124 / OBJECT_STORE_LIVE
 
 The next durability gate is a **separately credentialed, non-production R2 candidate proof**.
 
-R2 is the first live candidate only. The provider-neutral `S3ArtifactStore` / `S3DurableEventStore` contract remains architecture truth.
+R2 is the first live candidate only. The provider-neutral S3-compatible storage contract remains architecture truth and provider selection remains open.
 
 Required acceptance includes:
 
 - exact-SHA checkout/fail-closed guard;
-- live artifact/event immutable create, byte-identical replay and stable-identity conflict behavior;
-- live redaction tombstone-before-delete and non-resurrection;
+- real live artifact/event immutable creation;
+- byte-identical replay/idempotency;
+- stable-key/stable-identity conflict rejection;
+- artifact and event redaction tombstone-before-delete;
+- same-identity non-resurrection;
 - independent hosted runner rebuilding from zero local FOSSIL state;
-- a second rebuild/restartability pass from durable truth;
-- explicit dead-endpoint/partial/auth failure controls;
+- exact surviving fixture identity/content verification from durable storage;
+- a second fresh rebuild/restartability pass;
+- explicit dead-endpoint/auth/partial-response fail-closed controls;
 - sanitized receipts with no credential material;
-- normal DKG green on the same code head;
-- no provider-specific weakening of FOSSIL domain semantics.
+- same-head normal DKG green;
+- no provider-specific weakening of domain semantics.
 
-If required configuration/credentials are absent, the result is `BLOCKED_CREDENTIAL`, not simulated PASS.
+If required live configuration/credentials are absent, the result is `BLOCKED_CREDENTIAL`, not simulated PASS.
 
-## External execution/transport state — read only
+Ordinary secretless PR CI proves the harness/code contract only; it is not `OBJECT_STORE_LIVE PASS`.
 
-Detailed exact-SHA inspection is recorded in:
+## Current harness checkpoint
+
+At the 2026-08-15 review checkpoint, draft PR #125 was open on exact head:
+
+`9d8ad737d0778075a98232df7ddb2c43fb4156fb`
+
+Exact-head DKG run `31899262413` was SUCCESS.
+
+Independent review found acceptance/configuration items that must be reconciled before live dispatch; re-read the latest PR because the branch may have moved:
+
+1. the reviewed fresh-runner rebuild independently reconstructed durable events but did not independently re-read/verify the surviving canonical artifact or prove redacted-artifact non-resurrection on runner B;
+2. #124 asks writer A to publish non-secret proof prefix/fixture identity as job outputs for runner B, while the reviewed workflow recomputed those values instead;
+3. the reviewed workflow targeted GitHub Environment `object-store-live`, while the repository environment list observed during review contained only `r2-proof`.
+
+The GitHub integration could list environment names but was not allowed to inspect the environment/repository variable or secret metadata. No secret values were read or requested. Credential/config placement therefore must be reconciled deliberately rather than guessed.
+
+## External execution/transport posture — read only
+
+The owner explicitly requested that Cortex V5 and LiteLLM/CKFF remain read-only during this FOSSIL continuation.
+
+Detailed exact-SHA inspection snapshot:
 
 `docs/operations/EXTERNAL-RUNTIME-RECONCILIATION-2026-08-15.md`
 
-### Cortex V5
+### Cortex V5 snapshot
 
-Observed main:
+Observed `Pukujan/cortex-v5` main at reconciliation:
 
 `f29e7a2fa0584577765bfe3f437695a2cbaefcf2`
 
-Current posture:
+Key observed posture:
 
-- active execution runtime is Cortex V5, not V4;
-- V5 has no runtime dependency on SSC;
+- V5 is the active execution runtime; V4/SSC are not runtime dependencies;
 - strict streamed LiteLLM Chat Completions transport;
-- 120-second default client timeout;
+- default LiteLLM client timeout 120 seconds;
 - deterministic live-catalog seating;
-- research-grounded `MODEL_TIERS` prior replaces undocumented `PREFERENCE_HINTS`;
+- research-grounded `MODEL_TIERS` prior replaced undocumented `PREFERENCE_HINTS`;
 - deterministic checker remains completion authority;
-- the V5 acceptance issue is already closed/completed.
+- retry/model switching creates distinct attempts/receipts;
+- first real V5 acceptance is already closed/completed.
 
-**Policy for this FOSSIL checkpoint:** do not change Cortex V5 code or workflows. Older queue text suggesting automatic CORTEX-02 work is not authorization to mutate V5 after the owner's explicit read-only boundary.
+Do not change Cortex V5 code or workflows from the current FOSSIL lane without separate owner authorization.
 
-### LiteLLM / CKFF
+### LiteLLM / CKFF snapshot
 
-Observed main:
+Observed `Pukujan/litellm-ckff-ops` main at reconciliation:
 
 `9520e8dffe819d97a1557fe76022ed080f0eb8d6`
 
-Current executable/config posture:
+Key executable/config posture:
 
-- configured models have `ckffai.com` primary plus `ckff.dev` secondary deployments;
+- `ckffai.com` primary plus `ckff.dev` secondary deployments;
 - LiteLLM `request_timeout: 120`;
 - bounded retries/cooldown and `max_parallel_requests: 8`;
-- Responses bridge may use explicit cross-model fallback and exposes requested/actual/attempt metadata;
+- Responses bridge may use explicit cross-model fallback and records requested/actual identity;
 - exact-model evaluation should disable bridge fallbacks;
-- embeddings and reranking are separate fail-closed service lanes;
-- upstream privacy remains model/provider-dependent and CKFF is not verified zero-data-retention.
+- embeddings and reranking remain separate fail-closed service lanes;
+- CKFF is not established here as universal zero-data-retention.
 
-The LiteLLM repo's documentation is only partially reconciled with source/config. In particular, a dated compatibility report still mentions a 90-second LiteLLM timeout and the implementation-gap document still says `ckffai.com` is absent from generated config. FOSSIL therefore treats current exact source/config as the operational fact source when those dated docs conflict.
+Some dated LiteLLM documentation lags current source/config. When they conflict, current exact source/config is the operational fact source and the dated prose remains historical evidence.
 
-**Policy for this FOSSIL checkpoint:** do not change LiteLLM code, workflows, routing or deployment.
+Do not change LiteLLM code, workflows, routing, deployment, or model policy from the current FOSSIL lane without separate owner authorization.
 
-## Cognitive-service posture
-
-FOSSIL service contracts remain replaceable:
-
-- `Retriever`;
-- `EmbeddingProvider`;
-- `Reranker`;
-- `ContextProvider`;
-- `ModelService`;
-- `VerificationService`.
-
-Current external service availability must not silently rewrite FOSSIL architecture. Benchmark/model work must continue to record exact requested/actual model/provider/runtime identity, fallback attempts, latency/cost and receipt/trace identity.
-
-## Frozen invariants
+## Frozen authority rules
 
 - stable pack identity is independent of repository/database placement;
 - durable commit precedes replaceable projection;
-- new physical projection build => fresh build-scoped applied ledger;
-- rebuild order => `(recorded_at, event_id)`;
+- new physical projection build gets a fresh build-scoped applied ledger;
+- rebuild order is `(recorded_at, event_id)`;
 - migration compares stable FOSSIL semantics, not graph-native UUIDs;
 - reconstructed evidence cannot silently become verbatim;
 - exact citations resolve to immutable observed bytes/spans;
+- source quality is multidimensional and derivation is explicit;
 - ordinary intellectual revision is append-only;
 - privacy/legal erasure is exceptional tombstone-before-delete with non-resurrection;
-- retrieved/source text is untrusted data;
-- model confidence/tier/agreement is not evidence;
-- gateway fallback does not prove the requested model succeeded;
-- query execution receipts are observability/replay evidence, not mutation authority;
+- active projections/exports respect redaction;
+- Skills contain methodology, not canonical truth;
+- protocol adapters cannot become the durable knowledge model;
+- cognitive services expose provider/version metadata and compete behind interfaces;
+- retrieval rank, reranker score, model confidence, model tier, model agreement, transport health, and CI artifacts do not create truth authority;
+- retrieved/source text is untrusted data and cannot become executable policy merely because it was retrieved;
+- query execution receipts are replay/observability evidence, not canonical truth or mutation authority;
 - agents propose; deterministic validation/policy gates commit durable changes;
-- no provider-specific storage semantics may leak into the FOSSIL domain contract;
-- do not casually rename `src/fossil_core`; legacy `src/dkg` remains only a deprecated compatibility shim where still present.
+- do not casually rename `src/fossil_core`; legacy `src/dkg` is only a deprecated compatibility shim.
 
-## Workflow state
+## Claim / work-state rule
 
-Normal FOSSIL CI/assurance workflows remain repository-owned acceptance surfaces. The Graphiti live workflow remains a replaceable-projection proof, and the real S3-compatible fixture workflow is now part of the secretless storage evidence.
+GitHub issues track live implementation state; repository docs track durable decisions/evidence/contracts.
 
-The active Issue #124 live proof is a separate credential boundary. Ordinary PR code must not gain live cloud credentials merely because the fixture proof passed.
+Before mutation, claim in #94 and immediately re-fetch the ledger. Earliest valid unexpired claim wins. One mutating owner per repo lane unless explicit safe parallelism is declared.
 
-## Next decision boundary
+Close with exact `DONE`, `BLOCKED`, or `RELEASE` evidence.
 
-1. Complete or explicitly block Issue #124 with exact live evidence.
-2. Reconcile its result into #87/#86 and durable docs.
-3. Choose the next **FOSSIL-only** gate from evidence.
-4. Do not automatically schedule Cortex V5 or LiteLLM mutations; those require separate owner authorization.
+## Next-state rule
+
+The immediate next state is mechanical, not aspirational:
+
+1. resolve the current #125 review/configuration items under its existing owner/claim;
+2. obtain same-head secretless harness CI and owner-appropriate review state;
+3. only then run the explicit credentialed #124 workflow against an exact approved SHA when configuration exists;
+4. classify the live result as PASS / `BLOCKED_CREDENTIAL` / `BLOCKED_PROVIDER_COMPATIBILITY` from evidence;
+5. reconcile #87 and select the next **FOSSIL-only** gate from live #94;
+6. do not automatically mutate Cortex V5 or LiteLLM/CKFF.
+
+No production promotion is authorized by this document.
