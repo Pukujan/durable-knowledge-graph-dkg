@@ -5,7 +5,7 @@
 **Architecture authority:** GitHub Issue #86  
 **Execution queue / claim ledger:** GitHub Issue #94  
 **Current focused campaign:** GitHub Issue #116  
-**Last updated:** 2026-08-14
+**Last updated:** 2026-08-15
 
 ## Current state
 
@@ -48,16 +48,17 @@ Live #86/#94 state is authoritative when this document and GitHub have diverged.
 
 Issue #116 carries the visible SDD/TDD for the FOSSIL-only verification campaign. It is subordinate to #86 for architecture and #94 for live execution/claims.
 
-At this documentation branch point:
+Fresh reconciled state:
 
 - FOSSIL `main` = `27764c4ab20c196ee0bc76a0d020fc961a385c4e`.
 - PR #114 is merged into that baseline. The inherited `graphiti_core -> httpx` dependency/import failure is repaired; clean declared installation uses real `httpx`, not a shim or skipped path.
 - PR #115 head = `c4432f577e6182efd4126c3bbd1171a1fb58cbbd`, rebased onto the merged #114 baseline.
 - Independent clean #115 evidence passes: declared `[test,graphiti]` install, `pip check`, Graphiti import, receipt tests `63/63`, focused tests `91/91`, full pytest `262/262`, and `git diff --check`.
-- Hosted Graphiti run `31850284986` exposed a new semantic failure: the live smoke materialized the episode path but produced zero entities, failing the semantic acceptance condition.
-- `FOSSIL-07` therefore stopped **BLOCKED** rather than weakening the gate; closeout comment `5299204005`.
-- `FOSSIL-07A` is the current bounded repeatability/root-cause lane. Its purpose is to determine whether the zero-entity result is reproducible semantic failure or nondeterministic live-model/smoke behavior, without “rerun until green.”
-- PR #115 remains unmerged in this state.
+- `FOSSIL-07A` completed its bounded identical-run repeatability experiment and closed **BLOCKED / NONDETERMINISTIC_GATE**.
+- On the same exact SHA, three Graphiti attempts produced materially different semantic outcomes: `0 entities/0 facts`; `5 entities/0 facts` with incomplete timeout; `5 entities/2 facts` with final PASS.
+- The variability is localized to the Graphiti LLM extraction/interpretation boundary, not #115 receipt/schema semantics or the repaired dependency/import path.
+- The latest Graphiti workflow conclusion is green, but that one green rerun is not stable acceptance because the gate cannot yet reliably distinguish a real semantic failure from run-to-run model variance.
+- PR #115 remains unmerged and must not merge until the required semantic gate is stabilized without weakening what it proves.
 - #87 secretless/local-fixture storage work remains gated until the baseline is mechanically trustworthy.
 
 The current #116 campaign also covers reconciliation of the other open FOSSIL branches on their actual live heads. Do not rely on SHAs embedded in the original #116 body without re-fetching current PR state.
@@ -73,6 +74,8 @@ For deterministic behavior changes:
 5. **HOSTED EVIDENCE** — exact-head Actions where the PR has hosted acceptance.
 
 No test deletion, skip, xfail, loosened assertion, semantic-gate reduction, conditional suppression, or narrower CI path merely to obtain green.
+
+For a nondeterministic live semantic gate, a single later PASS does not erase earlier contradictory outcomes on the same exact input/SHA. Stabilization must make the gate reproducible enough to distinguish actual semantic regression from model variance without lowering the semantic requirement.
 
 Terra is the normal orchestrator/independent verifier for ambiguous or campaign-level work. Luna is the normal bounded executor after scope is localized. Luna does not self-approve completion.
 
@@ -149,6 +152,6 @@ The chat UI is source material, not the control plane.
 
 The immediate next state is determined mechanically from #94. Broadly, the intended order is:
 
-**resolve #115 Graphiti semantic repeatability/root cause -> exact-head green acceptance -> owner-approved merge/reconciliation -> final clean FOSSIL baseline -> eligible secretless/local-fixture #87.**
+**stabilize the nondeterministic #115 Graphiti semantic acceptance path without weakening it -> exact-head repeatable acceptance -> owner-approved merge/reconciliation -> refresh and verify #112/#113 -> final clean FOSSIL baseline -> eligible secretless/local-fixture #87.**
 
 No production promotion is authorized by this document.
