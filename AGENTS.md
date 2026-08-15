@@ -15,7 +15,7 @@ This repository is designed so another GPT/Codex/Claude session can continue wit
 
 Live #86/#94 state supersedes stale operational ordering in repository prose. Re-fetch exact heads, CI, reviews, and claims immediately before any write, rebase, merge, deploy, or task claim.
 
-## Current state — 2026-08-14
+## Current state — 2026-08-15
 
 The cross-project boundary is:
 
@@ -31,7 +31,7 @@ Completed dependencies:
 - **LiteLLM/CKFF** false-success/routing repair and Railway production-health reconciliation are closed completed. Do not reopen that repair campaign without new regression evidence.
 - **Trusted local execution** tracker #96 is closed completed.
 
-Current FOSSIL work is governed by #116 with execution state in #94. At this documentation branch point, PR #114 is merged into `main` at `27764c4ab20c196ee0bc76a0d020fc961a385c4e`; PR #115 is at `c4432f577e6182efd4126c3bbd1171a1fb58cbbd` and is blocked only by a new exact-head hosted Graphiti semantic failure after clean local tests passed. `FOSSIL-07A` is the bounded repeatability/root-cause lane. #87 remains gated until the baseline is trustworthy.
+Current FOSSIL work is governed by #116 with execution state in #94. PR #114 is merged into `main` at `27764c4ab20c196ee0bc76a0d020fc961a385c4e`; PR #115 remains at `c4432f577e6182efd4126c3bbd1171a1fb58cbbd`. `FOSSIL-07A` completed its bounded identical-run experiment and is **BLOCKED / NONDETERMINISTIC_GATE**: three identical Graphiti attempts on that exact head produced materially different extraction outcomes (`0 entities/0 facts`, then `5 entities/0 facts` with incomplete timeout, then `5 entities/2 facts` with final PASS). The variability is localized to the Graphiti LLM extraction/interpretation boundary, not #115 receipt/schema semantics or the repaired dependency/import path. A later green rerun is therefore not stable acceptance. #115 must not merge while this required semantic gate is nondeterministic, and #87 remains gated.
 
 Do not assume those exact refs remain current: **#94 is the live execution ledger.**
 
@@ -150,11 +150,12 @@ Earliest valid unexpired claim wins. Close with the ledger-prescribed `DONE`, `B
 
 Resolve the present FOSSIL baseline before expanding the roadmap. In particular:
 
-1. follow the live #94 state for `FOSSIL-07A` / PR #115;
-2. do not merge #115 from local green alone while exact-head hosted semantic acceptance is unresolved;
-3. reconcile remaining #116 phases on their actual current heads;
-4. perform final clean-main verification after owner-approved merges;
-5. begin only the eligible secretless/local-fixture portion of #87 when its gate is truly open.
+1. follow the live #94 state after the `FOSSIL-07A` NONDETERMINISTIC_GATE closeout;
+2. stabilize the Graphiti semantic acceptance path without lowering its semantic requirement or treating rerun-until-green as success;
+3. do not merge #115 until Terra proves the stabilized exact-head gate is reliable;
+4. reconcile remaining #116 phases on their actual current heads;
+5. perform final clean-main verification after owner-approved merges;
+6. begin only the eligible secretless/local-fixture portion of #87 when its gate is truly open.
 
 Issue #47 remains later retrieval/reranking/model-bakeoff roadmap work. It is not permission to jump around the current FOSSIL baseline gate.
 
