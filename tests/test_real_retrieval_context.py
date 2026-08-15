@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from dkg.real_retrieval import LifecycleIntentReranker, RerankedRetriever
-from dkg.services import BudgetedContextProvider
+from fossil_core.real_retrieval import LifecycleIntentReranker, RerankedRetriever
+from fossil_core.services import BudgetedContextProvider
 
 
 PACK = "pack_f024177f89a5442db84171c3dd7f58e5"

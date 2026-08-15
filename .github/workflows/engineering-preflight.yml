@@ -1,0 +1,42 @@
+name: Engineering preflight
+
+on:
+  workflow_call:
+    inputs:
+      receipt-path:
+        description: Path to the assurance-v1 receipt JSON.
+        type: string
+        required: false
+        default: contracts/engineering/examples/assurance-receipt.json
+  pull_request:
+    paths:
+      - "contracts/engineering/**"
+      - "scripts/assurance/**"
+      - "tests/test_engineering_assurance_gate.py"
+      - ".github/workflows/engineering-preflight.yml"
+  push:
+    branches: [main]
+    paths:
+      - "contracts/engineering/**"
+      - "scripts/assurance/**"
+      - "tests/test_engineering_assurance_gate.py"
+      - ".github/workflows/engineering-preflight.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  preflight-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install minimal validation dependency
+        run: python -m pip install --quiet jsonschema pytest
+      - name: Validate assurance-v1 receipt
+        run: python scripts/assurance/validate_assurance_receipt.py "${{ inputs.receipt-path || 'contracts/engineering/examples/assurance-receipt.json' }}"
+      - name: Run preflight unit fixtures
+        run: python -m pytest -q tests/test_engineering_assurance_gate.py tests/test_engineering_preflight.py

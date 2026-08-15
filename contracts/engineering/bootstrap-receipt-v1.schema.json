@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bootstrap-receipt-v1.schema.json",
+  "title": "FOSSIL Bootstrap Receipt v1",
+  "description": "Offline, checker-verifiable bootstrap/deployment receipt. This records evidence only and does not claim a live deployment.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "host",
+    "health",
+    "tailscale",
+    "variables",
+    "correlation",
+    "status",
+    "timestamp"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "host": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["node"],
+      "properties": {
+        "node": {"type": "string", "minLength": 1}
+      }
+    },
+    "health": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fossil_health_url", "gravebuster_health_url"],
+      "properties": {
+        "fossil_health_url": {"$ref": "#/$defs/health_evidence"},
+        "gravebuster_health_url": {"$ref": "#/$defs/health_evidence"}
+      }
+    },
+    "tailscale": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["host", "reachable"],
+      "properties": {
+        "host": {"type": "string", "minLength": 1},
+        "reachable": {"type": "boolean"}
+      }
+    },
+    "variables": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/variable_evidence"}
+    },
+    "correlation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "project_issue_id",
+        "work_order_id",
+        "task_id",
+        "attempt_id",
+        "request_id",
+        "trace_id",
+        "checkpoint_id",
+        "commit_sha",
+        "deployment_id"
+      ],
+      "properties": {
+        "project_issue_id": {"$ref": "#/$defs/nonempty_string"},
+        "work_order_id": {"$ref": "#/$defs/nonempty_string"},
+        "task_id": {"$ref": "#/$defs/nonempty_string"},
+        "attempt_id": {"$ref": "#/$defs/nonempty_string"},
+        "request_id": {"$ref": "#/$defs/nonempty_string"},
+        "trace_id": {"$ref": "#/$defs/nonempty_string"},
+        "checkpoint_id": {"$ref": "#/$defs/nonempty_string"},
+        "commit_sha": {"$ref": "#/$defs/nonempty_string"},
+        "deployment_id": {"$ref": "#/$defs/nonempty_string"}
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["operational", "fail_closed", "degraded"]
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {"status": {"const": "operational"}},
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "tailscale": {
+            "properties": {"reachable": {"const": true}}
+          },
+          "health": {
+            "properties": {
+              "fossil_health_url": {
+                "properties": {"outcome": {"const": "success"}}
+              },
+              "gravebuster_health_url": {
+                "properties": {"outcome": {"const": "success"}}
+              }
+            }
+          },
+          "variables": {
+            "allOf": [
+              {
+                "contains": {
+                  "type": "object",
+                  "properties": {"required": {"const": true}},
+                  "required": ["required"]
+                },
+                "minContains": 1
+              },
+              {
+                "not": {
+                  "contains": {
+                    "type": "object",
+                    "properties": {
+                      "required": {"const": true},
+                      "present": {"const": false}
+                    },
+                    "required": ["required", "present"]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "nonempty_string": {
+      "type": "string",
+      "minLength": 1
+    },
+    "health_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["url", "json_key", "outcome"],
+      "properties": {
+        "url": {"type": "string", "minLength": 1},
+        "json_key": {"type": "string", "minLength": 1},
+        "outcome": {
+          "type": "string",
+          "enum": ["success", "failure", "unreachable", "invalid_response"]
+        }
+      }
+    },
+    "variable_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "required", "present"],
+      "properties": {
+        "name": {"$ref": "#/$defs/nonempty_string"},
+        "required": {"type": "boolean"},
+        "present": {"type": "boolean"}
+      }
+    }
+  }
+}

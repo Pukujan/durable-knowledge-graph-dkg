@@ -9,8 +9,8 @@ from typing import Any, Iterable, Mapping
 
 from jsonschema import Draft202012Validator, FormatChecker
 
-from dkg.artifact_store import ArtifactStore
-from dkg.io import publish_immutable
+from fossil_core.artifact_store import ArtifactStore
+from fossil_core.io import publish_immutable
 
 
 class SourceSnapshotConflict(RuntimeError):

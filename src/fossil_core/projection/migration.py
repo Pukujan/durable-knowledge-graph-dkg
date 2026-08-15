@@ -8,8 +8,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Awaitable, Callable, Iterable, Mapping, Sequence
 
-from dkg.io import publish_immutable
-from dkg.lifecycle import KnowledgeState
+from fossil_core.io import publish_immutable
+from fossil_core.lifecycle import KnowledgeState
 
 
 def canonical_event_order(event: Mapping[str, Any]) -> tuple[str, str]:

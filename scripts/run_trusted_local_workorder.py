@@ -11,7 +11,7 @@ import json
 import os
 from pathlib import Path
 
-from dkg.trusted_local_runner import (
+from fossil_core.trusted_local_runner import (
     DispatchPolicy,
     WorkOrderError,
     dispatch_secretless_attempt,

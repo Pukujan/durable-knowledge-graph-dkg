@@ -4,17 +4,17 @@ from pathlib import Path
 
 import pytest
 
-from dkg.agent import AgentContext, AgentProvenanceError, CorpusService, SkillRegistry
-from dkg.answer_eval import AnswerReliabilityCase, DeterministicEvidenceAnswerService
-from dkg.answer_pipeline import LineageResolvedModelService
-from dkg.context_security import (
+from fossil_core.agent import AgentContext, AgentProvenanceError, CorpusService, SkillRegistry
+from fossil_core.answer_eval import AnswerReliabilityCase, DeterministicEvidenceAnswerService
+from fossil_core.answer_pipeline import LineageResolvedModelService
+from fossil_core.context_security import (
     CONTEXT_SECURITY_RESOLVER,
     UntrustedContextModelService,
     canonicalize_untrusted_context,
 )
-from dkg.event_store import DurableEventStore
-from dkg.pack import PackAccess
-from dkg.poisoning_eval import RetrievalPoisoningCase, run_retrieval_poisoning_benchmark
+from fossil_core.event_store import DurableEventStore
+from fossil_core.pack import PackAccess
+from fossil_core.poisoning_eval import RetrievalPoisoningCase, run_retrieval_poisoning_benchmark
 
 PACK_A = "pack_security_a"
 PACK_B = "pack_security_b"
@@ -341,7 +341,7 @@ def test_poisoned_prebuilt_commit_cannot_bypass_proposal_or_agent_provenance_gat
         model_id="fixture-model",
         harness_version="fixture-harness",
         skill_id="skill_research-ingestion",
-        skill_version="1.1.0",
+        skill_version="1.0.0",
     )
 
     poisoned_prebuilt_event = {

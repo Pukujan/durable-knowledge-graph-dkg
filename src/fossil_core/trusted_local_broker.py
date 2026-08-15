@@ -19,7 +19,7 @@ from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 from uuid import uuid4
 
-from dkg.trusted_local_runner import (
+from fossil_core.trusted_local_runner import (
     DispatchLedger,
     DispatchPolicy,
     WorkOrderError,

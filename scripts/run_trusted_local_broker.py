@@ -22,7 +22,7 @@ _SOURCE_ROOT = Path(__file__).resolve().parents[1] / "src"
 if str(_SOURCE_ROOT) not in sys.path:
     sys.path.insert(0, str(_SOURCE_ROOT))
 
-from dkg.trusted_local_broker import (
+from fossil_core.trusted_local_broker import (
     GitHubQueueClient,
     QueueTask,
     RepoPolicy,
@@ -34,8 +34,8 @@ from dkg.trusted_local_broker import (
     terminal_text,
     workorder_text,
 )
-from dkg.trusted_local_queue import active_ready_local_tasks
-from dkg.trusted_local_runner import WorkOrderError, sanitize_receipt
+from fossil_core.trusted_local_queue import active_ready_local_tasks
+from fossil_core.trusted_local_runner import WorkOrderError, sanitize_receipt
 
 
 def load_token() -> str:

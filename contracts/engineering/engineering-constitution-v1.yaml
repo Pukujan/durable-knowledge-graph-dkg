@@ -1,17 +1,41 @@
 version: engineering-constitution-v1
 authority: versioned-git-contract
+principle: >
+  Progressive disclosure. Every substantial task answers the small universal
+  kernel below. A classifier then adds risk-triggered check packs only for the
+  facets the task actually touches; everything else is explicitly marked
+  not_applicable with a rationale rather than silently skipped.
 universal_kernel:
-  - outcome
-  - behavior_owner
-  - state_classification
-  - public_contract_impact
-  - semantic_success
-  - mechanical_success_and_failure
-  - evidence_and_tests
-  - recovery_and_rollback
-  - unresolved_assumptions
+  - id: outcome
+    prompt: Requested outcome, stated in terms a reader can verify.
+  - id: behavior_owner
+    prompt: Who or what owns the behavior being changed.
+  - id: state_classification
+    prompt: Classification of touched state (source text, durable write, projection, config, ...).
+  - id: public_contract_impact
+    prompt: Whether and how any public/cross-boundary contract changes.
+  - id: semantic_success
+    prompt: Semantic success criteria, not just transport/process completion.
+  - id: mechanical_success_and_failure
+    prompt: Exact mechanical pass/fail definition for the change.
+  - id: evidence_and_tests
+    prompt: Tests and evidence required to support the change.
+  - id: recovery_and_rollback
+    prompt: Recovery and rollback impact and proof.
+  - id: unresolved_assumptions
+    prompt: Assumptions left unresolved and whether any is material to dispatch.
+source_distinction:
+  - approved_current_standard: "Current authority; may drive implementation."
+  - explanatory_reference: "Explains intent; reference, not authority."
+  - historical: "Lineage only; never silently drives implementation."
+  - incident_evidence: "Observed incident evidence; durable but not current policy."
+  - proposed_lesson: "Proposed lesson/ADR; a PROPOSAL, not automatic truth."
+  - stale_or_unverified: "Stale or unverified; must be marked unverified, never current authority."
 rules:
   - Retrieval rank never establishes current authority.
   - Historical material is useful lineage but cannot silently drive implementation.
   - A material unresolved current-state conflict blocks an implementation WorkOrder.
+  - A stale or historical source must never be classified as current authority.
+  - A receipt must not silently treat stale material as current authority.
   - Operational telemetry is evidence, not canonical FOSSIL truth.
+  - A lesson, ADR, or policy update recorded at closeout is a PROPOSAL, not automatic truth.

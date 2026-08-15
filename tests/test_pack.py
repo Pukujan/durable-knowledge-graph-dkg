@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from dkg.pack import KnowledgePackValidator, PackAccess, PackBoundaryError
+from fossil_core.pack import KnowledgePackValidator, PackAccess, PackBoundaryError
 
 ROOT = Path(__file__).parents[1]
 

@@ -1,0 +1,121 @@
+{
+  "version": "preflight-v1",
+  "contract_version": "preflight-v1",
+  "identifiers": {
+    "repo": "Pukujan/fossil-core",
+    "issue": 91,
+    "task_id": "FOSSIL-DWRITE"
+  },
+  "task": {
+    "outcome": "Write a durable record across two services with idempotent retry and partial-failure handling.",
+    "behavior_owner": "FOSSIL durability and ingestion layer",
+    "state_classification": "durable knowledge-changing write across service boundary",
+    "public_contract_impact": "cross-service write contract; event and queue contract changes",
+    "semantic_success": "a committed durable record is visible after retry and survives partial failure without duplication",
+    "mechanical_success_and_failure": "idempotency test passes under replay; partial-failure probe converges; otherwise the write is blocked",
+    "evidence_and_tests": ["idempotency replay test", "partial-failure convergence test", "timeout-retry test", "compatibility test"],
+    "recovery_and_rollback": "replay from the applied ledger; rollback rebuilds the projection from recorded events"
+  },
+  "risk_facets": ["durable-write", "cross-service-call", "queue-or-event-stream"],
+  "risk_facets_rationale": {
+    "durable-write": "writes durable knowledge-changing state",
+    "cross-service-call": "calls a second service to complete the write",
+    "queue-or-event-stream": "delivery is async via an event stream"
+  },
+  "selected_risk_packs": ["durability", "timeout-retry", "recovery", "api-service", "async-delivery", "observability"],
+  "kernel": {
+    "outcome": "Write a durable record across two services with idempotent retry and partial-failure handling.",
+    "behavior_owner": "FOSSIL durability and ingestion layer",
+    "state_classification": "durable knowledge-changing write across service boundary",
+    "public_contract_impact": "cross-service write contract; event and queue contract changes",
+    "semantic_success": "a committed durable record is visible after retry and survives partial failure without duplication",
+    "mechanical_success_and_failure": "idempotency test passes under replay; partial-failure probe converges; otherwise the write is blocked",
+    "evidence_and_tests": ["idempotency replay test", "partial-failure convergence test", "timeout-retry test", "compatibility test"],
+    "recovery_and_rollback": "replay from the applied ledger; rollback rebuilds the projection from recorded events"
+  },
+  "required_checks": [
+    {
+      "id": "durable-commit",
+      "pack": "durability",
+      "question": "Is the write recorded durably before any downstream acknowledgment?",
+      "answer": "answered",
+      "answer_rationale": "record is appended to the applied ledger before acknowledgment"
+    },
+    {
+      "id": "transaction-boundary",
+      "pack": "durability",
+      "question": "Is the cross-service transaction boundary explicit and rollback-safe?",
+      "answer": "answered",
+      "answer_rationale": "write uses a defined transaction boundary with compensating action"
+    },
+    {
+      "id": "idempotency",
+      "pack": "timeout-retry",
+      "question": "Are retries idempotent so replay cannot duplicate the write?",
+      "answer": "answered",
+      "answer_rationale": "replay key makes the write idempotent under retry"
+    },
+    {
+      "id": "timeout-retry",
+      "pack": "timeout-retry",
+      "question": "Are timeouts bounded and retries capped with backoff?",
+      "answer": "answered",
+      "answer_rationale": "bounded timeout with capped exponential backoff"
+    },
+    {
+      "id": "partial-failure",
+      "pack": "recovery",
+      "question": "Is partial failure detected and converged rather than silently accepted?",
+      "answer": "answered",
+      "answer_rationale": "partial-failure probe converges via replay reconciliation"
+    },
+    {
+      "id": "compatibility",
+      "pack": "api-service",
+      "question": "Are queue and event contract changes backward compatible?",
+      "answer": "answered",
+      "answer_rationale": "additive event fields with versioned envelope"
+    },
+    {
+      "id": "security-boundary",
+      "pack": "observability",
+      "question": "Does the write respect the durability/provenance security boundary?",
+      "answer": "not_applicable",
+      "answer_rationale": "write is internal and not exposed to an untrusted surface in this task"
+    },
+    {
+      "id": "observability",
+      "pack": "observability",
+      "question": "Are durable-write metrics and delivery logs emitted?",
+      "answer": "answered",
+      "answer_rationale": "durability, retry, and partial-failure metrics added"
+    }
+  ],
+  "sources": [
+    {
+      "stable_id": "github:Pukujan/fossil-core:issue:91",
+      "status": "CURRENT_AUTHORITY",
+      "provenance": "live-github-read",
+      "kind": "approved_current_standard",
+      "freshness": "live-read",
+      "material": true
+    },
+    {
+      "stable_id": "fossil:ledger:replay-order",
+      "status": "CURRENT_AUTHORITY",
+      "provenance": "fixture",
+      "kind": "approved_current_standard",
+      "material": true
+    },
+    {
+      "stable_id": "fossil:event:2026-05-retrospective",
+      "status": "SUPERSEDED_OR_HISTORICAL",
+      "provenance": "corpus-history",
+      "kind": "historical",
+      "material": false
+    }
+  ],
+  "unresolved_assumptions": [],
+  "planned_tests_and_fault_probes": ["idempotency replay test", "partial-failure convergence test", "timeout-retry test", "compatibility test"],
+  "required_closeout_evidence": ["idempotency replay result", "partial-failure convergence result", "timeout-retry result"]
+}

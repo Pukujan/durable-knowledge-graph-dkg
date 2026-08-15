@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from dkg.io import publish_immutable
+from fossil_core.io import publish_immutable
 
 
 class ProjectionLedger:

@@ -1,6 +1,6 @@
 import pytest
 
-from dkg.lifecycle import KnowledgeState
+from fossil_core.lifecycle import KnowledgeState
 
 PACK = "pack_269099f7b2ba43b7a99b9427d64092de"
 

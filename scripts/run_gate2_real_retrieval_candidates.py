@@ -4,17 +4,17 @@ import argparse
 import json
 from pathlib import Path
 
-from dkg.benchmark import BenchmarkValidator, RetrievalBenchmark
-from dkg.benchmark_cases import load_benchmark_case_set, retrieval_cases_from_case_set
-from dkg.pack_corpus import retrieval_documents_from_pack_fixtures
-from dkg.real_retrieval import (
+from fossil_core.benchmark import BenchmarkValidator, RetrievalBenchmark
+from fossil_core.benchmark_cases import load_benchmark_case_set, retrieval_cases_from_case_set
+from fossil_core.pack_corpus import retrieval_documents_from_pack_fixtures
+from fossil_core.real_retrieval import (
     LifecycleIntentReranker,
     ReciprocalRankFusionRetriever,
     RerankedRetriever,
     SentenceTransformerEmbeddingProvider,
 )
-from dkg.semantic_retriever import SemanticEmbeddingRetriever
-from dkg.services import BM25Retriever, BudgetedContextProvider
+from fossil_core.semantic_retriever import SemanticEmbeddingRetriever
+from fossil_core.services import BM25Retriever, BudgetedContextProvider
 
 
 def parse_args() -> argparse.Namespace:

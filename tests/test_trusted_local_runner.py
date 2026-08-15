@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from dkg.trusted_local_runner import (
+from fossil_core.trusted_local_runner import (
     DispatchLedger,
     DispatchPolicy,
     LedgerClaim,
@@ -220,6 +220,6 @@ def test_broker_image_supplies_bounded_secretless_cross_repo_check_runtime():
 
 def test_independent_check_command_remains_literal_argv():
     root = Path(__file__).resolve().parents[1]
-    broker = (root / "src" / "dkg" / "trusted_local_broker.py").read_text(encoding="utf-8")
+    broker = (root / "src" / "fossil_core" / "trusted_local_broker.py").read_text(encoding="utf-8")
     assert "list(command)" in broker
     assert "shell=True" not in broker

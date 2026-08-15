@@ -5,13 +5,13 @@ from pathlib import Path
 
 import pytest
 
-from dkg.artifact_store import ArtifactStore
-from dkg.conversation import (
+from fossil_core.artifact_store import ArtifactStore
+from fossil_core.conversation import (
     ConversationLineage,
     ConversationProvenanceError,
     ConversationStore,
 )
-from dkg.event_store import DurableEventStore
+from fossil_core.event_store import DurableEventStore
 
 
 COMMON_PACK = "pack_269099f7b2ba43b7a99b9427d64092de"
