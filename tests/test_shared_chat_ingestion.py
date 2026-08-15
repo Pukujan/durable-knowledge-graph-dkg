@@ -3,9 +3,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from dkg.artifact_store import ArtifactStore
-from dkg.conversation import ConversationLineage, ConversationStore
-from dkg.event_store import DurableEventStore
+from fossil_core.artifact_store import ArtifactStore
+from fossil_core.conversation import ConversationLineage, ConversationStore
+from fossil_core.event_store import DurableEventStore
 from scripts.ingest_shared_chat_reconstructions import ingest_manifest
 
 
