@@ -26,12 +26,17 @@ def test_object_store_live_workflow_is_manual_exact_head_and_credential_scoped()
         "fossil-live-proof/${{ github.run_id }}/${{ github.run_attempt }}",
         "python scripts/live_object_store_proof.py write",
         "python scripts/live_object_store_rebuild_proof.py",
+        'FOSSIL_PROOF_RECEIPT_PATH=$RUNNER_TEMP/writer-receipt.json',
+        'FOSSIL_PROOF_RECEIPT_PATH=$RUNNER_TEMP/rebuild-receipt.json',
     ]
     for needle in required:
         assert needle in workflow, f"missing live object-store safety contract: {needle}"
 
     assert "pull_request:" not in workflow
     assert "push:" not in workflow
+    # The runner context is not valid in jobs.<job_id>.env. Resolve temporary
+    # paths only after the hosted runner has started.
+    assert "FOSSIL_PROOF_RECEIPT_PATH: ${{ runner.temp }}" not in workflow
 
 
 def test_writer_hands_runner_b_only_prefix_and_deterministic_fixture_identity() -> None:
