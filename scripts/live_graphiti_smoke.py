@@ -33,6 +33,17 @@ def required_env(name: str) -> str:
     return value
 
 
+def llm_temperature() -> float:
+    raw = os.environ.get("GRAPHITI_LLM_TEMPERATURE", "0")
+    try:
+        value = float(raw)
+    except ValueError as exc:
+        raise ValueError("GRAPHITI_LLM_TEMPERATURE must be a number") from exc
+    if value < 0:
+        raise ValueError("GRAPHITI_LLM_TEMPERATURE must be >= 0")
+    return value
+
+
 def software_commit() -> str:
     configured = os.environ.get("FOSSIL_SOFTWARE_COMMIT")
     if configured:
@@ -211,6 +222,7 @@ async def main() -> None:
             raise ValueError(
                 "GRAPHITI_STRUCTURED_OUTPUT_MODE must be json_schema or json_object"
             )
+        temperature = llm_temperature()
 
         neo4j_version = await wait_for_neo4j(
             neo4j_uri, neo4j_user, neo4j_password
@@ -220,6 +232,7 @@ async def main() -> None:
             model=llm_model,
             small_model=small_model,
             base_url=llm_base_url,
+            temperature=temperature,
         )
         llm_client = OpenAIGenericClient(
             config=llm_config,
@@ -255,6 +268,7 @@ async def main() -> None:
             "embedding_model_id": embedding_model,
             "embedding_dim": embedding_dim,
             "structured_output_mode": structured_output_mode,
+            "temperature": temperature,
             "ontology_version": os.environ.get("FOSSIL_ONTOLOGY_VERSION", "1.0.0"),
             "software_commit": commit,
         }

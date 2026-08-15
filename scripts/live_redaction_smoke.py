@@ -19,7 +19,7 @@ from neo4j import AsyncGraphDatabase
 from fossil_core.event_store import DurableEventStore, EventRedactedError
 from fossil_core.projection.graphiti import GraphitiProjectionAdapter
 from fossil_core.projection.ledger import ProjectionLedger
-from live_graphiti_smoke import required_env, software_commit, wait_for_neo4j
+from live_graphiti_smoke import llm_temperature, required_env, software_commit, wait_for_neo4j
 
 
 PACK_ID = "pack_f024177f89a5442db84171c3dd7f58e5"
@@ -139,6 +139,7 @@ async def main() -> None:
         structured_output_mode = os.environ.get(
             "GRAPHITI_STRUCTURED_OUTPUT_MODE", "json_schema"
         )
+        temperature = llm_temperature()
         neo4j_version = await wait_for_neo4j(
             neo4j_uri, neo4j_user, neo4j_password
         )
@@ -148,6 +149,7 @@ async def main() -> None:
             model=llm_model,
             small_model=small_model,
             base_url=llm_base_url,
+            temperature=temperature,
         )
         llm_client = OpenAIGenericClient(
             config=llm_config,
@@ -177,6 +179,7 @@ async def main() -> None:
             "model_id": llm_model,
             "embedding_model_id": embedding_model,
             "structured_output_mode": structured_output_mode,
+            "temperature": temperature,
             "software_commit": commit,
             "proof": "event-redaction-active-purge-non-resurrection",
         }
