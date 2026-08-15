@@ -58,7 +58,7 @@ def context(skill_id: str) -> AgentContext:
         model_id="fixture-model-v1",
         harness_version="fixture-harness-v2",
         skill_id=skill_id,
-        skill_version="1.0.0",
+        skill_version="1.1.0" if skill_id == "skill_research-ingestion" else "1.0.0",
     )
 
 
@@ -106,11 +106,11 @@ def test_agent_proposal_carries_actor_model_harness_and_skill_provenance(tmp_pat
         "model_id": "fixture-model-v1",
         "harness_version": "fixture-harness-v2",
         "skill_id": "skill_research-ingestion",
-        "skill_version": "1.0.0",
+        "skill_version": "1.1.0",
     }
     assert proposal["provenance"]["method"] == "agent_proposal"
     assert proposal["provenance"]["prompt_or_policy_ref"] == (
-        "skill_research-ingestion@1.0.0"
+        "skill_research-ingestion@1.1.0"
     )
     assert proposal["event_id"].startswith("evt_")
     assert list(service.event_store.iter_events()) == []

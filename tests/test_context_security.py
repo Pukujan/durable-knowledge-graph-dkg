@@ -341,7 +341,7 @@ def test_poisoned_prebuilt_commit_cannot_bypass_proposal_or_agent_provenance_gat
         model_id="fixture-model",
         harness_version="fixture-harness",
         skill_id="skill_research-ingestion",
-        skill_version="1.0.0",
+        skill_version="1.1.0",
     )
 
     poisoned_prebuilt_event = {
