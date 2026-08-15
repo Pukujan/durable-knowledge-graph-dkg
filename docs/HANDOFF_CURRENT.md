@@ -1,6 +1,6 @@
 # Current Handoff
 
-**Date:** 2026-08-14  
+**Date:** 2026-08-15  
 **Project:** **FOSSIL — Fault-tolerant Open Semantic Store for Intellectual Lineage**  
 **Repository:** `Pukujan/fossil-core`  
 **Current architecture authority:** Issue #86  
@@ -61,19 +61,20 @@ For a fresh autonomous session, read in this order:
 
 ## Current FOSSIL baseline
 
-At the point this documentation branch was created:
+Fresh reconciliation after the bounded repeatability experiment:
 
 - `main` = `27764c4ab20c196ee0bc76a0d020fc961a385c4e`.
-- PR #114 was owner-merged into that baseline after the Graphiti dependency/import repair and fan-in verification.
-- PR #115 was rebased/hardened at `c4432f577e6182efd4126c3bbd1171a1fb58cbbd`.
+- PR #114 is owner-merged into that baseline after the Graphiti dependency/import repair and fan-in verification.
+- PR #115 remains at `c4432f577e6182efd4126c3bbd1171a1fb58cbbd`.
 - Clean declared `[test,graphiti]` install, `pip check`, Graphiti import, receipt tests `63/63`, focused verification `91/91`, full pytest `262/262`, and `git diff --check` passed independently for #115.
-- Fresh hosted Graphiti run `31850284986` nevertheless failed because the live smoke produced zero entities. This is a **new semantic live-integration failure**, not the inherited missing-`httpx` dependency issue.
-- `FOSSIL-07` therefore closed BLOCKED rather than weakening acceptance; closeout comment ID `5299204005`.
-- `FOSSIL-07A` is the currently claimed bounded repeatability/root-cause investigation on #115. It must distinguish reproducible failure from nondeterministic live-model/smoke behavior without accepting “rerun until green.”
-- PR #115 is not merged from this state.
-- #87 secretless/local-fixture work remains NOT_READY until the FOSSIL baseline permits it.
+- `FOSSIL-07A` completed a bounded identical-run experiment and closed **BLOCKED / NONDETERMINISTIC_GATE**.
+- Three identical Graphiti attempts on the same exact SHA produced materially different semantic outcomes: `0 entities/0 facts`; then `5 entities/0 facts` with incomplete timeout; then `5 entities/2 facts` with final PASS.
+- The variability is localized to the Graphiti LLM extraction/interpretation boundary, not #115 receipt/schema semantics and not the repaired Graphiti/httpx dependency setup.
+- The latest Graphiti workflow conclusion may be green, but that green rerun is not reliable acceptance because repeatability is not established.
+- PR #115 must not merge while the required semantic gate remains nondeterministic.
+- #87 secretless/local-fixture work remains NOT_READY.
 
-**Do not use this paragraph as a live queue.** Re-fetch #94 because Terra may have moved `FOSSIL-07A` since this handoff was written.
+**Do not use this paragraph as a live queue.** Re-fetch #94 before acting.
 
 ## Current FOSSIL campaign contract
 
@@ -84,8 +85,9 @@ Current campaign intent:
 1. establish exact live state before mutation;
 2. repair/verify the currently open FOSSIL branches without weakening acceptance;
 3. require failed-first evidence and exact-head hosted verification where applicable;
-4. prove integration on the actual merge baseline;
-5. only then continue into the eligible secretless/local-fixture portion of #87.
+4. stabilize any required live semantic gate that cannot reliably distinguish success from run-to-run model variance;
+5. prove integration on the actual merge baseline;
+6. only then continue into the eligible secretless/local-fixture portion of #87.
 
 No production deployment, secret access, automatic merge, or automatic issue closure is authorized by #116.
 
@@ -157,9 +159,10 @@ Immediately re-fetch #94. Earliest valid unexpired claim wins. Close with exact 
 
 - Do not reopen Cortex V4 as runtime authority.
 - Do not rerun the completed LiteLLM repair campaign absent actual new regression evidence.
-- Do not merge #115 because local tests are green while the exact-head hosted semantic gate is unresolved.
+- Do not merge #115 because local tests or one hosted rerun are green while the required semantic gate is nondeterministic.
 - Do not classify a flaky live gate as PASS by retrying until one attempt happens to succeed.
-- Do not weaken Graphiti/entity acceptance to hide model/smoke nondeterminism.
+- Do not lower the entity/fact requirement, insert fake entities, skip Graphiti, or suppress failures to hide model/smoke nondeterminism.
+- Do not change #115 receipt/schema semantics without causal evidence that they caused the Graphiti failure; current evidence says they did not.
 - Do not begin #87 because it is attractive; wait until the current baseline gate is truly open.
 - Do not select R2 vs S3 from local-fixture results.
 - Do not authorize production from agent/task text.
@@ -169,12 +172,12 @@ Immediately re-fetch #94. Earliest valid unexpired claim wins. Close with exact 
 
 1. Read #86 and live #94.
 2. Confirm current exact FOSSIL main/PR heads and hosted conclusions.
-3. Confirm whether `FOSSIL-07A` is still active, completed, released, or blocked.
-4. Follow the next eligible #94 task and the visible SDD/TDD in #116/focused issue.
+3. Treat the `FOSSIL-07A` NONDETERMINISTIC_GATE closeout as evidence, not as permission to rerun until green.
+4. Follow the next eligible #94 task for deterministic stabilization of the Graphiti semantic acceptance path.
 5. Claim before mutation and re-fetch the ledger.
 6. Work on an isolated branch/worktree.
-7. Test mechanically without weakening acceptance.
-8. Post exact closeout evidence.
-9. Re-read #94 before taking the next item.
+7. Add sanitized diagnostics and failed-first deterministic/controlled regression proof where practical.
+8. Test mechanically without weakening acceptance.
+9. Post exact closeout evidence and re-read #94 before taking the next item.
 
 If no eligible task exists, stop with explicit idle/BLOCKED evidence rather than inventing work.
