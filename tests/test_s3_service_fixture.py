@@ -38,7 +38,7 @@ def test_real_s3_service_fixture_workflow_is_fail_closed_and_exact_head() -> Non
     workflow = WORKFLOW.read_text(encoding="utf-8")
     required = [
         "quay.io/minio/minio",
-        "server /data --console-address \"\\:9001\"",
+        'server /data --console-address ":9001"',
         "/minio/health/ready",
         "python -m pip install -e '.[test,s3]'",
         "python -m pytest -q tests/test_s3_service_fixture.py",
@@ -82,7 +82,6 @@ def test_real_s3_service_preserves_canonical_semantics(tmp_path: Path) -> None:
     raw.create_bucket(Bucket=bucket)
     raw.head_bucket(Bucket=bucket)
 
-    # Use the adapter's real default boto3 path for the positive compatibility proof.
     artifacts = S3ArtifactStore(
         bucket=bucket,
         prefix=prefix,
@@ -102,7 +101,6 @@ def test_real_s3_service_preserves_canonical_semantics(tmp_path: Path) -> None:
     assert artifacts.read_bytes(manifest["artifact_id"]) == b"canonical service bytes"
     assert artifacts.verify(manifest["artifact_id"]) is True
 
-    # Deliberate remote corruption must be detected rather than normalized away.
     digest = manifest["content_hash"]["digest"]
     raw.put_object(
         Bucket=bucket,
@@ -112,7 +110,6 @@ def test_real_s3_service_preserves_canonical_semantics(tmp_path: Path) -> None:
     with pytest.raises(ArtifactIntegrityError, match="verification failed"):
         artifacts.verify(manifest["artifact_id"])
 
-    # A separate artifact proves the tombstone exists in the real service before deletion.
     redact_manifest = artifacts.put_bytes(b"redact me", media_type="text/plain")
     observed = {"tombstone_before_delete": False}
     original_delete = artifacts.backend.delete
@@ -151,7 +148,6 @@ def test_real_s3_service_preserves_canonical_semantics(tmp_path: Path) -> None:
 
     expected = SemanticSnapshot.from_events([first, second])
 
-    # Fresh adapter/client instance: no warm Python object or connection state.
     restarted = S3DurableEventStore(
         bucket=bucket,
         schema_path=SCHEMA,
@@ -165,14 +161,12 @@ def test_real_s3_service_preserves_canonical_semantics(tmp_path: Path) -> None:
         second["event_id"],
     }
 
-    # Fresh local state rebuilds only from canonical remote enumeration.
     restored = DurableEventStore(tmp_path / "restored-events", SCHEMA)
     assert list(restored.iter_events()) == []
     for remote_event in restarted_events:
         restored.commit(remote_event)
     assert SemanticSnapshot.from_events(list(restored.iter_events())) == expected
 
-    # A real HTTP client aimed at a dead local endpoint must fail closed quickly.
     dead_client = boto3.client(
         "s3",
         endpoint_url="http://127.0.0.1:1",
@@ -190,10 +184,9 @@ def test_real_s3_service_preserves_canonical_semantics(tmp_path: Path) -> None:
     with pytest.raises(RemoteStoreUnavailable, match="durable object"):
         unavailable.commit(_event(3))
 
-    # Sanity check that the fixture was the real S3 API surface, not an injected fake.
     try:
         raw.head_object(Bucket=bucket, Key="definitely-missing")
     except ClientError as exc:
         assert str(exc.response.get("Error", {}).get("Code")) in {"404", "NoSuchKey", "NotFound"}
-    else:  # pragma: no cover - a compliant service must report missing objects
+    else:  # pragma: no cover
         raise AssertionError("missing object unexpectedly resolved")
