@@ -2,14 +2,29 @@
 
 **Project:** **FOSSIL — Fault-tolerant Open Semantic Store for Intellectual Lineage**  
 **Durable substrate:** **DICS — Durable Intellectual Corpus System**  
-**Completed:** **Milestone 0 / Gate 1; Gate 2; Issue #48 research ingestion; Issue #48 Workstreams A, B, C, and F**  
-**Active work:** **Issue #48 Workstream D / Issue #47 — retrieval/reranking/model bakeoff**  
-**Control plane:** GitHub issues + durable repository docs  
-**Last updated:** 2026-08-10
+**Architecture authority:** Issue #86  
+**Execution ledger:** Issue #94  
+**Active FOSSIL durability track:** Issue #87  
+**Current live candidate gate:** Issue #124 / `OBJECT_STORE_LIVE`  
+**Last updated:** 2026-08-15
+
+## Current checkpoint
+
+Current `fossil-core` main at this checkpoint:
+
+`ea1d88fc114981915603ec46a401dca45acd5a11`
+
+This includes the merged PR #123 real secretless S3-compatible service-fixture proof.
+
+The project invariant remains:
+
+> **Compute may disappear; truth must not.**
+
+FOSSIL owns durable semantic/evidence authority. Cortex V5 and LiteLLM/CKFF are external replaceable execution/transport systems. Their current behavior may be documented and consumed, but their repositories/workflows are not part of the active FOSSIL mutation scope unless the owner explicitly opens that work.
 
 ## Repository family
 
-- `Pukujan/fossil-core` — architecture/contracts/durable core/projections/benchmarks;
+- `Pukujan/fossil-core` — architecture, contracts, durable core, projections, storage adapters, rebuild machinery, benchmarks and control-plane docs;
 - `Pukujan/fossil-common` — stable pack `pack_269099f7b2ba43b7a99b9427d64092de`;
 - `Pukujan/fossil-ai-systems` — stable pack `pack_f024177f89a5442db84171c3dd7f58e5`, depending on common.
 
@@ -20,15 +35,14 @@ Repository/database/graph placement is physical placement, not knowledge identit
 1. `AGENTS.md`
 2. `ARCHITECTURE.md`
 3. `docs/HANDOFF_CURRENT.md`
-4. `docs/handoffs/2026-08-10-chatgpt-session-handoff-post-query-execution-receipt.md`
-5. this file
-6. `docs/implementation/2026-08-10-post-gate2-query-execution-receipt-proof.md`
-7. `docs/implementation/2026-08-10-post-gate2-retrieval-poisoning-proof.md`
-8. `docs/implementation/2026-08-10-post-gate2-answer-reliability-proof.md`
-9. `docs/operations/LITELLM-GATEWAY.md`
-10. Issue #48
-11. Issue #47
-12. `docs/DECISION_LOG.md`
+4. this file
+5. `docs/operations/EXTERNAL-RUNTIME-RECONCILIATION-2026-08-15.md`
+6. Issue #86
+7. Issue #94
+8. Issue #87
+9. Issue #124
+10. `docs/DECISION_LOG.md`
+11. `docs/operations/LITELLM-GATEWAY.md`
 
 The chat UI is source material, not the control plane.
 
@@ -36,195 +50,119 @@ The chat UI is source material, not the control plane.
 
 Canonical FOSSIL knowledge is **immutable evidence + stable corpus IDs + append-only validated knowledge events + versioned pack/ontology contracts + provenance/history**.
 
-Graphiti/Neo4j, lexical/vector indexes, embedding models, rerankers, context construction, planners, model services, Skills, MCP, and future databases remain replaceable projections/services.
+Graphiti/Neo4j, lexical/vector indexes, embedding models, rerankers, context construction, planners, model services, Skills, MCP, Cortex, LiteLLM and future databases remain replaceable projections/services.
 
-Retrieved/source text is untrusted data. Retrieval rank, reranker score, model confidence, multi-model agreement, and query-execution receipts are not truth authority.
+Retrieved/source text is untrusted data. Retrieval rank, reranker score, model confidence, model tier, multi-model agreement, route success and query-execution receipts are not truth authority.
 
 ## Completed foundation
 
-### Gate 1
+The earlier durable/evidence foundation remains complete, including:
 
-Gate 1 is complete: durable events/artifacts, pack boundaries, lifecycle/disagreement/supersession, replaceable graph projection, rebuild/migration, conversation lineage, exact source/citation integrity, redaction/non-resurrection, cognitive-service contracts, and safe Agent Skill/API/MCP boundaries were proven.
+- immutable validated events and content-addressed evidence;
+- stable pack identity and portable pack boundaries;
+- provenance, lifecycle, disagreement, supersession and lineage replay;
+- exact source/citation integrity;
+- exceptional redaction with tombstone-before-delete and non-resurrection;
+- replaceable Graphiti/Neo4j projection and rebuild/migration proof;
+- safe Agent Skill/API/MCP boundary;
+- cognitive-service interfaces and benchmark/receipt contracts;
+- post-Gate-2 answer, poisoning/untrusted-context and query-replay hardening evidence.
 
-Final cleaned Gate 1 run `31347457485`, job `93331933728`: **51 passed in 0.82s**. Cognitive-service contract run `31347744797`, job `93332738616`: **56 passed in 0.70s**.
+Historical Gate 1/Gate 2/workstream proof detail remains in the existing implementation, research, handoff and decision-log documents and in git history. This current-state file does not replace those records.
 
-### Gate 2
+## Recent 2026-08-15 reconciliation
 
-Gate 2 control #33 and children #34–#37 are closed/completed.
+### #112–#115 baseline/fan-in
 
-Evidence anchors:
+The previously open repair/fan-in work is now reconciled:
 
-- Gate 2A core commit `a028f9e328c2cbcde0185930e90b5eeb4c4efcb8`;
-- Gate 2B core commit `2affde923acf196319d90bfa63f206e4a5e2f25f`;
-- Gate 2C PR #44 / squash `38aac6325cdb5b738c8a6ac5e55959affb3acfb5`;
-- Gate 2C semantic proof run `31364039745`, artifact `9053475462`, digest `sha256:23c95b46f47cec5a16e0a8c0926a4f13532f283d8f4fbcc0de12ceb63db63c41`;
-- Gate 2D PR #45 / squash `2d22dee9e6b176956d30005f4d7877baf68b0a3c`;
-- closed-state reconciliation PR #46 / squash `a614936249ff0ab201756fa54a1e89699d7b924f`.
+- PR #115 merged after exact-head Graphiti live proof, deterministic tests and engineering/dependency/security gates passed;
+- PR #112 refreshed, verified and merged;
+- PR #113 refreshed, verified and merged;
+- final-main Graphiti materialization plus redaction/non-resurrection remained green.
 
-Decision D021 remains active: revision-pinned `BAAI/bge-small-en-v1.5@5c38ec7c405ec4b44b94cc5a9bb96e735b38267a` is the normal primary retriever and BM25 is explicit degraded availability fallback.
+### #87 secretless storage foundation
 
-Mandatory D021 safeguards remain:
+The provider-neutral S3-compatible storage lane advanced:
 
-- current/latest/accepted questions resolve lifecycle/provenance;
-- lineage/history/disagreement questions use durable lineage/read resolution;
-- top-k absence is not evidence of nonexistence;
-- citation-bearing answers resolve immutable source snapshots/spans/hashes;
-- retrieved/source text is untrusted data, never executable policy;
-- retrieval/model output does not receive truth authority from score, confidence, agreement, or receipt metadata.
+- PR #121 landed explicit provider-neutral S3-compatible artifact/event storage adapters and fail-closed durability semantics;
+- exact-head DKG/engineering/dependency/Graphiti evidence passed;
+- no live cloud credentials were used and no provider was selected.
 
-## Active campaign #48 — production RAG hardening
+### Real secretless S3-compatible service fixture
 
-The campaign remains **hardening, not a durable-core redesign and not a GraphRAG rewrite**.
+PR #123 then proved the adapter against a real local/service-container S3-compatible implementation. The final-main proof covered the storage contract without cloud credentials/provider lock-in, including the required secretless service-fixture path and normal DKG.
 
-### Workstream state
+Current main after that merge is `ea1d88fc114981915603ec46a401dca45acd5a11`.
 
-1. **A — evolving-corpus temporal/update benchmark: COMPLETE**
-2. **B — end-to-end answer/citation/unsupported-claim/abstention evaluation: COMPLETE**
-3. **C — poisoning/untrusted-context adversarial suite: COMPLETE**
-4. **F — replayable query execution receipt: COMPLETE**
-5. **D / #47 — embedding/hybrid/reranker/model bakeoff: ACTIVE NEXT**
-6. **E — conservative adaptive routing: pending evidence**
-7. **G — ACL/redaction propagation readiness: pending**
-8. final retrieval-policy/decision-log/residual-risk reconciliation: pending
+## Active FOSSIL work — Issue #124 / OBJECT_STORE_LIVE
 
-### Workstream A — landed evidence
+The next durability gate is a **separately credentialed, non-production R2 candidate proof**.
 
-Core PR #54 / squash:
+R2 is the first live candidate only. The provider-neutral `S3ArtifactStore` / `S3DurableEventStore` contract remains architecture truth.
 
-`e14148f504702ae9e708e2d58add4ee5c91bc8de`
+Required acceptance includes:
 
-Execution-only proof PR #55 passed on exact pack pins, workflow `31431113829`, job `93594491275`. The temporal benchmark proved lifecycle transitions, current/history reconstruction, and repeated-query stability after corpus growth while preserving D021 authority.
+- exact-SHA checkout/fail-closed guard;
+- live artifact/event immutable create, byte-identical replay and stable-identity conflict behavior;
+- live redaction tombstone-before-delete and non-resurrection;
+- independent hosted runner rebuilding from zero local FOSSIL state;
+- a second rebuild/restartability pass from durable truth;
+- explicit dead-endpoint/partial/auth failure controls;
+- sanitized receipts with no credential material;
+- normal DKG green on the same code head;
+- no provider-specific weakening of FOSSIL domain semantics.
 
-### Workstream B — landed evidence
+If required configuration/credentials are absent, the result is `BLOCKED_CREDENTIAL`, not simulated PASS.
 
-Core PR #57 / squash:
+## External execution/transport state — read only
 
-`483772ac0e1d441719aec42658ae00b62a032c11`
+Detailed exact-SHA inspection is recorded in:
 
-Final normal CI run `31433539654`, job `93602384284`: **94 passed in 1.80s**.
+`docs/operations/EXTERNAL-RUNTIME-RECONCILIATION-2026-08-15.md`
 
-B added answer-level evaluation and `fossil-lineage-context-v1`, which resolves durable relation endpoints from mounted validated packs before model execution.
+### Cortex V5
 
-The failed-first execution PR #58 proved a durable relation can identify a relevant stale claim omitted from top-k. The unchanged benchmark then passed in execution-only PR #59, run `31433427436`, job `93602011104`: 94 core tests, 27 documents, PASS 6/6, answer/outcome/citation/completeness/appropriate-abstention rates `1.0`, unsupported/over-abstention/Brier/high-confidence-error rates `0.0`.
+Observed main:
 
-The SQLite case resolves `current_state_unresolved` via durable claim `clm_a047d79b8604fadbd44efdf4` with exact citation `cite_b4e13e4e1a809f76527311ba`.
+`f29e7a2fa0584577765bfe3f437695a2cbaefcf2`
 
-### Workstream C — landed evidence
+Current posture:
 
-Core PR #61 / squash:
+- active execution runtime is Cortex V5, not V4;
+- V5 has no runtime dependency on SSC;
+- strict streamed LiteLLM Chat Completions transport;
+- 120-second default client timeout;
+- deterministic live-catalog seating;
+- research-grounded `MODEL_TIERS` prior replaces undocumented `PREFERENCE_HINTS`;
+- deterministic checker remains completion authority;
+- the V5 acceptance issue is already closed/completed.
 
-`f5634412222e8d86173eb6e8e364f3414a6f3cd6`
+**Policy for this FOSSIL checkpoint:** do not change Cortex V5 code or workflows. Older queue text suggesting automatic CORTEX-02 work is not authorization to mutate V5 after the owner's explicit read-only boundary.
 
-Final normal CI run `31436499505`, job `93611686820`: **100 passed in 1.07s**.
+### LiteLLM / CKFF
 
-`fossil-untrusted-context-v1`:
+Observed main:
 
-- re-resolves known retrieved stable IDs from mounted durable documents;
-- prevents retrieved payload metadata from self-authoring lifecycle/relation/citation/pack truth;
-- demotes unknown in-scope payloads to non-authoritative `untrusted_context`;
-- removes out-of-scope pack payloads;
-- collapses exact duplicate unknown passages;
-- exposes no executable tool/action surface through answer generation;
-- keeps model output candidate-only;
-- re-resolves emitted durable claim text/citation identity;
-- contains unknown claim IDs as `insufficient_evidence`;
-- leaves proposal-before-commit and deterministic mutation gates authoritative.
+`9520e8dffe819d97a1557fe76022ed080f0eb8d6`
 
-Execution-only PR #62 passed the unchanged eight-case plan on the exact B/C pins, run `31436425791`, job `93611459472`: 100 core tests, 27 documents, PASS 8/8, answer/citation/security-boundary metrics `1.0`, unsupported-claim rate `0.0`. This remains a bounded structural proof, not universal poisoning resistance.
+Current executable/config posture:
 
-### Workstream F — landed evidence
+- configured models have `ckffai.com` primary plus `ckff.dev` secondary deployments;
+- LiteLLM `request_timeout: 120`;
+- bounded retries/cooldown and `max_parallel_requests: 8`;
+- Responses bridge may use explicit cross-model fallback and exposes requested/actual/attempt metadata;
+- exact-model evaluation should disable bridge fallbacks;
+- embeddings and reranking are separate fail-closed service lanes;
+- upstream privacy remains model/provider-dependent and CKFF is not verified zero-data-retention.
 
-Core PR #64 / squash:
+The LiteLLM repo's documentation is only partially reconciled with source/config. In particular, a dated compatibility report still mentions a 90-second LiteLLM timeout and the implementation-gap document still says `ckffai.com` is absent from generated config. FOSSIL therefore treats current exact source/config as the operational fact source when those dated docs conflict.
 
-`42dab94b51a7b17f20c046f7257b912fe9f0c900`
-
-Final normal CI:
-
-- run `31437754923`;
-- job `93615632123`;
-- **104 passed in 1.04s**.
-
-F added `fossil.query-execution-receipt.v1` with authority `execution_observability_only`.
-
-The receipt records:
-
-- human/debuggable + deterministic query identity;
-- mounted pack IDs/revisions and explicit retrieval pack scope;
-- projection/build identity;
-- route/retrieval-policy identity;
-- requested/actual service/model/provider identity and bounded fallback attempts;
-- ordered candidate stable IDs/scores and reranker identity;
-- context-security/lineage resolver identities and stable-ID effects;
-- final context and exact citation IDs;
-- outcome/abstention and candidate-only authority;
-- latency/cost and trace/run reference;
-- execution-identity and result-identity hashes.
-
-Credential-shaped diagnostic keys are filtered, but this is not general DLP. Verbose provider telemetry remains outside canonical durable knowledge.
-
-Execution-only PR #65 ran the exact-pin replay proof and was closed unmerged:
-
-- run `31437447245`;
-- job `93614630416`;
-- **104 core tests passed in 2.41s**;
-- **27 projected documents**;
-- **6 queries / 18 receipts**;
-- answer correctness `1.0`;
-- exact replay identity `1.0`;
-- resolver recording `1.0`;
-- semantic-result stability `1.0`;
-- service-change visibility `1.0`.
-
-Exact replay changed telemetry only. A controlled route/retriever-version change visibly changed execution identity under policy/services while durable result identity stayed stable.
-
-Proof projection identity:
-
-- `pack-fixture-retrieval-documents`;
-- version `1`;
-- build ID `packfix_59b82d8d50ab38ea68402db7`.
-
-See `docs/implementation/2026-08-10-post-gate2-query-execution-receipt-proof.md` for residual risks.
-
-### Workstream D / Issue #47 — exact active target
-
-Issue #47 is active and retitled **Workstream D: retrieval/reranking/model bakeoff (0.6B → 4B → 8B)**.
-
-Begin with comparable incumbent/hybrid/reranker evidence before model-scale escalation.
-
-Required lanes:
-
-- incumbent D021 dense retrieval;
-- BM25 under its explicit fallback/degraded role;
-- deterministic dense+lexical hybrid/RRF;
-- at least one real cross-encoder/API reranker behind `Reranker`;
-- contextualized retrieval only when reproducible and source/claim identity remains distinguishable;
-- Qwen3-Embedding 0.6B class first, then 4B, then 8B only when prior results/resources justify continuation;
-- optional BGE-M3/larger BGE family control when justified.
-
-Every candidate execution must emit or be representable by the Workstream-F receipt and preserve D021 authority boundaries.
-
-Compare at least full misses/hit rate, recall@k, MRR, answer/citation/unsupported-claim behavior where applicable, current-vs-superseded leakage, lineage failures, poisoning/context-security compatibility, pack isolation, latency, memory, cost, outage/fallback behavior, and exact requested/actual provider/model/runtime identity.
-
-A newer/larger candidate cannot replace D021 on aggregate score alone. Decision-critical misses and lifecycle/lineage safety are hard constraints.
-
-## Research-to-corpus state
-
-The 2026-08-10 production-RAG research synthesis is ingested into `fossil-ai-systems` as a **local derived research artifact** with stable artifact/source identity, exact citations, deterministic event identity, and claim provenance.
-
-Exact landed pack state:
-
-- `fossil-common@d583005dce06dbb499c3c0de5c22b899655eb8d2`;
-- `fossil-ai-systems@84accd2ee895663990e82ca5b79b592cb503db24`;
-- research artifact `art_b030642ff65f883ff467529c73cbb6e5`;
-- source snapshot `snap_9c0e088ab2d7d8e1b21db563`.
-
-Original external papers and production documentation remain distinct source evidence; the local synthesis must not be presented as verbatim external evidence.
+**Policy for this FOSSIL checkpoint:** do not change LiteLLM code, workflows, routing or deployment.
 
 ## Cognitive-service posture
 
-Current approved retrieval profile remains D021 until new committed benchmark evidence says otherwise.
-
-Existing replaceable service contracts include:
+FOSSIL service contracts remain replaceable:
 
 - `Retriever`;
 - `EmbeddingProvider`;
@@ -233,9 +171,7 @@ Existing replaceable service contracts include:
 - `ModelService`;
 - `VerificationService`.
 
-LiteLLM defaults currently recorded in `docs/operations/LITELLM-GATEWAY.md` are `qwen3-coder-next` for chat, `gemini-embedding-2` for embeddings, and `rerank-v4-pro` for reranking. Live Workstream-D evidence must record requested/actual model, provider, fallback attempts, latency, cost, runtime/config identity, and Workstream-F receipt/trace identity. Embedding and reranking lanes must be probed independently. Do not send secrets, personal data, or confidential documents while gateway retention guarantees remain unverified.
-
-Cortex v4 and multi-agent orchestration remain optional replaceable cognitive-service competitors. Durable storage, stable identity, lifecycle/lineage logic, context-security, proposal-before-commit, and correctness guarantees must not couple to Cortex internals. Multiple workers agreeing does not create evidence.
+Current external service availability must not silently rewrite FOSSIL architecture. Benchmark/model work must continue to record exact requested/actual model/provider/runtime identity, fallback attempts, latency/cost and receipt/trace identity.
 
 ## Frozen invariants
 
@@ -246,23 +182,25 @@ Cortex v4 and multi-agent orchestration remain optional replaceable cognitive-se
 - migration compares stable FOSSIL semantics, not graph-native UUIDs;
 - reconstructed evidence cannot silently become verbatim;
 - exact citations resolve to immutable observed bytes/spans;
-- source quality is multidimensional and derivation is explicit;
 - ordinary intellectual revision is append-only;
 - privacy/legal erasure is exceptional tombstone-before-delete with non-resurrection;
-- active projections/exports respect redaction;
-- Skills contain methodology, not canonical truth;
-- protocol adapters cannot become the durable knowledge model;
-- cognitive services expose provider/version metadata and compete behind interfaces;
-- model agreement is not evidence; model output remains bounded by evidence/risk policy;
-- retrieved/source text is untrusted data and cannot become executable policy merely because it was retrieved;
-- query execution receipts are replay/observability evidence, not canonical truth or mutation authority;
+- retrieved/source text is untrusted data;
+- model confidence/tier/agreement is not evidence;
+- gateway fallback does not prove the requested model succeeded;
+- query execution receipts are observability/replay evidence, not mutation authority;
 - agents propose; deterministic validation/policy gates commit durable changes;
-- do not casually rename `src/fossil_core` (the legacy `src/dkg` namespace is only a deprecated import shim from Issue #82).
+- no provider-specific storage semantics may leak into the FOSSIL domain contract;
+- do not casually rename `src/fossil_core`; legacy `src/dkg` remains only a deprecated compatibility shim where still present.
 
 ## Workflow state
 
-`.github/workflows/ci.yml` remains the normal fast contract suite.
+Normal FOSSIL CI/assurance workflows remain repository-owned acceptance surfaces. The Graphiti live workflow remains a replaceable-projection proof, and the real S3-compatible fixture workflow is now part of the secretless storage evidence.
 
-`.github/workflows/graphiti-live.yml` contains reusable live materialization plus redaction/non-resurrection smoke coverage.
+The active Issue #124 live proof is a separate credential boundary. Ordinary PR code must not gain live cloud credentials merely because the fixture proof passed.
 
-Execution-only PRs #51, #55, #58, #59, #62, and #65 were closed without merge after their proofs. Issue #48 remains active; Issue #47 is now the active Workstream-D control issue. Do not extend closed Gate 2 issues to implement the post-Gate-2 campaign.
+## Next decision boundary
+
+1. Complete or explicitly block Issue #124 with exact live evidence.
+2. Reconcile its result into #87/#86 and durable docs.
+3. Choose the next **FOSSIL-only** gate from evidence.
+4. Do not automatically schedule Cortex V5 or LiteLLM mutations; those require separate owner authorization.
