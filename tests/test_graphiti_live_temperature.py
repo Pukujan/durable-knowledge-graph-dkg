@@ -54,6 +54,14 @@ def test_workflow_pins_bounded_model_compatibility_candidate() -> None:
     assert not re.search(r"(?m)^\s*ollama pull deepseek-r1:7b\s*$", workflow)
 
 
+def test_workflow_checks_out_and_records_exact_pr_head_sha() -> None:
+    workflow = _source(".github/workflows/graphiti-live.yml")
+    target = "${{ github.event.pull_request.head.sha || github.sha }}"
+    assert f"FOSSIL_SOFTWARE_COMMIT: {target}" in workflow
+    assert f"ref: {target}" in workflow
+    assert "FOSSIL_SOFTWARE_COMMIT: ${{ github.sha }}" not in workflow
+
+
 def test_live_graphiti_smoke_passes_and_records_temperature() -> None:
     source = _source("scripts/live_graphiti_smoke.py")
     assert "GRAPHITI_LLM_TEMPERATURE" in source
