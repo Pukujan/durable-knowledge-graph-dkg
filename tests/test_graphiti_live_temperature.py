@@ -42,6 +42,18 @@ def test_workflow_pins_explicit_zero_llm_temperature() -> None:
     ), "Graphiti live workflow must pin GRAPHITI_LLM_TEMPERATURE to 0"
 
 
+def test_workflow_pins_bounded_model_compatibility_candidate() -> None:
+    workflow = _source(".github/workflows/graphiti-live.yml")
+    assert re.search(r"(?m)^\s*GRAPHITI_LLM_MODEL:\s*gemma3:4b\s*$", workflow)
+    assert re.search(r"(?m)^\s*GRAPHITI_SMALL_MODEL:\s*gemma3:4b\s*$", workflow)
+    assert re.search(
+        r"(?m)^\s*GRAPHITI_STRUCTURED_OUTPUT_MODE:\s*json_schema\s*$",
+        workflow,
+    )
+    assert re.search(r"(?m)^\s*ollama pull gemma3:4b\s*$", workflow)
+    assert not re.search(r"(?m)^\s*ollama pull deepseek-r1:7b\s*$", workflow)
+
+
 def test_live_graphiti_smoke_passes_and_records_temperature() -> None:
     source = _source("scripts/live_graphiti_smoke.py")
     assert "GRAPHITI_LLM_TEMPERATURE" in source
