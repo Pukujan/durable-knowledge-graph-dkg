@@ -51,7 +51,6 @@ jobs:
       FOSSIL_TARGET_SHA: ${{ inputs.ref }}
       FOSSIL_SOFTWARE_COMMIT: ${{ inputs.ref }}
       FOSSIL_PROOF_PREFIX: fossil-live-proof/${{ github.run_id }}/${{ github.run_attempt }}
-      FOSSIL_PROOF_RECEIPT_PATH: ${{ runner.temp }}/writer-receipt.json
       OBJECT_STORE_ENDPOINT: ${{ vars.R2_ENDPOINT }}
       OBJECT_STORE_BUCKET: ${{ vars.R2_BUCKET }}
       OBJECT_STORE_REGION: auto
@@ -63,6 +62,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref }}
+
+      - name: Set writer receipt path
+        shell: bash
+        run: echo "FOSSIL_PROOF_RECEIPT_PATH=$RUNNER_TEMP/writer-receipt.json" >> "$GITHUB_ENV"
 
       - name: Verify exact target checkout
         shell: bash
@@ -125,7 +128,6 @@ jobs:
       FOSSIL_SOFTWARE_COMMIT: ${{ inputs.ref }}
       FOSSIL_PROOF_PREFIX: ${{ needs.writer.outputs.proof_prefix }}
       FOSSIL_FIXTURE_IDENTITY: ${{ needs.writer.outputs.fixture_identity }}
-      FOSSIL_PROOF_RECEIPT_PATH: ${{ runner.temp }}/rebuild-receipt.json
       OBJECT_STORE_ENDPOINT: ${{ vars.R2_ENDPOINT }}
       OBJECT_STORE_BUCKET: ${{ vars.R2_BUCKET }}
       OBJECT_STORE_REGION: auto
@@ -137,6 +139,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref }}
+
+      - name: Set rebuild receipt path
+        shell: bash
+        run: echo "FOSSIL_PROOF_RECEIPT_PATH=$RUNNER_TEMP/rebuild-receipt.json" >> "$GITHUB_ENV"
 
       - name: Verify exact target checkout
         shell: bash
