@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
-from dkg.trusted_local_broker import (
+from fossil_core.trusted_local_broker import (
     MODEL_BY_ROLE,
     build_codex_command,
     build_codex_prompt,
@@ -13,7 +13,7 @@ from dkg.trusted_local_broker import (
     parse_broker_ledger,
     parse_ready_local_tasks,
 )
-from dkg.trusted_local_runner import DispatchLedger, LedgerClaim
+from fossil_core.trusted_local_runner import DispatchLedger, LedgerClaim
 
 
 NOW = datetime(2026, 8, 12, 17, 0, tzinfo=UTC)

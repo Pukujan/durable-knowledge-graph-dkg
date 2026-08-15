@@ -15,9 +15,9 @@ _SOURCE_ROOT = Path(__file__).resolve().parents[1] / "src"
 if str(_SOURCE_ROOT) not in sys.path:
     sys.path.insert(0, str(_SOURCE_ROOT))
 
-from dkg.privileged_local_verifier import (active_ready_privileged_tasks, make_privileged_work_order, parse_actions, run_verified_action)
-from dkg.trusted_local_broker import GitHubQueueClient, claim_text, terminal_text
-from dkg.trusted_local_runner import DispatchPolicy, WorkOrderError, sanitize_receipt
+from fossil_core.privileged_local_verifier import (active_ready_privileged_tasks, make_privileged_work_order, parse_actions, run_verified_action)
+from fossil_core.trusted_local_broker import GitHubQueueClient, claim_text, terminal_text
+from fossil_core.trusted_local_runner import DispatchPolicy, WorkOrderError, sanitize_receipt
 
 
 def load_token() -> str:
@@ -58,7 +58,7 @@ def closeout(client: GitHubQueueClient, *, task: Any, order: Mapping[str, Any], 
 
 def run_once(*, client: GitHubQueueClient, agent: str, repos: Mapping[str, Path], trusted_refs: frozenset[str], actions: Mapping[str, Any], worktree_root: Path) -> bool:
     comments = client.comments()
-    from dkg.trusted_local_broker import parse_broker_ledger
+    from fossil_core.trusted_local_broker import parse_broker_ledger
     ledger = parse_broker_ledger(comments, now=datetime.now(UTC))
     candidates = [task for task in active_ready_privileged_tasks(comments) if task.repo in repos and task.action in actions and actions[task.action].access_class == task.access]
     task = next((item for item in candidates if item.task_id not in ledger.claims), None)

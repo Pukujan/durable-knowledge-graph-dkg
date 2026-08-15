@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 from jsonschema import ValidationError
 
-from dkg.benchmark_cases import (
+from fossil_core.benchmark_cases import (
     BenchmarkCaseSetError,
     load_benchmark_case_set,
     model_cases_from_case_set,

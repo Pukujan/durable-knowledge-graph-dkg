@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from jsonschema import ValidationError
 
-from dkg.event_store import DurableEventStore, IdempotencyConflict
+from fossil_core.event_store import DurableEventStore, IdempotencyConflict
 
 
 ROOT = Path(__file__).parents[1]

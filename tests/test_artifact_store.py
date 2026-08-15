@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from dkg.artifact_store import ArtifactIntegrityError, ArtifactStore
+from fossil_core.artifact_store import ArtifactIntegrityError, ArtifactStore
 
 
 def test_artifact_store_is_content_addressed_and_verifiable(tmp_path: Path):

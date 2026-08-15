@@ -5,13 +5,13 @@ import json
 import subprocess
 from pathlib import Path
 
-from dkg.answer_eval import (
+from fossil_core.answer_eval import (
     AnswerReliabilityCase,
     DeterministicEvidenceAnswerService,
     run_answer_reliability_benchmark,
 )
-from dkg.answer_pipeline import LineageResolvedModelService
-from dkg.pack_corpus import retrieval_documents_from_pack_fixtures
+from fossil_core.answer_pipeline import LineageResolvedModelService
+from fossil_core.pack_corpus import retrieval_documents_from_pack_fixtures
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_PLAN = ROOT / "benchmarks" / "post-gate2" / "answer-reliability-v1.json"

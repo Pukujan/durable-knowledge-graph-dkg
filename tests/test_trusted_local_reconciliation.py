@@ -4,8 +4,8 @@ from datetime import UTC, datetime
 
 import pytest
 
-from dkg.trusted_local_broker import QueueTask, reconcile_before_publication
-from dkg.trusted_local_runner import WorkOrderError
+from fossil_core.trusted_local_broker import QueueTask, reconcile_before_publication
+from fossil_core.trusted_local_runner import WorkOrderError
 
 
 NOW = datetime(2026, 8, 12, 17, 0, tzinfo=UTC)

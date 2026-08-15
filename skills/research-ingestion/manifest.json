@@ -1,11 +1,11 @@
 {
   "schema_version": "fossil.agent-skill.v1",
   "skill_id": "skill_research-ingestion",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "name": "Research ingestion",
-  "summary": "Preserve source evidence first, then propose provenance-rich durable knowledge events without flattening uncertainty.",
+  "summary": "Preserve source evidence first, then propose provenance-rich durable knowledge events with explicit evidence states and policy-gated promotion.",
   "methodology_ref": "SKILL.md",
   "capabilities": ["read", "propose", "validate", "commit"],
-  "triggers": ["ingest", "research", "source", "import", "evidence", "conversation"],
-  "risk_notes": "Primary/verbatim and reconstructed evidence must retain distinct status; durable commit precedes projection."
+  "triggers": ["ingest", "research", "source", "import", "evidence", "conversation", "provenance", "confidence"],
+  "risk_notes": "Primary/verbatim and reconstructed evidence must retain distinct status; model agreement is metadata rather than independent evidence; typed scores are not truth state; durable commit precedes projection."
 }

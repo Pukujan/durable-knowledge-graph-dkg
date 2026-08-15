@@ -5,10 +5,10 @@ from pathlib import Path
 
 import pytest
 
-from dkg.artifact_store import ArtifactStore
-from dkg.event_store import DurableEventStore
-from dkg.pack_fixture import PackFixtureIntegrityError, validate_pack_fixtures
-from dkg.source import SourceSnapshotStore
+from fossil_core.artifact_store import ArtifactStore
+from fossil_core.event_store import DurableEventStore
+from fossil_core.pack_fixture import PackFixtureIntegrityError, validate_pack_fixtures
+from fossil_core.source import SourceSnapshotStore
 
 
 COMMON = "pack_269099f7b2ba43b7a99b9427d64092de"

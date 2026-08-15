@@ -11,10 +11,10 @@ from pathlib import Path
 
 import pytest
 
-from dkg.artifact_store import ArtifactStore
-from dkg.event_store import DurableEventStore, IdempotencyConflict
-from dkg.projection.migration import SemanticSnapshot
-from dkg.projection.null import NullProjection
+from fossil_core.artifact_store import ArtifactStore
+from fossil_core.event_store import DurableEventStore, IdempotencyConflict
+from fossil_core.projection.migration import SemanticSnapshot
+from fossil_core.projection.null import NullProjection
 
 
 ROOT = Path(__file__).parents[1]

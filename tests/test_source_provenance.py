@@ -7,11 +7,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from dkg.artifact_store import ArtifactRedactedError, ArtifactStore
-from dkg.event_store import DurableEventStore
-from dkg.projection.graphiti import GraphitiProjectionAdapter
-from dkg.projection.ledger import ProjectionLedger
-from dkg.source import (
+from fossil_core.artifact_store import ArtifactRedactedError, ArtifactStore
+from fossil_core.event_store import DurableEventStore
+from fossil_core.projection.graphiti import GraphitiProjectionAdapter
+from fossil_core.projection.ledger import ProjectionLedger
+from fossil_core.source import (
     CitationIntegrityError,
     CitationLaunderingError,
     RedactionPolicy,

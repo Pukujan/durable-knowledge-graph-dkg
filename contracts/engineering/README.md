@@ -2,19 +2,53 @@
 
 This is a deliberately small, Git-versioned contract for bounded implementation
 work. It validates offline and never requires a live FOSSIL service, a model, or
-a secret. FOSSIL retrieval and the live GitHub read are supplied as evidence to
-`dkg.engineering_preflight.build_context_packet`.
+a secret. It is progressive disclosure, not a giant checklist: every substantial
+task answers the universal kernel; a classifier adds risk-triggered check packs
+only for the facets the task actually touches; everything else is explicitly
+`not_applicable` with a rationale. FOSSIL retrieval and the live GitHub read are
+supplied as evidence to `fossil_core.engineering_preflight.build_context_packet`.
 
-`CURRENT_AUTHORITY` establishes the current authority set only when supplied by
-an explicit lifecycle/authority source or the bounded live GitHub read. Retrieval
-rank is not an authority field. `SUPERSEDED_OR_HISTORICAL` material stays visible
-for lineage but cannot silently dispatch work. `CURRENT_STATE_UNRESOLVED`, an
-unknown source status, a material conflict, or a material unresolved assumption
-returns `dispatch_status: BLOCKED`.
+## Files
 
-The default GitHub reader is intentionally unauthenticated and reads no
-environment credentials. A trusted caller may inject an authenticated transport;
-ordinary pull-request CI should use fixtures or an injected secretless transport.
+- `engineering-constitution-v1.yaml` — the universal kernel and the source-distinction
+  rules every task must satisfy.
+- `task-trigger-matrix-v1.yaml` — the risk-facet to check-pack mapping and the
+  progressive-disclosure principle (trivial edits get the kernel only).
+- `preflight-v1.schema.json` — JSON Schema for a preflight receipt (identifiers,
+  risk facets + rationale, required checks with `answered`/`not_applicable`,
+  sources with freshness/version, unresolved assumptions, planned fault probes,
+  required closeout evidence).
+- `closeout-v1.schema.json` — JSON Schema for a closeout receipt (what changed,
+  contracts changed, tests + exact results, live/staging evidence, observed
+  failure, rollback/rebuild proof, new operational dependency, assumptions, and
+  lessons as `PROPOSAL`).
+- `examples/` — three scope-differentiated receipts that all validate:
+  `trivial-edit.json` (kernel only), `new-api.json` (kernel + API/service/
+  deployment/observability), `durable-cross-service-write.json` (kernel +
+  durability/transaction/idempotency/timeout-retry/partial-failure/compatibility/
+  recovery/security/observability).
+- `control-plane-contract-v1.json` — FOSSIL/Cortex/LiteLLM ownership and
+  correlation spine shared with the assurance workflow.
 
-The JSON schemas validate `preflight-v1` and `closeout-v1`. The Python module
-adds the fail-closed semantic checks required before a bounded WorkOrder is made.
+## How agents and CI use it
+
+The schemas validate offline and never require a live FOSSIL service, a model, or
+a secret. JSON Schema handles structure; `scripts/preflight_validate.py` adds the
+fail-closed semantic checks, most importantly that a stale or historical source is
+never silently treated as current authority.
+
+CLI:
+
+```sh
+python scripts/preflight_validate.py contracts/engineering/examples/*.json
+```
+
+The Python module `fossil_core.engineering_preflight` builds a task-scoped packet
+and returns `dispatch_status: BLOCKED` when material current-state is unresolved,
+and `READY_FOR_BOUNDED_WORKORDER` otherwise. FOSSIL retrieval and the live GitHub
+read are supplied as evidence; retrieval rank is never an authority field. The
+GitHub reader is intentionally unauthenticated by default.
+
+The canonical schema filenames (`preflight-v1.schema.json`,
+`closeout-v1.schema.json`) are stable and are referenced by downstream assurance
+workflows; do not rename them.

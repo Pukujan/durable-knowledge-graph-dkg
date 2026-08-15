@@ -287,7 +287,7 @@ def apply_release(
                 raise SupervisorError("detached build worktree origin mismatch")
             host.run(["docker", "build", "--label", f"org.opencontainers.image.revision={sha}", "-t", image, "-f", "docker/trusted-local-broker/Dockerfile", "."], cwd=worktree)
             candidate_id = _image_id(host, image)
-            host.run(["docker", "run", "--rm", "--network", "none", "--entrypoint", "python3", image, "-c", "import dkg"])
+            host.run(["docker", "run", "--rm", "--network", "none", "--entrypoint", "python3", image, "-c", "import fossil_core"])
         finally:
             host.run(["git", "-C", str(config.repository_path), "worktree", "remove", "--force", str(worktree)])
 

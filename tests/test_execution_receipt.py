@@ -5,17 +5,17 @@ from pathlib import Path
 
 from jsonschema import Draft202012Validator, FormatChecker
 
-from dkg.answer_eval import DeterministicEvidenceAnswerService
-from dkg.answer_pipeline import LineageResolvedModelService
-from dkg.context_security import UntrustedContextModelService
-from dkg.execution_receipt import (
+from fossil_core.answer_eval import DeterministicEvidenceAnswerService
+from fossil_core.answer_pipeline import LineageResolvedModelService
+from fossil_core.context_security import UntrustedContextModelService
+from fossil_core.execution_receipt import (
     QUERY_EXECUTION_RECEIPT_AUTHORITY,
     build_query_execution_receipt,
     build_service_invocation,
     compare_query_execution_receipts,
     execute_query_with_receipt,
 )
-from dkg.services import ServiceMetadata
+from fossil_core.services import ServiceMetadata
 
 PACK = "pack_receipt_fixture"
 
