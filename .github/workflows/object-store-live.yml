@@ -1,0 +1,177 @@
+name: OBJECT_STORE_LIVE
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Exact 40-character commit SHA to prove"
+        required: true
+        type: string
+      confirmation:
+        description: "Type OBJECT_STORE_LIVE to authorize the live proof"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fossil-object-store-live
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate explicit live dispatch
+        shell: bash
+        env:
+          FOSSIL_TARGET_SHA: ${{ inputs.ref }}
+          FOSSIL_LIVE_CONFIRMATION: ${{ inputs.confirmation }}
+        run: |
+          set -euo pipefail
+          if [[ "$FOSSIL_LIVE_CONFIRMATION" != "OBJECT_STORE_LIVE" ]]; then
+            echo "::error::Live object-store proof requires explicit OBJECT_STORE_LIVE confirmation"
+            exit 2
+          fi
+          if [[ ! "$FOSSIL_TARGET_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::Live object-store proof requires an exact 40-character lowercase commit SHA"
+            exit 2
+          fi
+
+  writer:
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: object-store-live
+    outputs:
+      proof_prefix: ${{ steps.proof_outputs.outputs.proof_prefix }}
+      fixture_identity: ${{ steps.proof_outputs.outputs.fixture_identity }}
+    env:
+      FOSSIL_TARGET_SHA: ${{ inputs.ref }}
+      FOSSIL_SOFTWARE_COMMIT: ${{ inputs.ref }}
+      FOSSIL_PROOF_PREFIX: fossil-live-proof/${{ github.run_id }}/${{ github.run_attempt }}
+      FOSSIL_PROOF_RECEIPT_PATH: ${{ runner.temp }}/writer-receipt.json
+      OBJECT_STORE_ENDPOINT: ${{ vars.R2_ENDPOINT }}
+      OBJECT_STORE_BUCKET: ${{ vars.R2_BUCKET }}
+      OBJECT_STORE_REGION: auto
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+      AWS_EC2_METADATA_DISABLED: "true"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Verify exact target checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual="$(git rev-parse HEAD)"
+          test "$actual" = "$FOSSIL_TARGET_SHA"
+
+      - name: Validate encrypted live configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=0
+          for name in OBJECT_STORE_ENDPOINT OBJECT_STORE_BUCKET AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "::error::BLOCKED_CREDENTIAL: required configuration $name is empty"
+              missing=1
+            fi
+          done
+          test "$missing" -eq 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install FOSSIL S3 runtime
+        run: python -m pip install -e '.[s3]'
+
+      - name: Run live durability writer
+        run: python scripts/live_object_store_proof.py write
+
+      - name: Publish non-secret handoff outputs
+        id: proof_outputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          fixture_identity="$(python -c 'import json, os; print(json.load(open(os.environ["FOSSIL_PROOF_RECEIPT_PATH"], encoding="utf-8"))["artifact_id"])')"
+          if [[ ! "$fixture_identity" =~ ^art_[0-9a-f]{32}$ ]]; then
+            echo "::error::writer receipt did not contain a deterministic artifact identity"
+            exit 2
+          fi
+          printf 'proof_prefix=%s\n' "$FOSSIL_PROOF_PREFIX" >> "$GITHUB_OUTPUT"
+          printf 'fixture_identity=%s\n' "$fixture_identity" >> "$GITHUB_OUTPUT"
+
+      - name: Upload sanitized writer receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: object-store-live-writer-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/writer-receipt.json
+          if-no-files-found: error
+
+  rebuild:
+    needs: writer
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: object-store-live
+    env:
+      FOSSIL_TARGET_SHA: ${{ inputs.ref }}
+      FOSSIL_SOFTWARE_COMMIT: ${{ inputs.ref }}
+      FOSSIL_PROOF_PREFIX: ${{ needs.writer.outputs.proof_prefix }}
+      FOSSIL_FIXTURE_IDENTITY: ${{ needs.writer.outputs.fixture_identity }}
+      FOSSIL_PROOF_RECEIPT_PATH: ${{ runner.temp }}/rebuild-receipt.json
+      OBJECT_STORE_ENDPOINT: ${{ vars.R2_ENDPOINT }}
+      OBJECT_STORE_BUCKET: ${{ vars.R2_BUCKET }}
+      OBJECT_STORE_REGION: auto
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+      AWS_EC2_METADATA_DISABLED: "true"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Verify exact target checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual="$(git rev-parse HEAD)"
+          test "$actual" = "$FOSSIL_TARGET_SHA"
+
+      - name: Validate encrypted live configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=0
+          for name in OBJECT_STORE_ENDPOINT OBJECT_STORE_BUCKET AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "::error::BLOCKED_CREDENTIAL: required configuration $name is empty"
+              missing=1
+            fi
+          done
+          test "$missing" -eq 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install FOSSIL S3 runtime
+        run: python -m pip install -e '.[s3]'
+
+      - name: Run fresh empty-runner rebuild twice
+        run: python scripts/live_object_store_rebuild_proof.py
+
+      - name: Upload sanitized rebuild receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: object-store-live-rebuild-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/rebuild-receipt.json
+          if-no-files-found: error
