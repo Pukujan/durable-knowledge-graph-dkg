@@ -16,7 +16,7 @@ The durable substrate is **DICS — Durable Intellectual Corpus System**.
 
 Repository names, graph namespaces, and physical database placement are operational details. Knowledge-pack identity remains the stable `pack_id`.
 
-## Current coordination state — 2026-08-14
+## Current coordination state — 2026-08-15
 
 FOSSIL's durable architecture is stable; current work is a **FOSSIL-only verification and continuation campaign**.
 
@@ -36,8 +36,10 @@ Completed dependencies must not be reopened without actual regression evidence:
 Current FOSSIL baseline at this documentation branch point:
 
 - `main` is `27764c4ab20c196ee0bc76a0d020fc961a385c4e`, containing the merged PR #114 Graphiti/dependency repair and #82/#84/#88 fan-in.
-- PR #115 is rebased at `c4432f577e6182efd4126c3bbd1171a1fb58cbbd`. Clean local verification passes, but exact-head hosted Graphiti integration exposed a new zero-entity semantic failure. `FOSSIL-07` therefore stopped BLOCKED rather than weakening acceptance.
-- `FOSSIL-07A` is the bounded repeatability/root-cause lane for that live Graphiti failure. Do not treat rerun-until-green as acceptance.
+- PR #115 remains at `c4432f577e6182efd4126c3bbd1171a1fb58cbbd`. Clean local verification passes.
+- `FOSSIL-07A` completed a bounded repeatability experiment and closed **BLOCKED / NONDETERMINISTIC_GATE**: identical Graphiti runs on the same exact SHA produced materially different extraction outcomes (`0 entities/0 facts`, `5 entities/0 facts` with incomplete timeout, then `5 entities/2 facts` with final PASS).
+- The variability is localized to the Graphiti LLM extraction/interpretation boundary, not the #115 receipt/schema contract or repaired dependency/import path. A later green rerun is not stable acceptance.
+- PR #115 must not merge until the required semantic gate is stabilized without lowering what it proves.
 - #87 secretless/local-fixture storage work remains gated until the current baseline is trustworthy.
 
 Always re-fetch #94 before acting; the exact heads above are historical anchors, not a substitute for live claim/CI state.
@@ -94,4 +96,4 @@ A **projection** is a rebuildable representation optimized for a workload. Neo4j
 
 ## Current continuation
 
-Resolve the current FOSSIL baseline mechanically before expanding the roadmap: exact-head verification of the open FOSSIL work, no weakened gates, owner-approved merges only, then the eligible secretless/local-fixture portion of #87. Workstream #47 remains later retrieval/model-bakeoff roadmap work and is not the current execution authority.
+Resolve the current FOSSIL baseline mechanically before expanding the roadmap: stabilize the required Graphiti semantic acceptance path without rerun-until-green or weakened semantics; verify the actual exact head; use owner-approved merges only; reconcile the remaining open FOSSIL work on the resulting baseline; then proceed to the eligible secretless/local-fixture portion of #87. Workstream #47 remains later retrieval/model-bakeoff roadmap work and is not the current execution authority.
