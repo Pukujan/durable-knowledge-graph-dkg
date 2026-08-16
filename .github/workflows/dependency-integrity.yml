@@ -6,18 +6,37 @@ on:
     paths:
       - "pyproject.toml"
       - "src/**"
+      - "scripts/architecture_inventory.py"
+      - "scripts/check_architecture_boundaries.py"
+      - "tests/test_architecture_inventory.py"
+      - "tests/test_architecture_boundaries.py"
       - ".github/workflows/dependency-integrity.yml"
   push:
     branches: [main]
     paths:
       - "pyproject.toml"
       - "src/**"
+      - "scripts/architecture_inventory.py"
+      - "scripts/check_architecture_boundaries.py"
+      - "tests/test_architecture_inventory.py"
+      - "tests/test_architecture_boundaries.py"
       - ".github/workflows/dependency-integrity.yml"
 
 permissions:
   contents: read
 
 jobs:
+  architecture-boundaries:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Enforce modular-monolith dependency boundaries
+        run: python scripts/check_architecture_boundaries.py
+
   pyproject-consistency:
     runs-on: ubuntu-latest
     timeout-minutes: 10
