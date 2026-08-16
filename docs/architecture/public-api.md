@@ -43,6 +43,18 @@ from fossil_core.domain.lifecycle import (
 
 This module contains deterministic domain state and invariants only. Architecture CI forbids it from importing ports, concrete adapters, or legacy storage shims.
 
+## Canonical pack-boundary domain
+
+Pure pack access and boundary checks are canonical under:
+
+```python
+from fossil_core.domain.pack import PackAccess, PackBoundaryError
+```
+
+`PackAccess` is a domain capability describing readable mounts and writable targets. It has no JSON Schema, filesystem, storage-provider, or runtime dependency.
+
+`KnowledgePackValidator` intentionally remains available from `fossil_core` / `fossil_core.pack`. It performs JSON Schema-backed manifest validation and file loading, so this bounded move does not relabel that validation/integration concern as pure domain logic.
+
 ## Canonical provider-neutral storage ports
 
 New code that depends on storage capabilities rather than a concrete implementation should use:
@@ -84,6 +96,8 @@ The following flat paths remain valid only to prevent migration breakage:
 | `fossil_core.s3_storage` | `fossil_core.adapters.s3` |
 
 They intentionally preserve object identity with canonical classes/protocols. The lifecycle shim also preserves its historical implicit star-import names rather than adding a new `__all__`. No runtime deprecation warning is added to these `fossil_core` compatibility paths because that would mix behavior changes into structural migration.
+
+`fossil_core.pack` is not listed as compatibility-only: it remains the active home of `KnowledgePackValidator` while `PackAccess` and `PackBoundaryError` are identity aliases to the pure domain boundary.
 
 Removal is not authorized by this document. Compatibility modules may be removed only in an explicit cleanup phase after first-party consumers, clean-install tests, cross-repository contracts, and required hosted gates demonstrate that the old paths are no longer needed.
 
