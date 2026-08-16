@@ -187,13 +187,38 @@ def _assert_raises(exc_type: type[BaseException], func: Any, message: str) -> No
     raise RuntimeError(message)
 
 
+def _verify_bucket_access(client: CountingClient, *, bucket: str, prefix: str) -> None:
+    """Verify bucket access with the object-scoped S3 operation we need.
+
+    R2 Object Read & Write credentials are scoped to objects in the proof
+    bucket.  ``HeadBucket`` is a bucket-level probe and can be rejected by a
+    correctly scoped credential even when the bucket, endpoint, and object
+    permissions are valid.  Listing only this run's empty proof prefix checks
+    the same endpoint/bucket and the required object-list capability without
+    enumerating unrelated remote state.
+    """
+
+    response = client.list_objects_v2(
+        Bucket=bucket,
+        Prefix=f"{prefix.strip('/')}/",
+        MaxKeys=1,
+    )
+    if (
+        not isinstance(response, dict)
+        or not isinstance(response.get("KeyCount"), int)
+        or not isinstance(response.get("IsTruncated"), bool)
+    ):
+        raise RuntimeError("object-store access probe returned a malformed response")
+
+
 def write_phase() -> None:
     started = time.monotonic()
     bucket = _required("OBJECT_STORE_BUCKET")
     software_commit = _required("FOSSIL_SOFTWARE_COMMIT")
+    proof_prefix = _prefix()
     client, artifacts, events = _stores()
 
-    client.head_bucket(Bucket=bucket)
+    _verify_bucket_access(client, bucket=bucket, prefix=proof_prefix)
 
     artifact_payload = b"FOSSIL OBJECT_STORE_LIVE canonical artifact v1\n"
     artifact = artifacts.put_bytes(artifact_payload, media_type="text/plain")
