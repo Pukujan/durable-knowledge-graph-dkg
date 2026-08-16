@@ -366,6 +366,10 @@ class ConversationLineage:
                 raise ConversationProvenanceError(
                     "current conclusion ref must point to current position state"
                 )
+            if node.get("epistemic_class") == "unproven_hypothesis":
+                raise ConversationProvenanceError(
+                    "unproven hypothesis cannot be promoted to a current conclusion"
+                )
 
     def node(self, node_id: str) -> dict[str, Any]:
         return copy.deepcopy(self.nodes[node_id])

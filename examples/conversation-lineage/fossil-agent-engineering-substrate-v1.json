@@ -1,0 +1,249 @@
+{
+  "schema_version": "fossil.conversation-lineage.v1",
+  "conversation_id": "conv_fossil_agent_engineering_20260816",
+  "lineage_id": "lin_fossil_agent_engineering_20260816",
+  "title": "FOSSIL AI-engineering substrate and admission discussion",
+  "source_path": "docs/recovery/2026-08-16-fossil-handoff-process-transcript.md",
+  "source_evidence_status": "reconstructed",
+  "reconstruction_basis_refs": [
+    "https://chatgpt.com/share/6a820cf1-1060-83ea-9831-82a8ae4c4ddb?ogimg=plain"
+  ],
+  "current_conclusion_refs": [
+    "ln_fossil_workflow_contract_001",
+    "ln_fossil_intent_broker_001",
+    "ln_fossil_human_time_001",
+    "ln_fossil_planes_001",
+    "ln_fossil_evidence_plane_001",
+    "ln_fossil_admission_adapter_001",
+    "ln_fossil_promotion_inputs_001",
+    "ln_fossil_closeout_001",
+    "ln_fossil_packs_001",
+    "ln_fossil_rag_build_001",
+    "ln_fossil_model_hosting_001"
+  ],
+  "required_path": [
+    "ln_fossil_request_001",
+    "ln_fossil_workflow_contract_001",
+    "ln_fossil_intent_broker_001",
+    "ln_fossil_qa_checkpoints_001",
+    "ln_fossil_planes_001",
+    "ln_fossil_evidence_plane_001",
+    "ln_fossil_admission_adapter_001",
+    "ln_fossil_packs_001",
+    "ln_fossil_rag_build_001"
+  ],
+  "benchmark_cases": [
+    {
+      "case_id": "methodology-is-workflow-not-skill",
+      "expected_node_ids": ["ln_fossil_workflow_contract_001", "ln_fossil_intent_broker_001"],
+      "expected_epistemic_classes": ["architectural_synthesis"]
+    },
+    {
+      "case_id": "closeout-is-not-proof",
+      "expected_node_ids": ["ln_fossil_closeout_001", "ln_fossil_promotion_inputs_001"],
+      "expected_epistemic_classes": ["architectural_synthesis"]
+    },
+    {
+      "case_id": "handoff-state-needs-live-verification",
+      "expected_node_ids": ["ln_fossil_handoff_observation_001", "ln_fossil_live_gap_001"],
+      "expected_epistemic_classes": ["repo_observation", "challenge"],
+      "forbidden_current_conclusion": true
+    }
+  ],
+  "nodes": [
+    {
+      "node_id": "ln_fossil_request_001",
+      "kind": "question",
+      "label": "Represent repeatable engineering methodology without turning every workflow into a skill",
+      "text": "Creating a skill for every repeatable engineering methodology or deterministic pipeline does not work.",
+      "source_turn": 0,
+      "source_marker": "Creating a skill for every repeatable engineering methodology or deterministic",
+      "epistemic_class": "repo_observation",
+      "position_state": "historical"
+    },
+    {
+      "node_id": "ln_fossil_workflow_contract_001",
+      "kind": "decision",
+      "label": "Repeatable methodology needs an executable workflow contract, not only a skill",
+      "text": "Do not treat repeatable engineering methodology as a skill.",
+      "source_turn": 1,
+      "source_marker": "Do not treat repeatable engineering methodology as a skill.",
+      "epistemic_class": "architectural_synthesis",
+      "operational_state": "proposed",
+      "applicability_scope": {"surface": "repeatable engineering workflows"},
+      "position_state": "current"
+    },
+    {
+      "node_id": "ln_fossil_intent_broker_001",
+      "kind": "decision",
+      "label": "Place an Intent/Requirements Broker before implementation",
+      "text": "Put a separate Intent/Requirements Broker before implementation.",
+      "source_turn": 3,
+      "source_marker": "Put a separate Intent/Requirements Broker before implementation.",
+      "epistemic_class": "architectural_synthesis",
+      "operational_state": "proposed",
+      "applicability_scope": {"surface": "requirements elicitation and implementation entry"},
+      "position_state": "current"
+    },
+    {
+      "node_id": "ln_fossil_qa_checkpoints_001",
+      "kind": "conclusion",
+      "label": "Intent compilation must produce versioned checkpoints and acceptance oracles",
+      "text": "The purpose is to convert vague intent into an executable behavioral contract with checkpoints and acceptance oracles.",
+      "source_turn": 3,
+      "source_marker": "clarification when tests expose a gap. The purpose is to convert vague intent",
+      "epistemic_class": "architectural_synthesis",
+      "operational_state": "proposed",
+      "applicability_scope": {"surface": "requirements and acceptance"},
+      "position_state": "current"
+    },
+    {
+      "node_id": "ln_fossil_human_time_001",
+      "kind": "decision",
+      "label": "Question selection should optimize human-time value",
+      "text": "The broker should optimize for human-time value, not maximum conversation length.",
+      "source_turn": 3,
+      "source_marker": "The broker should optimize for human-time value, not maximum conversation length.",
+      "epistemic_class": "architectural_synthesis",
+      "operational_state": "proposed",
+      "applicability_scope": {"surface": "human-agent interaction"},
+      "position_state": "current"
+    },
+    {
+      "node_id": "ln_fossil_planes_001",
+      "kind": "decision",
+      "label": "Separate intent, execution, verification, and durable evidence planes",
+      "text": "FOSSIL should be the durable knowledge/evidence plane of a larger AI-engineering substrate, not an undifferentiated store of every generated artifact.",
+      "source_turn": 5,
+      "source_marker": "FOSSIL should not become a dumping ground for literally everything. It is the",
+      "epistemic_class": "architectural_synthesis",
+      "operational_state": "proposed",
+      "applicability_scope": {"surface": "AI-engineering system architecture"},
+      "position_state": "current"
+    },
+    {
+      "node_id": "ln_fossil_evidence_plane_001",
+      "kind": "decision",
+      "label": "Durable FOSSIL records must preserve provenance without promoting every sentence to truth",
+      "text": "FOSSIL must not write every sentence as truth.",
+      "source_turn": 5,
+      "source_marker": "FOSSIL must not write every sentence as truth.",
+      "epistemic_class": "architectural_synthesis",
+      "operational_state": "proposed",
+      "applicability_scope": {"surface": "durable knowledge admission"},
+      "position_state": "current"
+    },
+    {
+      "node_id": "ln_fossil_admission_adapter_001",
+      "kind": "decision",
+      "label": "Prototype a knowledge-admission/promotion controller behind an adapter",
+      "text": "Prototype it behind an adapter rather than rewriting the core.",
+      "source_turn": 7,
+      "source_marker": "domain, or common knowledge promotion. Prototype it behind an adapter rather",
+      "epistemic_class": "architectural_synthesis",
+      "operational_state": "proposed",
+      "applicability_scope": {"surface": "claim promotion and knowledge admission"},
+      "position_state": "current"
+    },
+    {
+      "node_id": "ln_fossil_promotion_inputs_001",
+      "kind": "decision",
+      "label": "Promotion inputs remain distinguishable by evidence type and authority",
+      "text": "Benchmark numbers, user outcomes, human validation, shadow runs, and canary runs should remain distinguishable promotion inputs rather than being flattened into one quality tier.",
+      "source_turn": 8,
+      "source_marker": "evidence; benchmark numbers, user outcomes, human validation, shadow runs, and",
+      "epistemic_class": "architectural_synthesis",
+      "operational_state": "proposed",
+      "applicability_scope": {"surface": "promotion policy"},
+      "position_state": "current"
+    },
+    {
+      "node_id": "ln_fossil_closeout_001",
+      "kind": "decision",
+      "label": "Closeout lessons are proposals, not evidence of the underlying outcome",
+      "text": "Closeout lessons are proposals, not evidence; model agreement is not external evidence.",
+      "source_turn": 8,
+      "source_marker": "Closeout lessons are proposals, not evidence; model agreement is not external",
+      "epistemic_class": "architectural_synthesis",
+      "operational_state": "proposed",
+      "applicability_scope": {"surface": "closeout and learning records"},
+      "position_state": "current"
+    },
+    {
+      "node_id": "ln_fossil_packs_001",
+      "kind": "decision",
+      "label": "Packs are knowledge boundaries and upward promotion is explicit",
+      "text": "Packs are knowledge boundaries: project packs may mount shared/domain packs read-only, and promotion upward is explicit.",
+      "source_turn": 8,
+      "source_marker": "Packs are knowledge",
+      "epistemic_class": "architectural_synthesis",
+      "operational_state": "proposed",
+      "applicability_scope": {"surface": "pack access and promotion"},
+      "position_state": "current"
+    },
+    {
+      "node_id": "ln_fossil_rag_build_001",
+      "kind": "decision",
+      "label": "FOSSIL needs one concrete working RAG path for agent use",
+      "text": "FOSSIL still needs one concrete working RAG projection and retrieval path so agents can use it; replaceable components are not optional runtime capability.",
+      "source_turn": 8,
+      "source_marker": "upward is explicit. FOSSIL still needs one concrete working RAG projection and",
+      "epistemic_class": "architectural_synthesis",
+      "operational_state": "proposed",
+      "applicability_scope": {"surface": "retrieval and agent preflight"},
+      "position_state": "current"
+    },
+    {
+      "node_id": "ln_fossil_model_hosting_001",
+      "kind": "decision",
+      "label": "LiteLLM hosted embedding/reranking is optional benchmark infrastructure",
+      "text": "LiteLLM embedding/reranking is optional benchmark infrastructure rather than a permanent FOSSIL requirement.",
+      "source_turn": 9,
+      "source_marker": "LiteLLM embedding/reranking is optional benchmark infrastructure",
+      "epistemic_class": "architectural_synthesis",
+      "operational_state": "proposed",
+      "applicability_scope": {"surface": "retrieval model infrastructure"},
+      "position_state": "current"
+    },
+    {
+      "node_id": "ln_fossil_handoff_observation_001",
+      "kind": "observation",
+      "label": "The conversation reports a historical R2/main-branch handoff state",
+      "text": "The conversation’s reported R2 storage proof and main-branch handoff state are operational claims",
+      "source_turn": 9,
+      "source_marker": "hosting is not mandatory infrastructure. The conversation’s reported R2 storage",
+      "epistemic_class": "repo_observation",
+      "operational_state": "candidate",
+      "applicability_scope": {"surface": "historical operational handoff"},
+      "position_state": "historical"
+    },
+    {
+      "node_id": "ln_fossil_live_gap_001",
+      "kind": "challenge",
+      "label": "Historical handoff claims require live repository and workflow verification",
+      "text": "The conversation’s reported R2 storage proof and main-branch handoff state are operational claims to verify against the live repository and workflow before relying on them.",
+      "source_turn": 9,
+      "source_marker": "proof and main-branch handoff state are operational claims to verify against the",
+      "epistemic_class": "challenge",
+      "operational_state": "candidate",
+      "applicability_scope": {"surface": "live GitHub, CI, and R2 verification"},
+      "position_state": "unresolved"
+    }
+  ],
+  "edges": [
+    {"edge_id": "le_fossil_request_workflow", "source_node_id": "ln_fossil_request_001", "target_node_id": "ln_fossil_workflow_contract_001", "relation_type": "leads_to"},
+    {"edge_id": "le_fossil_workflow_broker", "source_node_id": "ln_fossil_workflow_contract_001", "target_node_id": "ln_fossil_intent_broker_001", "relation_type": "supports"},
+    {"edge_id": "le_fossil_broker_checkpoints", "source_node_id": "ln_fossil_intent_broker_001", "target_node_id": "ln_fossil_qa_checkpoints_001", "relation_type": "leads_to"},
+    {"edge_id": "le_fossil_broker_human_time", "source_node_id": "ln_fossil_intent_broker_001", "target_node_id": "ln_fossil_human_time_001", "relation_type": "supports"},
+    {"edge_id": "le_fossil_checkpoints_planes", "source_node_id": "ln_fossil_qa_checkpoints_001", "target_node_id": "ln_fossil_planes_001", "relation_type": "depends_on"},
+    {"edge_id": "le_fossil_planes_evidence", "source_node_id": "ln_fossil_planes_001", "target_node_id": "ln_fossil_evidence_plane_001", "relation_type": "supports"},
+    {"edge_id": "le_fossil_evidence_admission", "source_node_id": "ln_fossil_evidence_plane_001", "target_node_id": "ln_fossil_admission_adapter_001", "relation_type": "leads_to"},
+    {"edge_id": "le_fossil_admission_inputs", "source_node_id": "ln_fossil_admission_adapter_001", "target_node_id": "ln_fossil_promotion_inputs_001", "relation_type": "supports"},
+    {"edge_id": "le_fossil_admission_closeout", "source_node_id": "ln_fossil_admission_adapter_001", "target_node_id": "ln_fossil_closeout_001", "relation_type": "supports"},
+    {"edge_id": "le_fossil_admission_packs", "source_node_id": "ln_fossil_admission_adapter_001", "target_node_id": "ln_fossil_packs_001", "relation_type": "depends_on"},
+    {"edge_id": "le_fossil_packs_rag", "source_node_id": "ln_fossil_packs_001", "target_node_id": "ln_fossil_rag_build_001", "relation_type": "leads_to"},
+    {"edge_id": "le_fossil_rag_models", "source_node_id": "ln_fossil_rag_build_001", "target_node_id": "ln_fossil_model_hosting_001", "relation_type": "supports"},
+    {"edge_id": "le_fossil_handoff_gap", "source_node_id": "ln_fossil_handoff_observation_001", "target_node_id": "ln_fossil_live_gap_001", "relation_type": "challenges"},
+    {"edge_id": "le_fossil_rag_live_gap", "source_node_id": "ln_fossil_rag_build_001", "target_node_id": "ln_fossil_live_gap_001", "relation_type": "depends_on"}
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "contract_version": "dkg.pack.v1",
+  "pack_id": "pack_time_to_crawl_scope_20260816",
+  "name": "Time to Crawl project scope and methodology",
+  "kind": "experimental",
+  "description": "Reconstructed shared conversation preserved as candidate-only project scope, methodology, and lineage evidence for the separate Time to Crawl product.",
+  "schema_version": "dkg.event.v1",
+  "ontology_requirements": [
+    {
+      "ontology_id": "dkg.core",
+      "version_constraint": ">=1.0.0 <2.0.0"
+    }
+  ],
+  "dependencies": [],
+  "read_mounts": ["pack_time_to_crawl_scope_20260816"],
+  "write_targets": ["pack_time_to_crawl_scope_20260816"],
+  "event_roots": ["events/"],
+  "artifact_manifests": ["artifacts/manifest.jsonl"],
+  "placement_hint": "dedicated",
+  "projection_namespace": "time-to-crawl-scope",
+  "source_policy_ref": "policies/source-quality-v1.md",
+  "created_at": "2026-08-16T00:00:00Z"
+}

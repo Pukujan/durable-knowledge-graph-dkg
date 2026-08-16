@@ -61,6 +61,51 @@
           "position_state": {
             "enum": ["current", "historical", "opposing", "unresolved"]
           },
+          "epistemic_class": {
+            "enum": [
+              "repo_observation",
+              "external_evidence_claim",
+              "architectural_synthesis",
+              "unproven_hypothesis",
+              "challenge"
+            ]
+          },
+          "operational_state": {
+            "enum": [
+              "not_applicable",
+              "proposed",
+              "candidate",
+              "current_approved",
+              "stale_pending_review",
+              "rejected",
+              "superseded"
+            ]
+          },
+          "evidence_basis": {
+            "type": "array",
+            "items": {"type": "string", "minLength": 1},
+            "uniqueItems": true
+          },
+          "applicability_scope": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "critique_purpose": {
+            "enum": [
+              "premise",
+              "architecture_boundary",
+              "failure_security",
+              "measurement_generalization",
+              "scope_economics",
+              "trust_calibration",
+              "source_quality"
+            ]
+          },
+          "external_source_refs": {
+            "type": "array",
+            "items": {"type": "string", "format": "uri"},
+            "uniqueItems": true
+          },
           "source_message_refs": {
             "type": "array",
             "minItems": 1,

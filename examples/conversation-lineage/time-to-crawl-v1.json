@@ -1,0 +1,177 @@
+{
+  "schema_version": "fossil.conversation-lineage.v1",
+  "conversation_id": "conv_time_to_crawl_scope_20260816",
+  "lineage_id": "lin_time_to_crawl_scope_20260816",
+  "title": "Time to Crawl project scope and methodology",
+  "source_path": "docs/recovery/2026-08-16-time-to-crawl-transcript.md",
+  "source_evidence_status": "reconstructed",
+  "reconstruction_basis_refs": [
+    "https://chatgpt.com/share/6a81ec29-8d24-83ea-9fdd-db97df8ee576?ogimg=plain"
+  ],
+  "current_conclusion_refs": [
+    "ln_time_scope_001",
+    "ln_time_shopper_eval_001",
+    "ln_time_boundaries_001",
+    "ln_time_scope_guard_001",
+    "ln_time_llm_boundary_001",
+    "ln_time_storage_001",
+    "ln_time_methodology_001",
+    "ln_time_walking_skeleton_001"
+  ],
+  "required_path": [
+    "ln_time_request_001",
+    "ln_time_scope_001",
+    "ln_time_shopper_eval_001",
+    "ln_time_methodology_001",
+    "ln_time_walking_skeleton_001"
+  ],
+  "benchmark_cases": [
+    {
+      "case_id": "scope-is-synthesis",
+      "expected_node_ids": ["ln_time_scope_001", "ln_time_boundaries_001"],
+      "expected_epistemic_classes": ["architectural_synthesis"]
+    },
+    {
+      "case_id": "shopper-outcome-is-current-decision",
+      "expected_node_ids": ["ln_time_shopper_eval_001"],
+      "expected_epistemic_classes": ["architectural_synthesis"]
+    },
+    {
+      "case_id": "unverified-deployment-is-not-conclusion",
+      "expected_node_ids": ["ln_time_vps_gap_001"],
+      "expected_epistemic_classes": ["challenge"],
+      "forbidden_current_conclusion": true
+    }
+  ],
+  "nodes": [
+    {
+      "node_id": "ln_time_request_001",
+      "kind": "question",
+      "label": "Ingest the Time to Crawl research into FOSSIL before issue creation",
+      "text": "Please ingest this research into my FOSSIL Core repository.",
+      "source_turn": 0,
+      "source_marker": "Please ingest this research into my FOSSIL Core repository.",
+      "epistemic_class": "repo_observation",
+      "position_state": "historical"
+    },
+    {
+      "node_id": "ln_time_scope_001",
+      "kind": "decision",
+      "label": "Time to Crawl is a modular deal-intelligence monolith with Merchant Scout and Deal Finder subsystems",
+      "text": "Time to Crawl is a modular deal-intelligence platform.",
+      "source_turn": 1,
+      "source_marker": "Time to Crawl is a modular deal-intelligence platform.",
+      "epistemic_class": "architectural_synthesis",
+      "operational_state": "proposed",
+      "applicability_scope": {"project": "time-to-crawl"},
+      "position_state": "current"
+    },
+    {
+      "node_id": "ln_time_shopper_eval_001",
+      "kind": "decision",
+      "label": "Synthetic shopper outcome is the top-level acceptance condition",
+      "text": "Make a black-box synthetic-shopper evaluation the top-level acceptance test.",
+      "source_turn": 3,
+      "source_marker": "Make a black-box synthetic-shopper evaluation the top-level acceptance test.",
+      "epistemic_class": "architectural_synthesis",
+      "operational_state": "proposed",
+      "applicability_scope": {"surface": "product/system acceptance"},
+      "position_state": "current"
+    },
+    {
+      "node_id": "ln_time_boundaries_001",
+      "kind": "decision",
+      "label": "Use a modular monolith with ports-and-adapters and thin MVC boundaries",
+      "text": "Build a modular monolith with ports-and-adapters boundaries.",
+      "source_turn": 5,
+      "source_marker": "Build a modular monolith with ports-and-adapters boundaries.",
+      "epistemic_class": "architectural_synthesis",
+      "operational_state": "proposed",
+      "applicability_scope": {"surface": "application architecture"},
+      "position_state": "current"
+    },
+    {
+      "node_id": "ln_time_scope_guard_001",
+      "kind": "decision",
+      "label": "Deterministic Scope Guard authorizes crawl boundaries before enqueue and execution",
+      "text": "Treat all Internet content as untrusted: approved sources receive configured policies, unknown sources enter quarantine, and a deterministic Scope Guard authorizes domains, redirects, methods, ports, budgets, and network targets.",
+      "source_turn": 5,
+      "source_marker": "Treat all Internet content as untrusted: approved sources receive configured",
+      "epistemic_class": "architectural_synthesis",
+      "operational_state": "proposed",
+      "applicability_scope": {"surface": "crawler security and politeness"},
+      "position_state": "current"
+    },
+    {
+      "node_id": "ln_time_llm_boundary_001",
+      "kind": "decision",
+      "label": "LLMs may extract or recommend but deterministic validation and policy authorize",
+      "text": "LLMs may classify, extract, or recommend; deterministic policy validates and authorizes.",
+      "source_turn": 5,
+      "source_marker": "LLMs may classify, extract, or recommend; deterministic policy validates and",
+      "epistemic_class": "architectural_synthesis",
+      "operational_state": "proposed",
+      "applicability_scope": {"surface": "inference and execution boundary"},
+      "position_state": "current"
+    },
+    {
+      "node_id": "ln_time_storage_001",
+      "kind": "decision",
+      "label": "PostgreSQL is live canonical state; object storage preserves raw evidence; exports are interchange",
+      "text": "Use PostgreSQL for canonical live state, R2/object storage for raw evidence, and CSV/Parquet for exports and analysis.",
+      "source_turn": 5,
+      "source_marker": "Use PostgreSQL for canonical live state, R2/object storage for raw evidence,",
+      "epistemic_class": "architectural_synthesis",
+      "operational_state": "proposed",
+      "applicability_scope": {"surface": "storage and provenance"},
+      "position_state": "current"
+    },
+    {
+      "node_id": "ln_time_methodology_001",
+      "kind": "decision",
+      "label": "Development is spec-driven, evidence-led, and enforced by architecture, type, test, documentation, and scope gates",
+      "text": "The implementation method is spec-driven and evidence-led.",
+      "source_turn": 7,
+      "source_marker": "The implementation method is spec-driven and evidence-led.",
+      "epistemic_class": "architectural_synthesis",
+      "operational_state": "proposed",
+      "applicability_scope": {"surface": "engineering methodology"},
+      "position_state": "current"
+    },
+    {
+      "node_id": "ln_time_walking_skeleton_001",
+      "kind": "decision",
+      "label": "Start with a real walking skeleton through every mandatory boundary",
+      "text": "Then build one thin end-to-end path through discovery, scope enforcement, frontier, fetch, raw artifact, extraction, product/offer persistence, ranking, API, export, telemetry, and verification.",
+      "source_turn": 7,
+      "source_marker": "Then build one thin end-to-end path through",
+      "epistemic_class": "architectural_synthesis",
+      "operational_state": "proposed",
+      "applicability_scope": {"surface": "initial delivery method"},
+      "position_state": "current"
+    },
+    {
+      "node_id": "ln_time_vps_gap_001",
+      "kind": "challenge",
+      "label": "VPS and tailnet capabilities remain an execution-time proof gap",
+      "text": "Required environment checks must be declared.",
+      "source_turn": 7,
+      "source_marker": "declare VPS-required checks explicitly",
+      "epistemic_class": "challenge",
+      "operational_state": "candidate",
+      "applicability_scope": {"surface": "VPS, browser isolation, firewall, and live-provider verification"},
+      "position_state": "unresolved"
+    }
+  ],
+  "edges": [
+    {"edge_id": "le_time_request_scope", "source_node_id": "ln_time_request_001", "target_node_id": "ln_time_scope_001", "relation_type": "leads_to"},
+    {"edge_id": "le_time_scope_shopper", "source_node_id": "ln_time_scope_001", "target_node_id": "ln_time_shopper_eval_001", "relation_type": "supports"},
+    {"edge_id": "le_time_scope_boundaries", "source_node_id": "ln_time_scope_001", "target_node_id": "ln_time_boundaries_001", "relation_type": "supports"},
+    {"edge_id": "le_time_boundaries_guard", "source_node_id": "ln_time_boundaries_001", "target_node_id": "ln_time_scope_guard_001", "relation_type": "depends_on"},
+    {"edge_id": "le_time_guard_llm", "source_node_id": "ln_time_scope_guard_001", "target_node_id": "ln_time_llm_boundary_001", "relation_type": "supports"},
+    {"edge_id": "le_time_boundaries_storage", "source_node_id": "ln_time_boundaries_001", "target_node_id": "ln_time_storage_001", "relation_type": "supports"},
+    {"edge_id": "le_time_shopper_method", "source_node_id": "ln_time_shopper_eval_001", "target_node_id": "ln_time_methodology_001", "relation_type": "leads_to"},
+    {"edge_id": "le_time_method_skeleton", "source_node_id": "ln_time_methodology_001", "target_node_id": "ln_time_walking_skeleton_001", "relation_type": "leads_to"},
+    {"edge_id": "le_time_skeleton_vps_gap", "source_node_id": "ln_time_walking_skeleton_001", "target_node_id": "ln_time_vps_gap_001", "relation_type": "challenges"}
+  ]
+}
