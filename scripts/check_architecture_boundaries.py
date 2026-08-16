@@ -12,6 +12,7 @@ PACKAGE = "fossil_core"
 CANONICAL_MODULES = {
     "fossil_core.domain",
     "fossil_core.domain.lifecycle",
+    "fossil_core.domain.pack",
     "fossil_core.ports",
     "fossil_core.ports.artifact_store",
     "fossil_core.ports.event_store",
