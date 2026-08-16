@@ -1,6 +1,6 @@
 # FOSSIL Python public API
 
-Status: Phase 3 public-API contract for #82 under architecture authority #81 and #86.
+Status: versioned public-API contract for #82 under architecture authority #81 and #86.
 
 The machine-readable source of truth is [`contracts/python-public-api-v1.json`](../../contracts/python-public-api-v1.json). Tests must fail if the declared imports, `__all__` surfaces, or compatibility aliases drift from that contract.
 
@@ -24,7 +24,24 @@ from fossil_core import (
 )
 ```
 
-This is the compatibility-stable root surface. Phase 3 does not remove, rename, or warn on any of these imports.
+This is the compatibility-stable root surface. Bounded migration does not remove, rename, or warn on any of these imports.
+
+## Canonical lifecycle domain
+
+New code that works directly with claim/relation lifecycle semantics should use the pure domain boundary:
+
+```python
+from fossil_core.domain.lifecycle import (
+    CLAIM_STATES,
+    RELATION_STATES,
+    RELATION_TYPES,
+    KnowledgeState,
+    LifecycleError,
+    RelationRecord,
+)
+```
+
+This module contains deterministic domain state and invariants only. Architecture CI forbids it from importing ports, concrete adapters, or legacy storage shims.
 
 ## Canonical provider-neutral storage ports
 
@@ -34,7 +51,7 @@ New code that depends on storage capabilities rather than a concrete implementat
 from fossil_core.ports import ArtifactStorePort, EventStorePort
 ```
 
-These are the canonical provider-neutral storage interfaces. Application/domain code should depend on these boundaries rather than on S3/R2/filesystem implementation details when a port is sufficient.
+These are the canonical provider-neutral storage interfaces. Application/domain code should depend on bounded capabilities rather than on S3/R2/filesystem implementation details when a port is sufficient; pure domain modules must not depend on storage ports at all.
 
 ## Canonical concrete adapters
 
@@ -60,12 +77,13 @@ The following flat paths remain valid only to prevent migration breakage:
 
 | Compatibility path | Canonical replacement |
 | --- | --- |
+| `fossil_core.lifecycle` | `fossil_core.domain.lifecycle` |
 | `fossil_core.storage_ports` | `fossil_core.ports` |
 | `fossil_core.artifact_store` | `fossil_core.adapters.filesystem` |
 | `fossil_core.event_store` | `fossil_core.adapters.filesystem` |
 | `fossil_core.s3_storage` | `fossil_core.adapters.s3` |
 
-They intentionally preserve object identity with the canonical classes/protocols. No runtime deprecation warnings are emitted in this phase because adding warnings would be a behavior change mixed into structural migration.
+They intentionally preserve object identity with canonical classes/protocols. The lifecycle shim also preserves its historical implicit star-import names rather than adding a new `__all__`. No runtime deprecation warning is added to these `fossil_core` compatibility paths because that would mix behavior changes into structural migration.
 
 Removal is not authorized by this document. Compatibility modules may be removed only in an explicit cleanup phase after first-party consumers, clean-install tests, cross-repository contracts, and required hosted gates demonstrate that the old paths are no longer needed.
 

@@ -10,6 +10,8 @@ from architecture_inventory import inventory
 
 PACKAGE = "fossil_core"
 CANONICAL_MODULES = {
+    "fossil_core.domain",
+    "fossil_core.domain.lifecycle",
     "fossil_core.ports",
     "fossil_core.ports.artifact_store",
     "fossil_core.ports.event_store",
@@ -22,6 +24,7 @@ CANONICAL_MODULES = {
 }
 
 COMPATIBILITY_IMPORTS = {
+    "fossil_core.lifecycle": {"fossil_core.domain.lifecycle"},
     "fossil_core.storage_ports": {"fossil_core.ports"},
     "fossil_core.artifact_store": {
         "fossil_core.adapters.filesystem.artifact_store"
@@ -32,6 +35,15 @@ COMPATIBILITY_IMPORTS = {
 
 PORT_FORBIDDEN_PREFIXES = (
     "fossil_core.adapters",
+    "fossil_core.artifact_store",
+    "fossil_core.event_store",
+    "fossil_core.s3_storage",
+)
+
+DOMAIN_FORBIDDEN_PREFIXES = (
+    "fossil_core.ports",
+    "fossil_core.adapters",
+    "fossil_core.storage_ports",
     "fossil_core.artifact_store",
     "fossil_core.event_store",
     "fossil_core.s3_storage",
@@ -132,6 +144,16 @@ def violations(payload: dict[str, Any]) -> list[str]:
 
     for module, details in sorted(modules.items()):
         internal_imports = set(details["internal_imports"])
+
+        if _matches_prefix(module, "fossil_core.domain"):
+            for imported in sorted(internal_imports):
+                if any(
+                    _matches_prefix(imported, prefix)
+                    for prefix in DOMAIN_FORBIDDEN_PREFIXES
+                ):
+                    violations.append(
+                        f"domain boundary violation: {module} imports {imported}"
+                    )
 
         if _matches_prefix(module, "fossil_core.ports"):
             for imported in sorted(internal_imports):
