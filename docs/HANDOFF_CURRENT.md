@@ -1,6 +1,6 @@
 # Current Handoff
 
-**Date:** 2026-08-15  
+**Date:** 2026-08-16  
 **Project:** **FOSSIL — Fault-tolerant Open Semantic Store for Intellectual Lineage**  
 **Repository:** `Pukujan/fossil-core`  
 **Architecture authority:** Issue #86  
@@ -12,104 +12,118 @@ FOSSIL operates under the invariant:
 
 > **Compute may disappear; truth must not.**
 
-The current subsystem boundary is:
+Current subsystem boundary:
 
 > **Cortex V5 owns execution policy. FOSSIL owns durable knowledge/evidence. GitHub owns source/coordination/review. LiteLLM/CKFF owns provider/model/route transport facts. Infrastructure and projections are replaceable.**
 
-Do not treat an exact SHA embedded in this file as the live queue. Re-fetch #94 and current GitHub state before any write, merge, deployment, credentialed proof, or task claim.
+Do not treat any SHA in this file as a live lock. Re-fetch Issue #94 and current GitHub state before any write, merge, credentialed proof, or task claim.
 
-## Recent closeout anchors
+## Immediate checkpoint — OBJECT_STORE_LIVE / R2
 
-The earlier #112–#115 repair/fan-in campaign is complete:
+Current verified FOSSIL `main` checkpoint:
 
-- PR #115 merged after exact-head live Graphiti evidence plus deterministic, assurance, dependency, and security checks passed.
-- PR #112 refreshed, verified, and merged.
-- PR #113 refreshed, verified, and merged.
-- final-main Graphiti materialization plus redaction/non-resurrection remained green.
+`f3f439bc994f081ef9550f99ebc8002a128c19f4`
 
-The provider-neutral storage lane then advanced:
+This is the merge of PR #130, **Fix R2 object-scoped access preflight**.
 
-- PR #121 landed S3-compatible artifact/event adapters with fail-closed immutable/idempotent/conflict semantics.
-- PR #123 proved those adapters against a real disposable S3-compatible service with no cloud credentials and no provider selection.
-- Runtime/storage anchor after PR #123: `ea1d88fc114981915603ec46a401dca45acd5a11`.
+PR #130 resolved the live R2 compatibility blocker without broadening credentials or weakening acceptance:
 
-Docs reconciliation PR #126 later merged as `771216d79bdaaf324dff30c970c11be65d47d890`. Treat these SHAs as evidence anchors, not as a substitute for checking live `main`.
+- replaced bucket-level `HeadBucket` with a proof-prefix-scoped `ListObjectsV2` probe;
+- keeps the probe under the unique `fossil-live-proof/<run>/<attempt>/` prefix;
+- malformed list responses remain fail-closed;
+- regression coverage forbids reintroducing `HeadBucket` into this proof path;
+- local validation reported `280 passed, 1 skipped`;
+- exact-head DKG `31956846177` SUCCESS;
+- final-main DKG `31958886746` SUCCESS.
 
-## Active FOSSIL lane — Issue #124 / OBJECT_STORE_LIVE
+### Live proof is still NOT PASS
 
-The next durability gate is a separately credentialed, **non-production R2 candidate** proof. R2 is the first live candidate only; the provider-neutral `S3ArtifactStore` / `S3DurableEventStore` contract remains architecture truth.
+The latest credentialed live run is historical only:
 
-PASS requires the exact #124 acceptance, including:
+- workflow run `31924177103`;
+- old target SHA `9f9f426a192342042b42f189a11bbb53079b6b92`;
+- attempt 1 failed closed because endpoint/bucket variables were absent;
+- attempt 2 proved the GitHub environment variables and S3 credential secrets were loading, then old code failed on R2 `HeadBucket` HTTP 400;
+- rebuild did not run.
 
-- exact-SHA checkout/fail-closed guard;
-- live immutable create, byte-identical replay, and stable-identity conflict behavior;
-- artifact and event durability from a genuinely fresh hosted runner;
-- repeated rebuild/restartability from zero local state;
-- redaction tombstone-before-delete and non-resurrection;
-- dead-endpoint/auth/partial-response fail-closed controls;
-- sanitized receipts with no credential material;
-- same-head normal DKG green;
-- no provider-specific weakening of FOSSIL semantics.
+Do **not** reuse or rerun that old-SHA run as #124 acceptance after PR #130. The next valid evidence must be a **fresh `workflow_dispatch` from trusted default-branch code against the exact current `main` SHA** with confirmation `OBJECT_STORE_LIVE`.
 
-Ordinary PR CI is **not** `OBJECT_STORE_LIVE PASS`.
+If `main` has moved, use the newly fetched exact main SHA instead of the checkpoint above.
 
-### Current harness checkpoint
+## R2 configuration checkpoint
 
-As of this handoff checkpoint, draft PR #125 carried the credential-free live harness on head `9d8ad737d0778075a98232df7ddb2c43fb4156fb`, and exact-head DKG was green (`31899262413`). Re-read the PR before acting because the branch may move.
+GitHub Environment for the proof is deliberately:
 
-Independent review on that head identified two acceptance/configuration items before live dispatch:
+`r2-proof`
 
-1. fresh-runner rebuild covered durable events but did not independently re-read/verify the surviving canonical artifact or prove redacted-artifact non-resurrection from runner B;
-2. the workflow targeted GitHub Environment `object-store-live`, while the repository environment list observed during review contained only `r2-proof`. Environment variable/secret names were not readable through the GitHub integration, so credential placement must be reconciled deliberately rather than guessed.
+Current non-secret environment variables have been configured:
 
-The review also noted that #124 asks the writer to publish non-secret proof prefix/fixture identity as job outputs for runner B; the reviewed workflow instead recomputed them. Re-read the latest PR review state to see whether these points were addressed.
+- `R2_ENDPOINT`
+- `R2_BUCKET`
 
-If required configuration/credentials are absent, the result is `BLOCKED_CREDENTIAL`, not simulated PASS.
+Existing environment secrets remain the S3 runtime credentials:
+
+- `FOSSIL_R2_ACCESS_KEY_ID`
+- `FOSSIL_R2_SECRET_ACCESS_KEY`
+
+The workflow accepts both `R2_*` and `FOSSIL_R2_*` naming where wired by PR #129. Never print, copy, or move secret values into GitHub issues, chat, logs, receipts, or repository files.
+
+Cloudflare API verification during the PR #130 diagnosis confirmed the intended R2 bucket exists, uses the default jurisdiction, and the configured endpoint shape is appropriate. The prior HTTP 400 was traced to the bucket-level probe, not to a need for broader credentials.
+
+### Local Cloudflare access for Codex
+
+Owner/local Codex has a newly created **account-owned Cloudflare API token scoped only to `Workers R2 Storage Read`**, verified active and able to access the FOSSIL R2 bucket. It is available only in the owner's local environment for diagnostics. It is **not** the R2 S3 Access Key ID / Secret Access Key used by the GitHub live proof.
+
+Do not inspect, echo, log, commit, or copy that API token. Credential rotation and any temporary transfer-document cleanup are owner-local hygiene, not repository evidence; keep token values and transfer links out of GitHub.
+
+## Next valid execution path
+
+A fresh session should do this in order:
+
+1. Re-read Issue #94 and verify there is no winning unexpired claim for the same FOSSIL lane.
+2. Re-fetch `main` and Issue #124.
+3. Confirm normal DKG remains green on the exact main SHA.
+4. Dispatch a **new** `OBJECT_STORE_LIVE` run from the trusted default-branch workflow using:
+   - `ref=<exact current main SHA>`
+   - `confirmation=OBJECT_STORE_LIVE`
+5. Inspect bounded evidence for all three jobs: preflight, writer, rebuild.
+6. Claim PASS only if the full #124 contract passes: exact checkout, immutable/idempotent/conflict semantics, deterministic events, fresh-runner reconstruction twice, exact surviving artifact verification, redaction/non-resurrection, negative controls, sanitized receipts, and same-head normal DKG.
+7. If provider behavior fails again, classify from evidence instead of weakening the proof:
+   - missing/invalid auth or required configuration → `BLOCKED_CREDENTIAL`;
+   - provider/S3 compatibility mismatch → `BLOCKED_PROVIDER_COMPATIBILITY`;
+   - FOSSIL semantics/code failure → actual test failure requiring repair.
+8. After a real #124 PASS, update/close #124 with exact evidence, then finish Issue #87 closeout using the existing latency/recovery evidence and projection architecture. Do not automatically start Issue #111 until its sequencing is reconciled.
+
+No production deployment is authorized by this handoff.
+
+## Provider-neutral storage anchors
+
+The storage lane preceding the live proof remains authoritative:
+
+- PR #121: provider-neutral S3-compatible artifact/event adapters with immutable/idempotent/conflict semantics.
+- PR #123: real disposable S3-compatible MinIO proof with no cloud credentials and successful fresh reconstruction.
+- PR #125: manual `OBJECT_STORE_LIVE` harness with fresh-runner artifact/event verification and redaction non-resurrection.
+- PR #128: fixed hosted-runner workflow planning/context handling.
+- PR #129: reconciled the workflow to existing GitHub Environment `r2-proof` and current/legacy variable-secret names.
+- PR #130: replaced the R2-incompatible bucket-level preflight with the required object/prefix-scoped probe.
+
+R2 remains the first live candidate only. The provider-neutral `S3ArtifactStore` / `S3DurableEventStore` contract is architecture truth.
 
 ## External runtime posture — read only
 
-The owner explicitly requested that **Cortex V5 and LiteLLM/CKFF not be modified as part of this FOSSIL continuation**. Inspect them to understand current behavior; do not change their repositories or workflows unless the owner separately authorizes that work.
+The owner has explicitly requested that **Cortex V5 and LiteLLM/CKFF not be modified as part of this FOSSIL continuation**. Inspect them when needed to understand current behavior; do not change their repositories or workflows unless the owner separately authorizes that work.
 
-Detailed inspection snapshot:
+Detailed reconciliation snapshot:
 
 `docs/operations/EXTERNAL-RUNTIME-RECONCILIATION-2026-08-15.md`
 
-### Cortex V5
+Operational summary:
 
-Observed main at the reconciliation snapshot:
-
-`f29e7a2fa0584577765bfe3f437695a2cbaefcf2`
-
-Key facts at that snapshot:
-
-- no runtime dependency on Cortex V4 or legacy SSC;
-- tasks enter through the V5 HTTP API;
-- live LiteLLM `/v1/models` catalog refresh plus deterministic seat selection;
-- strict streamed `/v1/chat/completions`; invalid/premature SSE is failure;
-- 120-second LiteLLM client default timeout;
-- documented research-grounded `MODEL_TIERS` replaced undocumented `PREFERENCE_HINTS`;
-- deterministic checker remains completion authority;
-- retry/model switch creates a new attempt/receipt rather than hidden success.
-
-V5 acceptance is already closed/completed. Do not reopen it or automatically mutate V5 because older queue text mentions CORTEX-02.
-
-### LiteLLM / CKFF
-
-Observed main at the reconciliation snapshot:
-
-`9520e8dffe819d97a1557fe76022ed080f0eb8d6`
-
-Key executable/config facts at that snapshot:
-
-- configured logical models have `ckffai.com` primary plus `ckff.dev` secondary deployments;
-- LiteLLM `request_timeout` is 120 seconds;
-- retries/cooldown are bounded and `max_parallel_requests` is 8;
-- Responses bridge can use explicit cross-model fallback and records requested/actual identity;
-- exact-model work should disable bridge fallbacks;
-- embeddings and reranking remain separate fail-closed service lanes;
-- CKFF is not established here as universal zero-data-retention.
-
-Some dated LiteLLM docs lag current source/config. When they conflict, use current exact source/config as operational fact and treat the dated prose as historical evidence.
+- Cortex V5 is the active execution-policy runtime; V4/SSC are historical, not current authority.
+- Cortex V5 uses deterministic task/risk/methodology classification, live LiteLLM model-catalog refresh, explicit model selection, streamed Chat Completions, contained tools, deterministic verification, and sanitized receipts.
+- Retry/model switches are distinct attempts; no synthetic health call establishes task success.
+- LiteLLM/CKFF is transport/routing infrastructure, not FOSSIL truth authority.
+- Dated LiteLLM prose can lag source/config; current exact source/config is operational fact.
 
 ## Read first
 
@@ -121,9 +135,9 @@ For a fresh session:
 4. latest Issue #94 comments
 5. this file
 6. `docs/PROJECT_STATE.md`
-7. `docs/operations/EXTERNAL-RUNTIME-RECONCILIATION-2026-08-15.md`
+7. Issue #124
 8. Issue #87
-9. Issue #124
+9. `docs/operations/EXTERNAL-RUNTIME-RECONCILIATION-2026-08-15.md`
 10. `docs/DECISION_LOG.md`
 11. the focused issue/PR for the eligible task
 
@@ -138,14 +152,6 @@ For a fresh session:
 - Ordinary PR CI remains secretless.
 - Production promotion always requires separate explicit human authorization.
 - Never weaken acceptance merely to obtain green.
-
-## Legacy SSC
-
-Legacy `stupidly-simple-cortex` is retired/superseded as runtime, memory, RAG, ontology/current-state, orchestration, and project authority. Cortex V5 does not depend on it.
-
-Potentially useful historical eval/checker assets may survive only after independent extraction/revalidation with exact bytes, hashes, provenance, license, checker dependencies, and leakage controls. Do not revive SSC runtime to preserve an old asset.
-
-Durable retirement decision: D023 in `docs/DECISION_LOG.md`.
 
 ## Claim protocol
 
@@ -164,27 +170,16 @@ Immediately re-fetch #94. Earliest valid unexpired claim wins. One active mutati
 
 Close with exact `DONE`, `BLOCKED`, or `RELEASE` evidence.
 
-## Engineering policy
-
-- SDD always.
-- TDD for deterministic behavior where practical.
-- Integration/wiring tests for actual boundaries.
-- E2E for important real flows.
-- Fault injection for recovery/retry infrastructure.
-- Explicit security checks at credential/deployment boundaries.
-- Regression coverage for discovered bugs.
-- Hidden holdouts for autonomous model evaluation where appropriate.
-- Never weaken, skip, or suppress acceptance merely to obtain green.
-
 ## Immediate fresh-agent behavior
 
-1. Read #86, #94, #87, and #124 live.
+1. Read #86, #94, #124, and #87 live.
 2. Confirm current `main`, active PR heads, review state, environment/config state, and claim ownership.
 3. Treat Cortex V5 and LiteLLM/CKFF as read-only unless the owner explicitly opens separate mutation work.
-4. Take only an eligible task matching access and collision rules.
-5. Work on an isolated branch/target.
-6. Test mechanically and record exact evidence.
-7. Post `DONE`, `BLOCKED`, or `RELEASE`.
-8. Re-read #94 before taking another task.
+4. Do not use the old `31924177103` run as acceptance for the post-PR-130 main.
+5. Take only an eligible task matching access and collision rules.
+6. Work on an isolated branch/target for code/doc mutation.
+7. Test mechanically and record exact evidence.
+8. Post `DONE`, `BLOCKED`, or `RELEASE`.
+9. Re-read #94 before taking another task.
 
 If no eligible task exists, stop with explicit idle/BLOCKED evidence rather than inventing work.
