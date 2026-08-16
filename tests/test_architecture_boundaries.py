@@ -41,6 +41,18 @@ def test_current_repository_satisfies_enforced_boundaries():
     assert boundaries.check(ROOT) == []
 
 
+def test_domain_cannot_depend_on_ports_or_concrete_adapters():
+    payload = _synthetic_clean_payload()
+    payload["modules"]["fossil_core.domain.lifecycle"]["internal_imports"] = [
+        "fossil_core.ports",
+        "fossil_core.adapters.s3",
+    ]
+
+    problems = boundaries.violations(payload)
+
+    assert sum("domain boundary violation" in problem for problem in problems) == 2
+
+
 def test_ports_cannot_depend_on_concrete_adapters():
     payload = _synthetic_clean_payload()
     payload["modules"]["fossil_core.ports.artifact_store"]["internal_imports"] = [
