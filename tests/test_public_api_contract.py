@@ -40,7 +40,16 @@ def test_compatibility_modules_preserve_identity_and_star_exports():
         legacy = importlib.import_module(module_name)
         replacement = importlib.import_module(compatibility["replacement"])
 
-        assert legacy.__all__ == compatibility["star_exported_symbols"]
+        star_exports = compatibility["star_exported_symbols"]
+        if star_exports is None:
+            assert not hasattr(legacy, "__all__")
+            public_names = sorted(
+                name for name in vars(legacy) if not name.startswith("_")
+            )
+            assert public_names == compatibility["implicit_star_exported_symbols"]
+        else:
+            assert legacy.__all__ == star_exports
+
         for symbol in compatibility["symbols"]:
             assert getattr(legacy, symbol) is getattr(replacement, symbol)
 
