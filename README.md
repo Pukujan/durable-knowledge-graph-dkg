@@ -8,6 +8,16 @@ A local-first, migration-safe knowledge system for durable research and agent me
 
 The durable substrate is **DICS — Durable Intellectual Corpus System**.
 
+## License and rights
+
+**FOSSIL is proprietary software and is not open source.**
+
+Copyright © 2026 Pukujan. **All rights reserved.** No license is granted to use, copy, modify, distribute, sublicense, sell, host, deploy, or create derivative works from this repository or its original contents, in whole or in part, without prior express written permission from the copyright holder.
+
+Public visibility of this repository does not grant additional permission to use the code. Viewing or forking through GitHub remains subject only to the rights provided by GitHub's Terms of Service. Third-party software, dependencies, data, and other materials remain subject to their respective licenses and rights holders.
+
+See [`LICENSE`](LICENSE) for the repository's proprietary rights notice.
+
 ## Repository family
 
 - `fossil-core` — architecture, contracts, durable event/artifact core, projection adapters, storage/rebuild machinery, benchmarks, and project control plane;
