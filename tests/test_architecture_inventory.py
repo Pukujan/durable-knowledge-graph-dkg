@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "architecture_inventory.py"
+PUBLIC_API_CONTRACT = ROOT / "contracts" / "python-public-api-v1.json"
 
 
 def _load_inventory_module():
@@ -27,22 +29,13 @@ def test_architecture_inventory_is_import_free_and_tracks_storage_seams():
     assert "fossil_core.event_store" in payload["modules"]
 
 
-def test_declared_package_root_api_is_explicit_baseline():
+def test_declared_package_root_api_matches_versioned_public_contract():
     module = _load_inventory_module()
     payload = module.inventory(ROOT)
+    contract = json.loads(PUBLIC_API_CONTRACT.read_text(encoding="utf-8"))
 
-    assert payload["declared_public_api"] == [
-        "ArtifactIntegrityError",
-        "ArtifactStore",
-        "DurableEventStore",
-        "IdempotencyConflict",
-        "KnowledgeState",
-        "LifecycleError",
-        "RelationRecord",
-        "KnowledgePackValidator",
-        "PackAccess",
-        "PackBoundaryError",
-        "build_promotion_event",
+    assert payload["declared_public_api"] == contract["surfaces"]["package_root"][
+        "symbols"
     ]
 
 
