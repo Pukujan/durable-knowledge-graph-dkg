@@ -79,8 +79,15 @@ def test_object_store_live_script_is_provider_neutral_and_fail_closed() -> None:
         "FOSSIL_PROOF_PREFIX",
         "writer-receipt.json",
         "rebuild-receipt.json",
+        "list_objects_v2",
+        "Prefix=f\"{prefix.strip('/')}/\"",
     ]:
         assert needle in source, f"missing live proof semantic: {needle}"
+
+    # Object-scoped R2 credentials may list objects in the proof bucket but
+    # reject the bucket-level HeadBucket probe.  Keep preflight scoped to the
+    # unique run prefix and never regress to that broader bucket operation.
+    assert "head_bucket" not in source
 
     # Provider-specific secret names belong at the workflow boundary, not in the
     # provider-neutral proof implementation or receipts.
