@@ -43,7 +43,7 @@ jobs:
     needs: preflight
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    environment: object-store-live
+    environment: r2-proof
     outputs:
       proof_prefix: ${{ steps.proof_outputs.outputs.proof_prefix }}
       fixture_identity: ${{ steps.proof_outputs.outputs.fixture_identity }}
@@ -51,11 +51,11 @@ jobs:
       FOSSIL_TARGET_SHA: ${{ inputs.ref }}
       FOSSIL_SOFTWARE_COMMIT: ${{ inputs.ref }}
       FOSSIL_PROOF_PREFIX: fossil-live-proof/${{ github.run_id }}/${{ github.run_attempt }}
-      OBJECT_STORE_ENDPOINT: ${{ vars.R2_ENDPOINT }}
-      OBJECT_STORE_BUCKET: ${{ vars.R2_BUCKET }}
+      OBJECT_STORE_ENDPOINT: ${{ vars.R2_ENDPOINT || vars.FOSSIL_R2_ENDPOINT }}
+      OBJECT_STORE_BUCKET: ${{ vars.R2_BUCKET || vars.FOSSIL_R2_BUCKET }}
       OBJECT_STORE_REGION: auto
-      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID || secrets.FOSSIL_R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY || secrets.FOSSIL_R2_SECRET_ACCESS_KEY }}
       AWS_DEFAULT_REGION: auto
       AWS_EC2_METADATA_DISABLED: "true"
     steps:
@@ -122,17 +122,17 @@ jobs:
     needs: writer
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    environment: object-store-live
+    environment: r2-proof
     env:
       FOSSIL_TARGET_SHA: ${{ inputs.ref }}
       FOSSIL_SOFTWARE_COMMIT: ${{ inputs.ref }}
       FOSSIL_PROOF_PREFIX: ${{ needs.writer.outputs.proof_prefix }}
       FOSSIL_FIXTURE_IDENTITY: ${{ needs.writer.outputs.fixture_identity }}
-      OBJECT_STORE_ENDPOINT: ${{ vars.R2_ENDPOINT }}
-      OBJECT_STORE_BUCKET: ${{ vars.R2_BUCKET }}
+      OBJECT_STORE_ENDPOINT: ${{ vars.R2_ENDPOINT || vars.FOSSIL_R2_ENDPOINT }}
+      OBJECT_STORE_BUCKET: ${{ vars.R2_BUCKET || vars.FOSSIL_R2_BUCKET }}
       OBJECT_STORE_REGION: auto
-      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID || secrets.FOSSIL_R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY || secrets.FOSSIL_R2_SECRET_ACCESS_KEY }}
       AWS_DEFAULT_REGION: auto
       AWS_EC2_METADATA_DISABLED: "true"
     steps:
