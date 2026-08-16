@@ -7,6 +7,7 @@ from fossil_core.event_store import DurableEventStore
 from fossil_core.ports import ArtifactStorePort, EventStorePort
 from fossil_core.ports.artifact_store import ArtifactStorePort as BoundedArtifactStorePort
 from fossil_core.ports.event_store import EventStorePort as BoundedEventStorePort
+from fossil_core.s3_storage import S3ArtifactStore, S3DurableEventStore
 from fossil_core.storage_ports import ArtifactStorePort as LegacyArtifactStorePort
 from fossil_core.storage_ports import EventStorePort as LegacyEventStorePort
 
@@ -25,6 +26,19 @@ def test_legacy_storage_port_paths_alias_canonical_protocols():
 def test_existing_filesystem_stores_satisfy_canonical_ports(tmp_path):
     artifact_store = ArtifactStore(tmp_path / "artifacts")
     event_store = DurableEventStore(tmp_path / "events", SCHEMA)
+
+    assert isinstance(artifact_store, ArtifactStorePort)
+    assert isinstance(event_store, EventStorePort)
+
+
+def test_existing_s3_stores_satisfy_canonical_ports_without_remote_calls():
+    inert_client = object()
+    artifact_store = S3ArtifactStore(bucket="contract-only", client=inert_client)
+    event_store = S3DurableEventStore(
+        bucket="contract-only",
+        schema_path=SCHEMA,
+        client=inert_client,
+    )
 
     assert isinstance(artifact_store, ArtifactStorePort)
     assert isinstance(event_store, EventStorePort)
