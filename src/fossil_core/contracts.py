@@ -4,13 +4,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
 
+from .ports.cognitive_service import VersionedCognitiveService
 from .ports.projection import ProjectionAdapter, ProjectionReceipt
-
-
-class VersionedCognitiveService(Protocol):
-    """Every replaceable cognitive service must expose durable provenance metadata."""
-
-    def metadata(self) -> dict[str, Any]: ...
 
 
 class Retriever(VersionedCognitiveService, Protocol):
