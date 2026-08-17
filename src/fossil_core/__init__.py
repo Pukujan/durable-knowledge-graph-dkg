@@ -1,10 +1,10 @@
 """Durable Knowledge Graph core contracts."""
 
-from .artifact_store import ArtifactIntegrityError, ArtifactStore
-from .event_store import DurableEventStore, IdempotencyConflict
-from .lifecycle import KnowledgeState, LifecycleError, RelationRecord
-from .pack import KnowledgePackValidator, PackAccess, PackBoundaryError
-from .promotion import build_promotion_event
+from .adapters.filesystem import ArtifactIntegrityError, ArtifactStore, DurableEventStore, IdempotencyConflict
+from .application.ingest import KnowledgePackValidator
+from .domain.lifecycle import KnowledgeState, LifecycleError, RelationRecord
+from .domain.pack import PackAccess, PackBoundaryError
+from .domain.promotion import build_promotion_event
 
 __all__ = [
     "ArtifactIntegrityError",
