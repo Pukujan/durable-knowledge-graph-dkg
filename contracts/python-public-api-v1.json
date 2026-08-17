@@ -163,6 +163,13 @@
         "SourceLifecycleState",
         "build_source_state_event"
       ]
+    },
+    "evidence_domain": {
+      "module": "fossil_core.domain.evidence",
+      "status": "supported_domain_model",
+      "symbols": [
+        "build_redaction_event"
+      ]
     }
   },
   "compatibility_modules": {
@@ -332,6 +339,10 @@
     {
       "source": "fossil_core.source.build_source_state_event",
       "target": "fossil_core.domain.provenance.build_source_state_event"
+    },
+    {
+      "source": "fossil_core.source.build_redaction_event",
+      "target": "fossil_core.domain.evidence.build_redaction_event"
     },
     {
       "source": "fossil_core.contracts.ProjectionReceipt",
