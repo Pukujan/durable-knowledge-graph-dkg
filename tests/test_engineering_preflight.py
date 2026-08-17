@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fossil_core.engineering_preflight import (
+from fossil_core.application.engineering.preflight import (
     build_context_packet,
     preflight_from_packet,
     resolve_live_github_state,
