@@ -35,7 +35,8 @@
         "Retriever",
         "ContextProvider",
         "EmbeddingProvider",
-        "Reranker"
+        "Reranker",
+        "ModelService"
       ]
     },
     "projection_port": {
@@ -79,6 +80,13 @@
       "status": "supported",
       "symbols": [
         "Reranker"
+      ]
+    },
+    "model_service_port": {
+      "module": "fossil_core.ports.model_service",
+      "status": "supported",
+      "symbols": [
+        "ModelService"
       ]
     },
     "filesystem_adapter": {
@@ -323,6 +331,10 @@
     {
       "source": "fossil_core.contracts.Reranker",
       "target": "fossil_core.ports.reranker.Reranker"
+    },
+    {
+      "source": "fossil_core.contracts.ModelService",
+      "target": "fossil_core.ports.model_service.ModelService"
     }
   ]
 }
