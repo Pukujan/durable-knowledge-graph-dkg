@@ -81,6 +81,13 @@
         "new_id",
         "deterministic_event_id"
       ]
+    },
+    "promotion_domain": {
+      "module": "fossil_core.domain.promotion",
+      "status": "supported_domain_model",
+      "symbols": [
+        "build_promotion_event"
+      ]
     }
   },
   "compatibility_modules": {
@@ -175,6 +182,19 @@
         "new_id",
         "uuid"
       ]
+    },
+    "fossil_core.promotion": {
+      "replacement": "fossil_core.domain.promotion",
+      "symbols": [
+        "build_promotion_event"
+      ],
+      "star_exported_symbols": null,
+      "implicit_star_exported_symbols": [
+        "Any",
+        "Iterable",
+        "annotations",
+        "build_promotion_event"
+      ]
     }
   },
   "identity_aliases": [
@@ -221,6 +241,10 @@
     {
       "source": "fossil_core.ids.deterministic_event_id",
       "target": "fossil_core.domain.identity.deterministic_event_id"
+    },
+    {
+      "source": "fossil_core.build_promotion_event",
+      "target": "fossil_core.domain.promotion.build_promotion_event"
     }
   ]
 }

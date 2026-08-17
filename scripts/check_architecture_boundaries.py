@@ -14,6 +14,7 @@ CANONICAL_MODULES = {
     "fossil_core.domain.identity",
     "fossil_core.domain.lifecycle",
     "fossil_core.domain.pack",
+    "fossil_core.domain.promotion",
     "fossil_core.ports",
     "fossil_core.ports.artifact_store",
     "fossil_core.ports.event_store",
@@ -28,6 +29,7 @@ CANONICAL_MODULES = {
 COMPATIBILITY_IMPORTS = {
     "fossil_core.ids": {"fossil_core.domain.identity"},
     "fossil_core.lifecycle": {"fossil_core.domain.lifecycle"},
+    "fossil_core.promotion": {"fossil_core.domain.promotion"},
     "fossil_core.storage_ports": {"fossil_core.ports"},
     "fossil_core.artifact_store": {
         "fossil_core.adapters.filesystem.artifact_store"

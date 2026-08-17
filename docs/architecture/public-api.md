@@ -67,6 +67,18 @@ These helpers define FOSSIL-owned durable identity rather than provider- or stor
 
 The exact deterministic event-ID derivation is compatibility-sensitive. Moving this code between packages does not authorize changing its input framing, SHA-256 derivation, prefix, truncation, or output shape. Likewise, `new_id` retains the existing `<prefix>_<uuid4 hex>` shape.
 
+## Canonical promotion domain
+
+Cross-pack promotion event construction is canonical under:
+
+```python
+from fossil_core.domain.promotion import build_promotion_event
+```
+
+This is a pure domain event factory. It enforces that promotion has at least one stable subject reference and crosses a real pack boundary, then returns the existing `dkg.event.v1` `knowledge.promoted` event. It does not persist the event or select a storage provider; committing and schema validation remain outside the pure domain module.
+
+Promotion is append-only: the source pack is not mutated. The target records a new durable event whose payload points to the source pack and whose evidence/provenance fields preserve why the promotion was accepted. The existing event type, schema version, payload keys, provenance method, and validation messages are compatibility-sensitive and are not changed by package movement.
+
 ## Canonical provider-neutral storage ports
 
 New code that depends on storage capabilities rather than a concrete implementation should use:
@@ -103,12 +115,13 @@ The following flat paths remain valid only to prevent migration breakage:
 | --- | --- |
 | `fossil_core.ids` | `fossil_core.domain.identity` |
 | `fossil_core.lifecycle` | `fossil_core.domain.lifecycle` |
+| `fossil_core.promotion` | `fossil_core.domain.promotion` |
 | `fossil_core.storage_ports` | `fossil_core.ports` |
 | `fossil_core.artifact_store` | `fossil_core.adapters.filesystem` |
 | `fossil_core.event_store` | `fossil_core.adapters.filesystem` |
 | `fossil_core.s3_storage` | `fossil_core.adapters.s3` |
 
-They intentionally preserve object identity with canonical classes/protocols/functions. The lifecycle shim preserves its historical implicit star-import names rather than adding a new `__all__`. The `ids` shim likewise preserves its historical implicit `annotations`, `hashlib`, and `uuid` names as well as the two identity functions; it does not add a new `__all__`. No runtime deprecation warning is added to these `fossil_core` compatibility paths because that would mix behavior changes into structural migration.
+They intentionally preserve object identity with canonical classes/protocols/functions. The lifecycle shim preserves its historical implicit star-import names rather than adding a new `__all__`. The `ids` shim likewise preserves its historical implicit `annotations`, `hashlib`, and `uuid` names as well as the two identity functions. The promotion shim preserves its historical `Any`, `Iterable`, `annotations`, and `build_promotion_event` names. None of these compatibility-only modules gains a new `__all__`. No runtime deprecation warning is added to these `fossil_core` compatibility paths because that would mix behavior changes into structural migration.
 
 `fossil_core.pack` is not listed as compatibility-only: it remains the active home of `KnowledgePackValidator` while `PackAccess` and `PackBoundaryError` are identity aliases to the pure domain boundary.
 
