@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any, Protocol
 
 from .ports.cognitive_service import VersionedCognitiveService
+from .ports.context_provider import ContextProvider
 from .ports.projection import ProjectionAdapter, ProjectionReceipt
 from .ports.retriever import Retriever
 
@@ -24,10 +25,6 @@ class Reranker(VersionedCognitiveService, Protocol):
         *,
         limit: int,
     ) -> list[dict[str, Any]]: ...
-
-
-class ContextProvider(VersionedCognitiveService, Protocol):
-    def build_context(self, request: dict[str, Any]) -> dict[str, Any]: ...
 
 
 class ModelService(VersionedCognitiveService, Protocol):
