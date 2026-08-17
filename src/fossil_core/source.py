@@ -10,6 +10,7 @@ from typing import Any, Iterable, Mapping
 from jsonschema import Draft202012Validator, FormatChecker
 
 from fossil_core.artifact_store import ArtifactStore
+from fossil_core.domain.evidence import build_redaction_event
 from fossil_core.domain.provenance import (
     SourceLifecycleState,
     SourceStatus,
@@ -302,34 +303,3 @@ class RedactionPolicy:
 
     def export_event(self, event: Mapping[str, Any]) -> dict[str, Any] | None:
         return copy.deepcopy(dict(event)) if self.event_visible(event) else None
-
-
-def build_redaction_event(
-    *,
-    tombstone: Mapping[str, Any],
-    pack_id: str,
-    actor: Mapping[str, Any],
-    occurred_at: str,
-    recorded_at: str,
-    idempotency_key: str,
-    snapshot_ids: Iterable[str] = (),
-) -> dict[str, Any]:
-    return {
-        "schema_version": "dkg.event.v1",
-        "event_type": "evidence.redacted",
-        "occurred_at": occurred_at,
-        "recorded_at": recorded_at,
-        "pack_id": pack_id,
-        "actor": dict(actor),
-        "subject_refs": [str(tombstone["artifact_id"]), *list(snapshot_ids)],
-        "idempotency_key": idempotency_key,
-        "payload": {
-            "artifact_id": tombstone["artifact_id"],
-            "snapshot_ids": list(snapshot_ids),
-            "reason": tombstone["reason"],
-            "authority": tombstone["authority"],
-            "request_ref": tombstone.get("request_ref"),
-            "redacted_at": tombstone["redacted_at"],
-        },
-        "provenance": {"method": "artifact_redaction_tombstone"},
-    }
