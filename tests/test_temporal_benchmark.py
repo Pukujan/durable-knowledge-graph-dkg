@@ -154,7 +154,10 @@ def _fixture(tmp_path: Path) -> Path:
 
 def test_temporal_benchmark_replays_current_and_historical_truth(tmp_path, monkeypatch):
     root = _fixture(tmp_path)
-    monkeypatch.setattr("fossil_core.pack_corpus.validate_pack_fixtures", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        "fossil_core.application.rebuild.pack_corpus.validate_pack_fixtures",
+        lambda *args, **kwargs: None,
+    )
 
     current_new = TemporalQueryCase(
         case_id="current-durable-core",
@@ -231,7 +234,10 @@ def test_temporal_benchmark_replays_current_and_historical_truth(tmp_path, monke
 
 def test_temporal_benchmark_rejects_wrong_expected_state(tmp_path, monkeypatch):
     root = _fixture(tmp_path)
-    monkeypatch.setattr("fossil_core.pack_corpus.validate_pack_fixtures", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        "fossil_core.application.rebuild.pack_corpus.validate_pack_fixtures",
+        lambda *args, **kwargs: None,
+    )
 
     report = run_temporal_evolution_benchmark(
         [root],

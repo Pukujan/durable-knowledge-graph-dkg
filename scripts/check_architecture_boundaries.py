@@ -15,6 +15,8 @@ CANONICAL_MODULES = {
     "fossil_core.application.ingest.pack_validation",
     "fossil_core.application.query",
     "fossil_core.application.query.lineage",
+    "fossil_core.application.rebuild",
+    "fossil_core.application.rebuild.pack_corpus",
     "fossil_core.domain",
     "fossil_core.domain.evidence",
     "fossil_core.domain.identity",
@@ -50,6 +52,7 @@ COMPATIBILITY_IMPORTS = {
     "fossil_core.ids": {"fossil_core.domain.identity"},
     "fossil_core.io": {"fossil_core.adapters.filesystem.io"},
     "fossil_core.lifecycle": {"fossil_core.domain.lifecycle"},
+    "fossil_core.pack_corpus": {"fossil_core.application.rebuild.pack_corpus"},
     "fossil_core.promotion": {"fossil_core.domain.promotion"},
     "fossil_core.storage_ports": {"fossil_core.ports"},
     "fossil_core.artifact_store": {
