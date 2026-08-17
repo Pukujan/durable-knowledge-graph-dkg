@@ -36,7 +36,8 @@
         "ContextProvider",
         "EmbeddingProvider",
         "Reranker",
-        "ModelService"
+        "ModelService",
+        "VerificationService"
       ]
     },
     "projection_port": {
@@ -87,6 +88,13 @@
       "status": "supported",
       "symbols": [
         "ModelService"
+      ]
+    },
+    "verification_service_port": {
+      "module": "fossil_core.ports.verification_service",
+      "status": "supported",
+      "symbols": [
+        "VerificationService"
       ]
     },
     "filesystem_adapter": {
@@ -335,6 +343,10 @@
     {
       "source": "fossil_core.contracts.ModelService",
       "target": "fossil_core.ports.model_service.ModelService"
+    },
+    {
+      "source": "fossil_core.contracts.VerificationService",
+      "target": "fossil_core.ports.verification_service.VerificationService"
     }
   ]
 }
