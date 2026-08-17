@@ -7,7 +7,7 @@ from pathlib import Path
 
 from fossil_core.answer_eval import DeterministicEvidenceAnswerService
 from fossil_core.answer_pipeline import LineageResolvedModelService
-from fossil_core.context_security import UntrustedContextModelService
+from fossil_core.application.query.security import UntrustedContextModelService
 from fossil_core.pack_corpus import retrieval_documents_from_pack_fixtures
 from fossil_core.poisoning_eval import RetrievalPoisoningCase, run_retrieval_poisoning_benchmark
 
