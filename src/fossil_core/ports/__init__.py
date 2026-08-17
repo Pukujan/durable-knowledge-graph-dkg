@@ -9,6 +9,7 @@ from .model_service import ModelService
 from .projection import ProjectionAdapter, ProjectionReceipt
 from .reranker import Reranker
 from .retriever import Retriever
+from .verification_service import VerificationService
 
 __all__ = [
     "ArtifactStorePort",
@@ -21,4 +22,5 @@ __all__ = [
     "EmbeddingProvider",
     "Reranker",
     "ModelService",
+    "VerificationService",
 ]

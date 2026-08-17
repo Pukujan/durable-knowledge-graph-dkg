@@ -11,7 +11,4 @@ from .ports.model_service import ModelService
 from .ports.projection import ProjectionAdapter, ProjectionReceipt
 from .ports.reranker import Reranker
 from .ports.retriever import Retriever
-
-
-class VerificationService(VersionedCognitiveService, Protocol):
-    def verify(self, proposal: dict[str, Any]) -> dict[str, Any]: ...
+from .ports.verification_service import VerificationService

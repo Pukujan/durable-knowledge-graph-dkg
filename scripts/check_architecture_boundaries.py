@@ -25,6 +25,7 @@ CANONICAL_MODULES = {
     "fossil_core.ports.projection",
     "fossil_core.ports.reranker",
     "fossil_core.ports.retriever",
+    "fossil_core.ports.verification_service",
     "fossil_core.adapters",
     "fossil_core.adapters.filesystem",
     "fossil_core.adapters.filesystem.artifact_store",

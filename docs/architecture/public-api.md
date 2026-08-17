@@ -159,7 +159,17 @@ from fossil_core.ports.model_service import ModelService
 
 `ModelService.run` retains the existing `run(task) -> dict[str, Any]` contract. Moving the Protocol does not select a model/provider, change routing or prompting policy, alter task/output semantics, or change verification behavior.
 
-`fossil_core.contracts.ProjectionAdapter`, `fossil_core.contracts.ProjectionReceipt`, `fossil_core.contracts.VersionedCognitiveService`, `fossil_core.contracts.Retriever`, `fossil_core.contracts.ContextProvider`, `fossil_core.contracts.EmbeddingProvider`, `fossil_core.contracts.Reranker`, and `fossil_core.contracts.ModelService` remain identity-preserving aliases during migration. The entire `fossil_core.contracts` module is **not** classified as compatibility-only yet because it still owns `VerificationService`. That final interface requires its own bounded migration rather than a broad package move.
+Verification capability code should depend on the canonical VerificationService port:
+
+```python
+from fossil_core.ports import VerificationService
+# equivalent canonical module:
+from fossil_core.ports.verification_service import VerificationService
+```
+
+`VerificationService.verify` retains the existing `verify(proposal) -> dict[str, Any]` contract. Moving the Protocol does not change verification rules, scoring, evidence requirements, proposal semantics, model/provider selection, or any acceptance policy.
+
+All projection/cognitive types historically exposed by `fossil_core.contracts` now forward to canonical port modules with object identity preserved. `fossil_core.contracts` remains available as the historical aggregate and keeps its exact implicit namespace and absence of `__all__`; this structural move does not authorize deleting, warning on, or reclassifying that module. Any compatibility cleanup is a separate Phase 6 decision after first-party and cross-repository consumers are migrated and verified.
 
 ## Canonical concrete adapters
 
@@ -195,7 +205,7 @@ The following flat paths remain valid only to prevent migration breakage:
 
 They intentionally preserve object identity with canonical classes/protocols/functions. The lifecycle shim preserves its historical implicit star-import names rather than adding a new `__all__`. The `ids` shim likewise preserves its historical implicit `annotations`, `hashlib`, and `uuid` names as well as the two identity functions. The promotion shim preserves its historical `Any`, `Iterable`, `annotations`, and `build_promotion_event` names. None of these compatibility-only modules gains a new `__all__`. No runtime deprecation warning is added to these `fossil_core` compatibility paths because that would mix behavior changes into structural migration.
 
-`fossil_core.pack` is not listed as compatibility-only: it remains the active home of `KnowledgePackValidator` while `PackAccess` and `PackBoundaryError` are identity aliases to the pure domain boundary. Likewise, `fossil_core.contracts` remains a mixed active module while migrated projection, cognitive-metadata, Retriever, ContextProvider, EmbeddingProvider, Reranker, and ModelService types forward to canonical ports.
+`fossil_core.pack` is not listed as compatibility-only: it remains the active home of `KnowledgePackValidator` while `PackAccess` and `PackBoundaryError` are identity aliases to the pure domain boundary. `fossil_core.contracts` is also intentionally not reclassified here: it is now a forwarding aggregate for canonical projection/cognitive ports, and its cleanup status remains a separate migration decision.
 
 Removal is not authorized by this document. Compatibility modules may be removed only in an explicit cleanup phase after first-party consumers, clean-install tests, cross-repository contracts, and required hosted gates demonstrate that the old paths are no longer needed.
 
