@@ -53,6 +53,17 @@ def test_domain_cannot_depend_on_ports_or_concrete_adapters():
     assert sum("domain boundary violation" in problem for problem in problems) == 2
 
 
+def test_application_cannot_depend_on_concrete_adapters():
+    payload = _synthetic_clean_payload()
+    payload["modules"]["fossil_core.application.query.lineage"]["internal_imports"] = [
+        "fossil_core.adapters.s3"
+    ]
+
+    problems = boundaries.violations(payload)
+
+    assert any("application boundary violation" in problem for problem in problems)
+
+
 def test_ports_cannot_depend_on_concrete_adapters():
     payload = _synthetic_clean_payload()
     payload["modules"]["fossil_core.ports.artifact_store"]["internal_imports"] = [

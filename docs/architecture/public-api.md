@@ -107,6 +107,23 @@ from fossil_core.domain.evidence import build_redaction_event
 
 `fossil_core.source` remains the active mixed source-evidence module. `SourceSnapshotStore`, citation/schema validation, artifact-backed source bytes, and `RedactionPolicy` intentionally remain there because they depend on storage, filesystem, schema, or visibility concerns. `fossil_core.source.build_redaction_event` remains an identity-preserving alias to the canonical evidence-domain factory.
 
+## Canonical query application surface
+
+Provider-neutral query orchestration that expands durable lineage before model execution is canonical under:
+
+```python
+from fossil_core.application.query import (
+    LINEAGE_CONTEXT_RESOLVER,
+    LineageResolvedModelService,
+    expand_context_with_lineage,
+    expand_context_with_lineage_diagnostics,
+)
+```
+
+This is an application boundary, not a new retrieval or truth-authority layer. The move preserves the historical lineage resolver identifier, relation-endpoint expansion order, pack scoping, maximum-expansion behavior, diagnostics, model-service wrapper behavior, and public call signatures. It does not change retrieval ranking, context policy, model selection or prompting, lineage semantics, durable events/schemas/IDs/hashes, storage/provider behavior, or projection behavior.
+
+`fossil_core.answer_pipeline` remains a compatibility module and forwards these four objects with identity preserved. Its historical implicit public namespace is deliberately frozen during this migration, including `Any`, `Iterable`, `Mapping`, `annotations`, and `copy`; the shim does not gain a new `__all__`. Application code under `fossil_core.application` is mechanically prevented from importing concrete adapters or legacy concrete-store shims so orchestration remains provider-neutral.
+
 ## Canonical provider-neutral ports
 
 New code that depends on storage capabilities rather than a concrete implementation should use:
@@ -226,12 +243,13 @@ The following flat paths remain valid only to prevent migration breakage:
 | `fossil_core.ids` | `fossil_core.domain.identity` |
 | `fossil_core.lifecycle` | `fossil_core.domain.lifecycle` |
 | `fossil_core.promotion` | `fossil_core.domain.promotion` |
+| `fossil_core.answer_pipeline` | `fossil_core.application.query` |
 | `fossil_core.storage_ports` | `fossil_core.ports` |
 | `fossil_core.artifact_store` | `fossil_core.adapters.filesystem` |
 | `fossil_core.event_store` | `fossil_core.adapters.filesystem` |
 | `fossil_core.s3_storage` | `fossil_core.adapters.s3` |
 
-They intentionally preserve object identity with canonical classes/protocols/functions. The lifecycle shim preserves its historical implicit star-import names rather than adding a new `__all__`. The `ids` shim likewise preserves its historical implicit `annotations`, `hashlib`, and `uuid` names as well as the two identity functions. The promotion shim preserves its historical `Any`, `Iterable`, `annotations`, and `build_promotion_event` names. None of these compatibility-only modules gains a new `__all__`. No runtime deprecation warning is added to these `fossil_core` compatibility paths because that would mix behavior changes into structural migration.
+They intentionally preserve object identity with canonical classes/protocols/functions. The lifecycle shim preserves its historical implicit star-import names rather than adding a new `__all__`. The `ids` shim likewise preserves its historical implicit `annotations`, `hashlib`, and `uuid` names as well as the two identity functions. The promotion shim preserves its historical `Any`, `Iterable`, `annotations`, and `build_promotion_event` names. The `answer_pipeline` shim preserves its historical `Any`, `Iterable`, `Mapping`, `annotations`, `copy`, lineage resolver, functions, and wrapper class. None of these compatibility-only modules gains a new `__all__`. No runtime deprecation warning is added to these `fossil_core` compatibility paths because that would mix behavior changes into structural migration.
 
 `fossil_core.pack` is not listed as compatibility-only: it remains the active home of `KnowledgePackValidator` while `PackAccess` and `PackBoundaryError` are identity aliases to the pure domain boundary. `fossil_core.source` likewise remains an active mixed module while its pure source-lifecycle and evidence-redaction factories/types forward to canonical domain modules. `fossil_core.contracts` is also intentionally not reclassified here: it is now a forwarding aggregate for canonical projection/cognitive ports, and its cleanup status remains a separate migration decision.
 
