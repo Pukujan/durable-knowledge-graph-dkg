@@ -8,8 +8,11 @@ from pathlib import Path
 from fossil_core.answer_eval import DeterministicEvidenceAnswerService
 from fossil_core.answer_pipeline import LineageResolvedModelService
 from fossil_core.application.query.security import UntrustedContextModelService
+from fossil_core.application.query.poisoning_eval import (
+    RetrievalPoisoningCase,
+    run_retrieval_poisoning_benchmark,
+)
 from fossil_core.pack_corpus import retrieval_documents_from_pack_fixtures
-from fossil_core.poisoning_eval import RetrievalPoisoningCase, run_retrieval_poisoning_benchmark
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_PLAN = ROOT / "benchmarks" / "post-gate2" / "retrieval-poisoning-v1.json"
