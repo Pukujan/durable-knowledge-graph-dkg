@@ -17,6 +17,7 @@ CANONICAL_MODULES = {
     "fossil_core.domain.promotion",
     "fossil_core.ports",
     "fossil_core.ports.artifact_store",
+    "fossil_core.ports.cognitive_service",
     "fossil_core.ports.event_store",
     "fossil_core.ports.projection",
     "fossil_core.adapters",

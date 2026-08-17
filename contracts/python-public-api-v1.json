@@ -30,7 +30,8 @@
         "ArtifactStorePort",
         "EventStorePort",
         "ProjectionReceipt",
-        "ProjectionAdapter"
+        "ProjectionAdapter",
+        "VersionedCognitiveService"
       ]
     },
     "projection_port": {
@@ -39,6 +40,13 @@
       "symbols": [
         "ProjectionReceipt",
         "ProjectionAdapter"
+      ]
+    },
+    "cognitive_service_port": {
+      "module": "fossil_core.ports.cognitive_service",
+      "status": "supported",
+      "symbols": [
+        "VersionedCognitiveService"
       ]
     },
     "filesystem_adapter": {
@@ -263,6 +271,10 @@
     {
       "source": "fossil_core.contracts.ProjectionAdapter",
       "target": "fossil_core.ports.projection.ProjectionAdapter"
+    },
+    {
+      "source": "fossil_core.contracts.VersionedCognitiveService",
+      "target": "fossil_core.ports.cognitive_service.VersionedCognitiveService"
     }
   ]
 }
