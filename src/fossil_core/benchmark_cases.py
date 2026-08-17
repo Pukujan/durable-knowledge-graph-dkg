@@ -7,7 +7,7 @@ from typing import Any, Mapping
 
 from jsonschema import Draft202012Validator, FormatChecker
 
-from .benchmark import ModelBenchmarkCase, RetrievalBenchmarkCase
+from .application.evaluation.benchmark import ModelBenchmarkCase, RetrievalBenchmarkCase
 
 
 class BenchmarkCaseSetError(ValueError):

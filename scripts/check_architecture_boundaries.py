@@ -11,6 +11,8 @@ from architecture_inventory import inventory
 PACKAGE = "fossil_core"
 CANONICAL_MODULES = {
     "fossil_core.application",
+    "fossil_core.application.evaluation",
+    "fossil_core.application.evaluation.benchmark",
     "fossil_core.application.ingest",
     "fossil_core.application.ingest.pack_validation",
     "fossil_core.application.query",
@@ -51,6 +53,7 @@ CANONICAL_MODULES = {
 
 COMPATIBILITY_IMPORTS = {
     "fossil_core.answer_pipeline": {"fossil_core.application.query"},
+    "fossil_core.benchmark": {"fossil_core.application.evaluation.benchmark"},
     "fossil_core.ids": {"fossil_core.domain.identity"},
     "fossil_core.io": {"fossil_core.adapters.filesystem.io"},
     "fossil_core.lifecycle": {"fossil_core.domain.lifecycle"},
