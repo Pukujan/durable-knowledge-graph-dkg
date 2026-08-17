@@ -79,6 +79,22 @@ This is a pure domain event factory. It enforces that promotion has at least one
 
 Promotion is append-only: the source pack is not mutated. The target records a new durable event whose payload points to the source pack and whose evidence/provenance fields preserve why the promotion was accepted. The existing event type, schema version, payload keys, provenance method, and validation messages are compatibility-sensitive and are not changed by package movement.
 
+## Canonical source lifecycle provenance domain
+
+Replayable source lifecycle state is canonical under:
+
+```python
+from fossil_core.domain.provenance import (
+    SourceLifecycleState,
+    SourceStatus,
+    build_source_state_event,
+)
+```
+
+This pure domain slice owns only the semantics of `source.stale`, `source.retracted`, and `source.restored`, their deterministic replay ordering, and the existing `dkg.event.v1` source-lifecycle event factory. Moving it does not change event type names, payload keys, provenance method, ordering, or default-active behavior.
+
+`fossil_core.source` remains the active mixed source-evidence module. `SourceSnapshotStore`, citation/schema validation, artifact-backed source bytes, `RedactionPolicy`, and `build_redaction_event` intentionally remain there because they depend on storage, filesystem, schema, or visibility concerns. `fossil_core.source.SourceStatus`, `SourceLifecycleState`, and `build_source_state_event` remain identity-preserving aliases to the canonical domain definitions.
+
 ## Canonical provider-neutral ports
 
 New code that depends on storage capabilities rather than a concrete implementation should use:
@@ -205,7 +221,7 @@ The following flat paths remain valid only to prevent migration breakage:
 
 They intentionally preserve object identity with canonical classes/protocols/functions. The lifecycle shim preserves its historical implicit star-import names rather than adding a new `__all__`. The `ids` shim likewise preserves its historical implicit `annotations`, `hashlib`, and `uuid` names as well as the two identity functions. The promotion shim preserves its historical `Any`, `Iterable`, `annotations`, and `build_promotion_event` names. None of these compatibility-only modules gains a new `__all__`. No runtime deprecation warning is added to these `fossil_core` compatibility paths because that would mix behavior changes into structural migration.
 
-`fossil_core.pack` is not listed as compatibility-only: it remains the active home of `KnowledgePackValidator` while `PackAccess` and `PackBoundaryError` are identity aliases to the pure domain boundary. `fossil_core.contracts` is also intentionally not reclassified here: it is now a forwarding aggregate for canonical projection/cognitive ports, and its cleanup status remains a separate migration decision.
+`fossil_core.pack` is not listed as compatibility-only: it remains the active home of `KnowledgePackValidator` while `PackAccess` and `PackBoundaryError` are identity aliases to the pure domain boundary. `fossil_core.source` likewise remains an active mixed module while its pure source lifecycle types/event factory forward to `fossil_core.domain.provenance`. `fossil_core.contracts` is also intentionally not reclassified here: it is now a forwarding aggregate for canonical projection/cognitive ports, and its cleanup status remains a separate migration decision.
 
 Removal is not authorized by this document. Compatibility modules may be removed only in an explicit cleanup phase after first-party consumers, clean-install tests, cross-repository contracts, and required hosted gates demonstrate that the old paths are no longer needed.
 

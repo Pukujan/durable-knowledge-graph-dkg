@@ -154,6 +154,15 @@
       "symbols": [
         "build_promotion_event"
       ]
+    },
+    "provenance_domain": {
+      "module": "fossil_core.domain.provenance",
+      "status": "supported_domain_model",
+      "symbols": [
+        "SourceStatus",
+        "SourceLifecycleState",
+        "build_source_state_event"
+      ]
     }
   },
   "compatibility_modules": {
@@ -311,6 +320,18 @@
     {
       "source": "fossil_core.build_promotion_event",
       "target": "fossil_core.domain.promotion.build_promotion_event"
+    },
+    {
+      "source": "fossil_core.source.SourceStatus",
+      "target": "fossil_core.domain.provenance.SourceStatus"
+    },
+    {
+      "source": "fossil_core.source.SourceLifecycleState",
+      "target": "fossil_core.domain.provenance.SourceLifecycleState"
+    },
+    {
+      "source": "fossil_core.source.build_source_state_event",
+      "target": "fossil_core.domain.provenance.build_source_state_event"
     },
     {
       "source": "fossil_core.contracts.ProjectionReceipt",
