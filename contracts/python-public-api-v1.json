@@ -32,7 +32,8 @@
         "ProjectionReceipt",
         "ProjectionAdapter",
         "VersionedCognitiveService",
-        "Retriever"
+        "Retriever",
+        "ContextProvider"
       ]
     },
     "projection_port": {
@@ -55,6 +56,13 @@
       "status": "supported",
       "symbols": [
         "Retriever"
+      ]
+    },
+    "context_provider_port": {
+      "module": "fossil_core.ports.context_provider",
+      "status": "supported",
+      "symbols": [
+        "ContextProvider"
       ]
     },
     "filesystem_adapter": {
@@ -287,6 +295,10 @@
     {
       "source": "fossil_core.contracts.Retriever",
       "target": "fossil_core.ports.retriever.Retriever"
+    },
+    {
+      "source": "fossil_core.contracts.ContextProvider",
+      "target": "fossil_core.ports.context_provider.ContextProvider"
     }
   ]
 }
