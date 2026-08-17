@@ -169,6 +169,7 @@
       ],
       "star_exported_symbols": null,
       "implicit_star_exported_symbols": [
+        "annotations",
         "deterministic_event_id",
         "hashlib",
         "new_id",
