@@ -12,6 +12,7 @@ PACKAGE = "fossil_core"
 CANONICAL_MODULES = {
     "fossil_core.application",
     "fossil_core.application.engineering",
+    "fossil_core.application.engineering.assurance",
     "fossil_core.application.engineering.preflight",
     "fossil_core.application.evaluation",
     "fossil_core.application.evaluation.answer",
@@ -62,6 +63,7 @@ COMPATIBILITY_IMPORTS = {
     "fossil_core.benchmark": {"fossil_core.application.evaluation.benchmark"},
     "fossil_core.benchmark_cases": {"fossil_core.application.evaluation.cases"},
     "fossil_core.contracts": {"fossil_core.ports"},
+    "fossil_core.engineering_assurance": {"fossil_core.application.engineering.assurance"},
     "fossil_core.engineering_preflight": {"fossil_core.application.engineering.preflight"},
     "fossil_core.ids": {"fossil_core.domain.identity"},
     "fossil_core.io": {"fossil_core.adapters.filesystem.io"},
