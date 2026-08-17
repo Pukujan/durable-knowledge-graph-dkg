@@ -31,7 +31,8 @@
         "EventStorePort",
         "ProjectionReceipt",
         "ProjectionAdapter",
-        "VersionedCognitiveService"
+        "VersionedCognitiveService",
+        "Retriever"
       ]
     },
     "projection_port": {
@@ -47,6 +48,13 @@
       "status": "supported",
       "symbols": [
         "VersionedCognitiveService"
+      ]
+    },
+    "retriever_port": {
+      "module": "fossil_core.ports.retriever",
+      "status": "supported",
+      "symbols": [
+        "Retriever"
       ]
     },
     "filesystem_adapter": {
@@ -275,6 +283,10 @@
     {
       "source": "fossil_core.contracts.VersionedCognitiveService",
       "target": "fossil_core.ports.cognitive_service.VersionedCognitiveService"
+    },
+    {
+      "source": "fossil_core.contracts.Retriever",
+      "target": "fossil_core.ports.retriever.Retriever"
     }
   ]
 }
