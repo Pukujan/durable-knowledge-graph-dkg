@@ -13,7 +13,7 @@ from fossil_core.answer_eval import (
 )
 from fossil_core.answer_pipeline import LineageResolvedModelService
 from fossil_core.context_security import UntrustedContextModelService
-from fossil_core.execution_receipt import (
+from fossil_core.application.query.receipt import (
     compare_query_execution_receipts,
     execute_query_with_receipt,
 )
