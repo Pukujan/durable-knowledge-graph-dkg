@@ -39,6 +39,7 @@ CANONICAL_MODULES = {
     "fossil_core.adapters.filesystem.event_store",
     "fossil_core.adapters.filesystem.io",
     "fossil_core.adapters.litellm",
+    "fossil_core.adapters.litellm.embedding",
     "fossil_core.adapters.litellm.reranker",
     "fossil_core.adapters.s3",
     "fossil_core.adapters.s3.storage",
