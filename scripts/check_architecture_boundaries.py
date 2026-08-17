@@ -10,6 +10,9 @@ from architecture_inventory import inventory
 
 PACKAGE = "fossil_core"
 CANONICAL_MODULES = {
+    "fossil_core.application",
+    "fossil_core.application.query",
+    "fossil_core.application.query.lineage",
     "fossil_core.domain",
     "fossil_core.domain.evidence",
     "fossil_core.domain.identity",
@@ -37,6 +40,7 @@ CANONICAL_MODULES = {
 }
 
 COMPATIBILITY_IMPORTS = {
+    "fossil_core.answer_pipeline": {"fossil_core.application.query"},
     "fossil_core.ids": {"fossil_core.domain.identity"},
     "fossil_core.lifecycle": {"fossil_core.domain.lifecycle"},
     "fossil_core.promotion": {"fossil_core.domain.promotion"},
@@ -59,6 +63,13 @@ DOMAIN_FORBIDDEN_PREFIXES = (
     "fossil_core.ports",
     "fossil_core.adapters",
     "fossil_core.storage_ports",
+    "fossil_core.artifact_store",
+    "fossil_core.event_store",
+    "fossil_core.s3_storage",
+)
+
+APPLICATION_FORBIDDEN_PREFIXES = (
+    "fossil_core.adapters",
     "fossil_core.artifact_store",
     "fossil_core.event_store",
     "fossil_core.s3_storage",
@@ -168,6 +179,16 @@ def violations(payload: dict[str, Any]) -> list[str]:
                 ):
                     violations.append(
                         f"domain boundary violation: {module} imports {imported}"
+                    )
+
+        if _matches_prefix(module, "fossil_core.application"):
+            for imported in sorted(internal_imports):
+                if any(
+                    _matches_prefix(imported, prefix)
+                    for prefix in APPLICATION_FORBIDDEN_PREFIXES
+                ):
+                    violations.append(
+                        f"application boundary violation: {module} imports {imported}"
                     )
 
         if _matches_prefix(module, "fossil_core.ports"):
