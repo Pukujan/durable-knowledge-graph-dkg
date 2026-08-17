@@ -5,7 +5,7 @@ import time
 from dataclasses import dataclass
 from typing import Any, Iterable, Mapping
 
-from .answer_eval import AnswerReliabilityCase, build_answer_context, evaluate_answer_candidate
+from ...answer_eval import AnswerReliabilityCase, build_answer_context, evaluate_answer_candidate
 
 
 @dataclass(frozen=True)
