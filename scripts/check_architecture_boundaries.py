@@ -12,6 +12,7 @@ PACKAGE = "fossil_core"
 CANONICAL_MODULES = {
     "fossil_core.application",
     "fossil_core.application.evaluation",
+    "fossil_core.application.evaluation.answer",
     "fossil_core.application.evaluation.benchmark",
     "fossil_core.application.evaluation.cases",
     "fossil_core.application.evaluation.context_probe",
