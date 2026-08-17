@@ -28,7 +28,17 @@
       "status": "supported",
       "symbols": [
         "ArtifactStorePort",
-        "EventStorePort"
+        "EventStorePort",
+        "ProjectionReceipt",
+        "ProjectionAdapter"
+      ]
+    },
+    "projection_port": {
+      "module": "fossil_core.ports.projection",
+      "status": "supported",
+      "symbols": [
+        "ProjectionReceipt",
+        "ProjectionAdapter"
       ]
     },
     "filesystem_adapter": {
@@ -245,6 +255,14 @@
     {
       "source": "fossil_core.build_promotion_event",
       "target": "fossil_core.domain.promotion.build_promotion_event"
+    },
+    {
+      "source": "fossil_core.contracts.ProjectionReceipt",
+      "target": "fossil_core.ports.projection.ProjectionReceipt"
+    },
+    {
+      "source": "fossil_core.contracts.ProjectionAdapter",
+      "target": "fossil_core.ports.projection.ProjectionAdapter"
     }
   ]
 }
