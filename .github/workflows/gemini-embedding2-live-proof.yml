@@ -1,0 +1,115 @@
+name: Gemini Embedding 2 live proof
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/gemini-embedding2-live-proof.yml"
+
+jobs:
+  embedding-proof:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      LITELLM_URL: ${{ vars.LITELLM_URL }}
+      LITELLM_PROXY_KEY: ${{ secrets.LITELLM_PROXY_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run one bounded non-sensitive embedding request
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          CONNECT_TIMEOUT_SECONDS=5
+          MAX_TIME_SECONDS=30
+          REQUESTED_MODEL="gemini-embedding-2"
+          base="${LITELLM_URL:-https://litellm-production-8656.up.railway.app/v1}"
+          base="${base%/}"
+
+          test -n "${LITELLM_PROXY_KEY:-}" || { echo 'LITELLM_PROXY_KEY missing'; exit 1; }
+
+          echo "requested_model=$REQUESTED_MODEL"
+          echo "request_count_bound=1"
+          echo "connect_timeout_seconds=$CONNECT_TIMEOUT_SECONDS"
+          echo "max_time_seconds=$MAX_TIME_SECONDS"
+          echo "streaming_supported=false"
+          echo "streaming_required=false"
+          echo "response_mode=buffered-json"
+          echo "automatic_retries=0"
+          echo "fallback=disabled"
+          echo "index_projection_mutation=false"
+
+          http_code="$(
+            curl -sS \
+              --connect-timeout "$CONNECT_TIMEOUT_SECONDS" \
+              --max-time "$MAX_TIME_SECONDS" \
+              --retry 0 \
+              -D embedding.headers \
+              -H "Authorization: Bearer ${LITELLM_PROXY_KEY}" \
+              -H 'Content-Type: application/json' \
+              -H 'Accept: application/json' \
+              -X POST "$base/embeddings" \
+              --data '{"model":"gemini-embedding-2","input":["FOSSIL non-sensitive Gemini Embedding 2 proof"]}' \
+              -o embedding.json \
+              -w '%{http_code}'
+          )"
+
+          echo "embedding_http=$http_code"
+          test "$http_code" = "200" || { echo 'embedding request failed'; exit 1; }
+
+          REQUESTED_MODEL="$REQUESTED_MODEL" python - <<'PY'
+          import json
+          import math
+          import os
+          from pathlib import Path
+
+          payload = json.loads(Path("embedding.json").read_text(encoding="utf-8"))
+          data = payload.get("data") or []
+          if not isinstance(data, list) or len(data) != 1:
+              raise SystemExit("expected exactly one embedding row")
+
+          row = data[0]
+          if not isinstance(row, dict):
+              raise SystemExit("embedding row must be an object")
+          if row.get("index") not in (None, 0):
+              raise SystemExit(f"unexpected embedding index: {row.get('index')!r}")
+
+          vector = row.get("embedding")
+          if not isinstance(vector, list) or len(vector) != 3072:
+              raise SystemExit(f"expected 3072-d vector, got {len(vector) if isinstance(vector, list) else 'non-list'}")
+          if any(
+              isinstance(value, bool)
+              or not isinstance(value, (int, float))
+              or not math.isfinite(float(value))
+              for value in vector
+          ):
+              raise SystemExit("embedding vector contained invalid values")
+
+          reported_model = payload.get("model")
+          accepted_models = {"gemini-embedding-2", "google/gemini-embedding-2"}
+          if reported_model not in accepted_models:
+              raise SystemExit(f"unaccepted reported model: {reported_model!r}")
+
+          metadata = payload.get("metadata") if isinstance(payload.get("metadata"), dict) else {}
+          reported_provider = payload.get("provider") or metadata.get("bridge_actual_provider") or metadata.get("actual_provider")
+
+          print("embedding_result_count=", len(data))
+          print("embedding_dimension=", len(vector))
+          print("requested_model=", os.environ["REQUESTED_MODEL"])
+          print("reported_actual_model=", reported_model)
+          print("reported_actual_provider=", reported_provider or "unreported")
+          print("actual_model_verified=", True)
+          print("promotion_identity_grade=", True)
+          print("usage=", json.dumps(payload.get("usage") or {}, sort_keys=True))
+          PY
+
+          privacy_warning="$(grep -i '^x-litellm-data-privacy-warning:' embedding.headers || true)"
+          if [ -n "$privacy_warning" ]; then
+            echo "privacy_warning_present=true"
+            printf '%s\n' "$privacy_warning"
+          else
+            echo "privacy_warning_present=false"
+          fi
+
+          echo 'proof_complete=true'
