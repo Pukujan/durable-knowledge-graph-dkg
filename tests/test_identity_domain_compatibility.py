@@ -31,4 +31,10 @@ def test_new_id_keeps_corpus_prefix_and_uuid_hex_shape():
 def test_legacy_ids_preserves_historical_implicit_star_surface():
     assert not hasattr(legacy_ids, "__all__")
     public_names = sorted(name for name in vars(legacy_ids) if not name.startswith("_"))
-    assert public_names == ["deterministic_event_id", "hashlib", "new_id", "uuid"]
+    assert public_names == [
+        "annotations",
+        "deterministic_event_id",
+        "hashlib",
+        "new_id",
+        "uuid",
+    ]
