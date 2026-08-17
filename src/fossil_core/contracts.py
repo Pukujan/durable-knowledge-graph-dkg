@@ -6,16 +6,7 @@ from typing import Any, Protocol
 
 from .ports.cognitive_service import VersionedCognitiveService
 from .ports.projection import ProjectionAdapter, ProjectionReceipt
-
-
-class Retriever(VersionedCognitiveService, Protocol):
-    def search(
-        self,
-        query: str,
-        *,
-        pack_ids: list[str],
-        limit: int = 20,
-    ) -> list[dict[str, Any]]: ...
+from .ports.retriever import Retriever
 
 
 class EmbeddingProvider(VersionedCognitiveService, Protocol):
