@@ -4,6 +4,7 @@ import importlib
 
 import fossil_core
 import fossil_core.pack as legacy_pack
+from fossil_core.application.ingest import KnowledgePackValidator
 from fossil_core.domain.pack import PackAccess, PackBoundaryError
 
 
@@ -26,5 +27,7 @@ def test_legacy_dkg_pack_boundary_exports_alias_canonical_domain_objects():
 
 
 def test_json_schema_validator_stays_outside_pure_domain_boundary():
-    assert legacy_pack.KnowledgePackValidator.__module__ == "fossil_core.pack"
+    assert legacy_pack.KnowledgePackValidator is KnowledgePackValidator
+    assert fossil_core.KnowledgePackValidator is KnowledgePackValidator
+    assert KnowledgePackValidator.__module__ == "fossil_core.application.ingest.pack_validation"
     assert not hasattr(importlib.import_module("fossil_core.domain.pack"), "KnowledgePackValidator")
