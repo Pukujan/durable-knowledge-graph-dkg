@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from fossil_core.pack_corpus import retrieval_documents_from_pack_fixtures
+from fossil_core.application.rebuild import retrieval_documents_from_pack_fixtures
 
 
 COMMON = "pack_269099f7b2ba43b7a99b9427d64092de"
@@ -156,7 +156,10 @@ def _fixture(tmp_path: Path) -> tuple[Path, Path]:
 
 def test_pack_projection_preserves_claim_state_history_and_citation(tmp_path, monkeypatch):
     common, ai = _fixture(tmp_path)
-    monkeypatch.setattr("fossil_core.pack_corpus.validate_pack_fixtures", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        "fossil_core.application.rebuild.pack_corpus.validate_pack_fixtures",
+        lambda *args, **kwargs: None,
+    )
 
     documents = retrieval_documents_from_pack_fixtures(
         [common, ai],
@@ -178,7 +181,10 @@ def test_pack_projection_preserves_claim_state_history_and_citation(tmp_path, mo
 
 def test_pack_projection_materializes_cross_pack_relation_with_durable_identity(tmp_path, monkeypatch):
     common, ai = _fixture(tmp_path)
-    monkeypatch.setattr("fossil_core.pack_corpus.validate_pack_fixtures", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        "fossil_core.application.rebuild.pack_corpus.validate_pack_fixtures",
+        lambda *args, **kwargs: None,
+    )
 
     documents = retrieval_documents_from_pack_fixtures(
         [ai, common],
