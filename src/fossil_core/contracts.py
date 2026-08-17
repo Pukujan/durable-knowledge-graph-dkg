@@ -6,15 +6,9 @@ from typing import Any, Protocol
 
 from .ports.cognitive_service import VersionedCognitiveService
 from .ports.context_provider import ContextProvider
+from .ports.embedding_provider import EmbeddingProvider
 from .ports.projection import ProjectionAdapter, ProjectionReceipt
 from .ports.retriever import Retriever
-
-
-class EmbeddingProvider(VersionedCognitiveService, Protocol):
-    @property
-    def model_id(self) -> str: ...
-
-    def embed(self, texts: list[str]) -> list[list[float]]: ...
 
 
 class Reranker(VersionedCognitiveService, Protocol):

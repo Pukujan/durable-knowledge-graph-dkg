@@ -33,7 +33,8 @@
         "ProjectionAdapter",
         "VersionedCognitiveService",
         "Retriever",
-        "ContextProvider"
+        "ContextProvider",
+        "EmbeddingProvider"
       ]
     },
     "projection_port": {
@@ -63,6 +64,13 @@
       "status": "supported",
       "symbols": [
         "ContextProvider"
+      ]
+    },
+    "embedding_provider_port": {
+      "module": "fossil_core.ports.embedding_provider",
+      "status": "supported",
+      "symbols": [
+        "EmbeddingProvider"
       ]
     },
     "filesystem_adapter": {
@@ -299,6 +307,10 @@
     {
       "source": "fossil_core.contracts.ContextProvider",
       "target": "fossil_core.ports.context_provider.ContextProvider"
+    },
+    {
+      "source": "fossil_core.contracts.EmbeddingProvider",
+      "target": "fossil_core.ports.embedding_provider.EmbeddingProvider"
     }
   ]
 }
