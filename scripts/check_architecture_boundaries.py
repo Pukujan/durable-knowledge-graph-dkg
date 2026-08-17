@@ -11,6 +11,8 @@ from architecture_inventory import inventory
 PACKAGE = "fossil_core"
 CANONICAL_MODULES = {
     "fossil_core.application",
+    "fossil_core.application.ingest",
+    "fossil_core.application.ingest.pack_validation",
     "fossil_core.application.query",
     "fossil_core.application.query.lineage",
     "fossil_core.domain",
