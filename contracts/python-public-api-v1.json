@@ -119,59 +119,174 @@
   "compatibility_modules": {
     "fossil_core.storage_ports": {
       "replacement": "fossil_core.ports",
-      "symbols": ["ArtifactStorePort", "EventStorePort"],
-      "star_exported_symbols": ["ArtifactStorePort", "EventStorePort"]
+      "symbols": [
+        "ArtifactStorePort",
+        "EventStorePort"
+      ],
+      "star_exported_symbols": [
+        "ArtifactStorePort",
+        "EventStorePort"
+      ]
     },
     "fossil_core.artifact_store": {
       "replacement": "fossil_core.adapters.filesystem",
-      "symbols": ["ArtifactIntegrityError", "ArtifactRedactedError", "ArtifactStore"],
-      "star_exported_symbols": ["ArtifactIntegrityError", "ArtifactRedactedError", "ArtifactStore"]
+      "symbols": [
+        "ArtifactIntegrityError",
+        "ArtifactRedactedError",
+        "ArtifactStore"
+      ],
+      "star_exported_symbols": [
+        "ArtifactIntegrityError",
+        "ArtifactRedactedError",
+        "ArtifactStore"
+      ]
     },
     "fossil_core.event_store": {
       "replacement": "fossil_core.adapters.filesystem",
-      "symbols": ["DurableEventStore", "EventRedactedError", "EventRedactionConflict", "IdempotencyConflict"],
-      "star_exported_symbols": ["DurableEventStore", "EventRedactedError", "EventRedactionConflict", "IdempotencyConflict"]
+      "symbols": [
+        "DurableEventStore",
+        "EventRedactedError",
+        "EventRedactionConflict",
+        "IdempotencyConflict"
+      ],
+      "star_exported_symbols": [
+        "DurableEventStore",
+        "EventRedactedError",
+        "EventRedactionConflict",
+        "IdempotencyConflict"
+      ]
     },
     "fossil_core.s3_storage": {
       "replacement": "fossil_core.adapters.s3",
-      "symbols": ["RemoteObjectConflict", "RemoteStoreUnavailable", "S3ArtifactStore", "S3DurableEventStore"],
-      "star_exported_symbols": ["RemoteStoreUnavailable", "S3ArtifactStore", "S3DurableEventStore"]
+      "symbols": [
+        "RemoteObjectConflict",
+        "RemoteStoreUnavailable",
+        "S3ArtifactStore",
+        "S3DurableEventStore"
+      ],
+      "star_exported_symbols": [
+        "RemoteStoreUnavailable",
+        "S3ArtifactStore",
+        "S3DurableEventStore"
+      ]
     },
     "fossil_core.lifecycle": {
       "replacement": "fossil_core.domain.lifecycle",
-      "symbols": ["CLAIM_STATES", "RELATION_STATES", "RELATION_TYPES", "LifecycleError", "RelationRecord", "KnowledgeState"],
+      "symbols": [
+        "CLAIM_STATES",
+        "RELATION_STATES",
+        "RELATION_TYPES",
+        "LifecycleError",
+        "RelationRecord",
+        "KnowledgeState"
+      ],
       "star_exported_symbols": null,
-      "implicit_star_exported_symbols": ["Any", "CLAIM_STATES", "Iterable", "KnowledgeState", "LifecycleError", "RELATION_STATES", "RELATION_TYPES", "RelationRecord", "dataclass", "field"]
+      "implicit_star_exported_symbols": [
+        "Any",
+        "CLAIM_STATES",
+        "Iterable",
+        "KnowledgeState",
+        "LifecycleError",
+        "RELATION_STATES",
+        "RELATION_TYPES",
+        "RelationRecord",
+        "dataclass",
+        "field"
+      ]
     },
     "fossil_core.ids": {
       "replacement": "fossil_core.domain.identity",
-      "symbols": ["new_id", "deterministic_event_id"],
+      "symbols": [
+        "new_id",
+        "deterministic_event_id"
+      ],
       "star_exported_symbols": null,
-      "implicit_star_exported_symbols": ["annotations", "deterministic_event_id", "hashlib", "new_id", "uuid"]
+      "implicit_star_exported_symbols": [
+        "annotations",
+        "deterministic_event_id",
+        "hashlib",
+        "new_id",
+        "uuid"
+      ]
     },
     "fossil_core.promotion": {
       "replacement": "fossil_core.domain.promotion",
-      "symbols": ["build_promotion_event"],
+      "symbols": [
+        "build_promotion_event"
+      ],
       "star_exported_symbols": null,
-      "implicit_star_exported_symbols": ["Any", "Iterable", "annotations", "build_promotion_event"]
+      "implicit_star_exported_symbols": [
+        "Any",
+        "Iterable",
+        "annotations",
+        "build_promotion_event"
+      ]
     }
   },
   "identity_aliases": [
-    {"source": "fossil_core.ArtifactIntegrityError", "target": "fossil_core.adapters.filesystem.ArtifactIntegrityError"},
-    {"source": "fossil_core.ArtifactStore", "target": "fossil_core.adapters.filesystem.ArtifactStore"},
-    {"source": "fossil_core.DurableEventStore", "target": "fossil_core.adapters.filesystem.DurableEventStore"},
-    {"source": "fossil_core.IdempotencyConflict", "target": "fossil_core.adapters.filesystem.IdempotencyConflict"},
-    {"source": "fossil_core.KnowledgeState", "target": "fossil_core.domain.lifecycle.KnowledgeState"},
-    {"source": "fossil_core.LifecycleError", "target": "fossil_core.domain.lifecycle.LifecycleError"},
-    {"source": "fossil_core.RelationRecord", "target": "fossil_core.domain.lifecycle.RelationRecord"},
-    {"source": "fossil_core.PackAccess", "target": "fossil_core.domain.pack.PackAccess"},
-    {"source": "fossil_core.PackBoundaryError", "target": "fossil_core.domain.pack.PackBoundaryError"},
-    {"source": "fossil_core.ids.new_id", "target": "fossil_core.domain.identity.new_id"},
-    {"source": "fossil_core.ids.deterministic_event_id", "target": "fossil_core.domain.identity.deterministic_event_id"},
-    {"source": "fossil_core.build_promotion_event", "target": "fossil_core.domain.promotion.build_promotion_event"},
-    {"source": "fossil_core.contracts.ProjectionReceipt", "target": "fossil_core.ports.projection.ProjectionReceipt"},
-    {"source": "fossil_core.contracts.ProjectionAdapter", "target": "fossil_core.ports.projection.ProjectionAdapter"},
-    {"source": "fossil_core.contracts.VersionedCognitiveService", "target": "fossil_core.ports.cognitive_service.VersionedCognitiveService"},
-    {"source": "fossil_core.contracts.Retriever", "target": "fossil_core.ports.retriever.Retriever"}
+    {
+      "source": "fossil_core.ArtifactIntegrityError",
+      "target": "fossil_core.adapters.filesystem.ArtifactIntegrityError"
+    },
+    {
+      "source": "fossil_core.ArtifactStore",
+      "target": "fossil_core.adapters.filesystem.ArtifactStore"
+    },
+    {
+      "source": "fossil_core.DurableEventStore",
+      "target": "fossil_core.adapters.filesystem.DurableEventStore"
+    },
+    {
+      "source": "fossil_core.IdempotencyConflict",
+      "target": "fossil_core.adapters.filesystem.IdempotencyConflict"
+    },
+    {
+      "source": "fossil_core.KnowledgeState",
+      "target": "fossil_core.domain.lifecycle.KnowledgeState"
+    },
+    {
+      "source": "fossil_core.LifecycleError",
+      "target": "fossil_core.domain.lifecycle.LifecycleError"
+    },
+    {
+      "source": "fossil_core.RelationRecord",
+      "target": "fossil_core.domain.lifecycle.RelationRecord"
+    },
+    {
+      "source": "fossil_core.PackAccess",
+      "target": "fossil_core.domain.pack.PackAccess"
+    },
+    {
+      "source": "fossil_core.PackBoundaryError",
+      "target": "fossil_core.domain.pack.PackBoundaryError"
+    },
+    {
+      "source": "fossil_core.ids.new_id",
+      "target": "fossil_core.domain.identity.new_id"
+    },
+    {
+      "source": "fossil_core.ids.deterministic_event_id",
+      "target": "fossil_core.domain.identity.deterministic_event_id"
+    },
+    {
+      "source": "fossil_core.build_promotion_event",
+      "target": "fossil_core.domain.promotion.build_promotion_event"
+    },
+    {
+      "source": "fossil_core.contracts.ProjectionReceipt",
+      "target": "fossil_core.ports.projection.ProjectionReceipt"
+    },
+    {
+      "source": "fossil_core.contracts.ProjectionAdapter",
+      "target": "fossil_core.ports.projection.ProjectionAdapter"
+    },
+    {
+      "source": "fossil_core.contracts.VersionedCognitiveService",
+      "target": "fossil_core.ports.cognitive_service.VersionedCognitiveService"
+    },
+    {
+      "source": "fossil_core.contracts.Retriever",
+      "target": "fossil_core.ports.retriever.Retriever"
+    }
   ]
 }
