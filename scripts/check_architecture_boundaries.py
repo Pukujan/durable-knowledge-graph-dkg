@@ -45,6 +45,8 @@ CANONICAL_MODULES = {
     "fossil_core.adapters.litellm.reranker",
     "fossil_core.adapters.s3",
     "fossil_core.adapters.s3.storage",
+    "fossil_core.adapters.vector",
+    "fossil_core.adapters.vector.semantic_retriever",
 }
 
 COMPATIBILITY_IMPORTS = {
@@ -54,6 +56,7 @@ COMPATIBILITY_IMPORTS = {
     "fossil_core.lifecycle": {"fossil_core.domain.lifecycle"},
     "fossil_core.pack_corpus": {"fossil_core.application.rebuild.pack_corpus"},
     "fossil_core.promotion": {"fossil_core.domain.promotion"},
+    "fossil_core.semantic_retriever": {"fossil_core.adapters.vector.semantic_retriever"},
     "fossil_core.storage_ports": {"fossil_core.ports"},
     "fossil_core.artifact_store": {
         "fossil_core.adapters.filesystem.artifact_store"
