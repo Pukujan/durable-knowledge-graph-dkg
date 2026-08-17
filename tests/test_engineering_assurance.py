@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from fossil_core.engineering_assurance import (
+from fossil_core.application.engineering.assurance import (
     load_control_plane_contract,
     semantic_http_errors,
     validate_control_plane_contract,
