@@ -139,7 +139,17 @@ from fossil_core.ports.embedding_provider import EmbeddingProvider
 
 `EmbeddingProvider` retains the existing `model_id` property and `embed(texts) -> list[list[float]]` contract. Moving the Protocol does not select a provider/model, change vector dimensions or normalization, alter batching/caching behavior, or change any retrieval/reranking policy.
 
-`fossil_core.contracts.ProjectionAdapter`, `fossil_core.contracts.ProjectionReceipt`, `fossil_core.contracts.VersionedCognitiveService`, `fossil_core.contracts.Retriever`, `fossil_core.contracts.ContextProvider`, and `fossil_core.contracts.EmbeddingProvider` remain identity-preserving aliases during migration. The entire `fossil_core.contracts` module is **not** classified as compatibility-only yet because it still owns `Reranker`, `ModelService`, and `VerificationService`. Those interfaces require separate bounded migrations rather than one broad package move.
+Reranking capability code should depend on the canonical Reranker port:
+
+```python
+from fossil_core.ports import Reranker
+# equivalent canonical module:
+from fossil_core.ports.reranker import Reranker
+```
+
+`Reranker.rerank` retains the existing `query`, `candidates`, and keyword-only `limit` contract. Moving the Protocol does not select a reranking provider/model or change candidate scoring, ordering, truncation, filtering, retrieval, or context-construction behavior.
+
+`fossil_core.contracts.ProjectionAdapter`, `fossil_core.contracts.ProjectionReceipt`, `fossil_core.contracts.VersionedCognitiveService`, `fossil_core.contracts.Retriever`, `fossil_core.contracts.ContextProvider`, `fossil_core.contracts.EmbeddingProvider`, and `fossil_core.contracts.Reranker` remain identity-preserving aliases during migration. The entire `fossil_core.contracts` module is **not** classified as compatibility-only yet because it still owns `ModelService` and `VerificationService`. Those interfaces require separate bounded migrations rather than one broad package move.
 
 ## Canonical concrete adapters
 
@@ -175,7 +185,7 @@ The following flat paths remain valid only to prevent migration breakage:
 
 They intentionally preserve object identity with canonical classes/protocols/functions. The lifecycle shim preserves its historical implicit star-import names rather than adding a new `__all__`. The `ids` shim likewise preserves its historical implicit `annotations`, `hashlib`, and `uuid` names as well as the two identity functions. The promotion shim preserves its historical `Any`, `Iterable`, `annotations`, and `build_promotion_event` names. None of these compatibility-only modules gains a new `__all__`. No runtime deprecation warning is added to these `fossil_core` compatibility paths because that would mix behavior changes into structural migration.
 
-`fossil_core.pack` is not listed as compatibility-only: it remains the active home of `KnowledgePackValidator` while `PackAccess` and `PackBoundaryError` are identity aliases to the pure domain boundary. Likewise, `fossil_core.contracts` remains a mixed active module while migrated projection, cognitive-metadata, Retriever, ContextProvider, and EmbeddingProvider types forward to canonical ports.
+`fossil_core.pack` is not listed as compatibility-only: it remains the active home of `KnowledgePackValidator` while `PackAccess` and `PackBoundaryError` are identity aliases to the pure domain boundary. Likewise, `fossil_core.contracts` remains a mixed active module while migrated projection, cognitive-metadata, Retriever, ContextProvider, EmbeddingProvider, and Reranker types forward to canonical ports.
 
 Removal is not authorized by this document. Compatibility modules may be removed only in an explicit cleanup phase after first-party consumers, clean-install tests, cross-repository contracts, and required hosted gates demonstrate that the old paths are no longer needed.
 
