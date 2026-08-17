@@ -55,6 +55,18 @@ from fossil_core.domain.pack import PackAccess, PackBoundaryError
 
 `KnowledgePackValidator` intentionally remains available from `fossil_core` / `fossil_core.pack`. It performs JSON Schema-backed manifest validation and file loading, so this bounded move does not relabel that validation/integration concern as pure domain logic.
 
+## Canonical identity domain
+
+Corpus-owned identity helpers are canonical under:
+
+```python
+from fossil_core.domain.identity import deterministic_event_id, new_id
+```
+
+These helpers define FOSSIL-owned durable identity rather than provider- or storage-native identity. Storage object keys, database IDs, projection IDs, or provider-specific identifiers must not become durable semantic identity.
+
+The exact deterministic event-ID derivation is compatibility-sensitive. Moving this code between packages does not authorize changing its input framing, SHA-256 derivation, prefix, truncation, or output shape. Likewise, `new_id` retains the existing `<prefix>_<uuid4 hex>` shape.
+
 ## Canonical provider-neutral storage ports
 
 New code that depends on storage capabilities rather than a concrete implementation should use:
@@ -89,13 +101,14 @@ The following flat paths remain valid only to prevent migration breakage:
 
 | Compatibility path | Canonical replacement |
 | --- | --- |
+| `fossil_core.ids` | `fossil_core.domain.identity` |
 | `fossil_core.lifecycle` | `fossil_core.domain.lifecycle` |
 | `fossil_core.storage_ports` | `fossil_core.ports` |
 | `fossil_core.artifact_store` | `fossil_core.adapters.filesystem` |
 | `fossil_core.event_store` | `fossil_core.adapters.filesystem` |
 | `fossil_core.s3_storage` | `fossil_core.adapters.s3` |
 
-They intentionally preserve object identity with canonical classes/protocols. The lifecycle shim also preserves its historical implicit star-import names rather than adding a new `__all__`. No runtime deprecation warning is added to these `fossil_core` compatibility paths because that would mix behavior changes into structural migration.
+They intentionally preserve object identity with canonical classes/protocols/functions. The lifecycle shim preserves its historical implicit star-import names rather than adding a new `__all__`. The `ids` shim likewise preserves its historical implicit `hashlib` and `uuid` names as well as the two identity functions; it does not add a new `__all__`. No runtime deprecation warning is added to these `fossil_core` compatibility paths because that would mix behavior changes into structural migration.
 
 `fossil_core.pack` is not listed as compatibility-only: it remains the active home of `KnowledgePackValidator` while `PackAccess` and `PackBoundaryError` are identity aliases to the pure domain boundary.
 
