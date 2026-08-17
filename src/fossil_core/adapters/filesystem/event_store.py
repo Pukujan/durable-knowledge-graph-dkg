@@ -9,7 +9,7 @@ from typing import Any, Iterator
 from jsonschema import Draft202012Validator, FormatChecker
 
 from ...ids import deterministic_event_id, new_id
-from ...io import publish_immutable
+from .io import publish_immutable
 
 
 class IdempotencyConflict(RuntimeError):
