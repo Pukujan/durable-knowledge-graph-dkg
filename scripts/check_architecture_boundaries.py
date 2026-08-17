@@ -14,6 +14,7 @@ CANONICAL_MODULES = {
     "fossil_core.application.evaluation",
     "fossil_core.application.evaluation.benchmark",
     "fossil_core.application.evaluation.cases",
+    "fossil_core.application.evaluation.context_probe",
     "fossil_core.application.ingest",
     "fossil_core.application.ingest.pack_validation",
     "fossil_core.application.query",
