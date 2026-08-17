@@ -34,7 +34,8 @@
         "VersionedCognitiveService",
         "Retriever",
         "ContextProvider",
-        "EmbeddingProvider"
+        "EmbeddingProvider",
+        "Reranker"
       ]
     },
     "projection_port": {
@@ -71,6 +72,13 @@
       "status": "supported",
       "symbols": [
         "EmbeddingProvider"
+      ]
+    },
+    "reranker_port": {
+      "module": "fossil_core.ports.reranker",
+      "status": "supported",
+      "symbols": [
+        "Reranker"
       ]
     },
     "filesystem_adapter": {
@@ -311,6 +319,10 @@
     {
       "source": "fossil_core.contracts.EmbeddingProvider",
       "target": "fossil_core.ports.embedding_provider.EmbeddingProvider"
+    },
+    {
+      "source": "fossil_core.contracts.Reranker",
+      "target": "fossil_core.ports.reranker.Reranker"
     }
   ]
 }

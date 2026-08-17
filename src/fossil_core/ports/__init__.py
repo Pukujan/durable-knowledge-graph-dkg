@@ -6,6 +6,7 @@ from .context_provider import ContextProvider
 from .embedding_provider import EmbeddingProvider
 from .event_store import EventStorePort
 from .projection import ProjectionAdapter, ProjectionReceipt
+from .reranker import Reranker
 from .retriever import Retriever
 
 __all__ = [
@@ -17,4 +18,5 @@ __all__ = [
     "Retriever",
     "ContextProvider",
     "EmbeddingProvider",
+    "Reranker",
 ]

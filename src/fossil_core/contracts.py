@@ -8,17 +8,8 @@ from .ports.cognitive_service import VersionedCognitiveService
 from .ports.context_provider import ContextProvider
 from .ports.embedding_provider import EmbeddingProvider
 from .ports.projection import ProjectionAdapter, ProjectionReceipt
+from .ports.reranker import Reranker
 from .ports.retriever import Retriever
-
-
-class Reranker(VersionedCognitiveService, Protocol):
-    def rerank(
-        self,
-        query: str,
-        candidates: list[dict[str, Any]],
-        *,
-        limit: int,
-    ) -> list[dict[str, Any]]: ...
 
 
 class ModelService(VersionedCognitiveService, Protocol):
