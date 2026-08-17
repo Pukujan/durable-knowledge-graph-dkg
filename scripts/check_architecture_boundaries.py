@@ -11,6 +11,7 @@ from architecture_inventory import inventory
 PACKAGE = "fossil_core"
 CANONICAL_MODULES = {
     "fossil_core.domain",
+    "fossil_core.domain.evidence",
     "fossil_core.domain.identity",
     "fossil_core.domain.lifecycle",
     "fossil_core.domain.pack",

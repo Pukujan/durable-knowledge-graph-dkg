@@ -93,7 +93,19 @@ from fossil_core.domain.provenance import (
 
 This pure domain slice owns only the semantics of `source.stale`, `source.retracted`, and `source.restored`, their deterministic replay ordering, and the existing `dkg.event.v1` source-lifecycle event factory. Moving it does not change event type names, payload keys, provenance method, ordering, or default-active behavior.
 
-`fossil_core.source` remains the active mixed source-evidence module. `SourceSnapshotStore`, citation/schema validation, artifact-backed source bytes, `RedactionPolicy`, and `build_redaction_event` intentionally remain there because they depend on storage, filesystem, schema, or visibility concerns. `fossil_core.source.SourceStatus`, `SourceLifecycleState`, and `build_source_state_event` remain identity-preserving aliases to the canonical domain definitions.
+`fossil_core.source.SourceStatus`, `SourceLifecycleState`, and `build_source_state_event` remain identity-preserving aliases to the canonical domain definitions.
+
+## Canonical evidence redaction event domain
+
+The deterministic evidence-redaction event factory is canonical under:
+
+```python
+from fossil_core.domain.evidence import build_redaction_event
+```
+
+`build_redaction_event` retains the exact existing `dkg.event.v1` `evidence.redacted` dictionary: artifact and snapshot subject references, tombstone reason/authority/request/redaction time, and provenance method `artifact_redaction_tombstone`. Moving this constructor does not create or persist a tombstone, delete bytes, change redaction ordering, or select storage/provider behavior.
+
+`fossil_core.source` remains the active mixed source-evidence module. `SourceSnapshotStore`, citation/schema validation, artifact-backed source bytes, and `RedactionPolicy` intentionally remain there because they depend on storage, filesystem, schema, or visibility concerns. `fossil_core.source.build_redaction_event` remains an identity-preserving alias to the canonical evidence-domain factory.
 
 ## Canonical provider-neutral ports
 
@@ -221,7 +233,7 @@ The following flat paths remain valid only to prevent migration breakage:
 
 They intentionally preserve object identity with canonical classes/protocols/functions. The lifecycle shim preserves its historical implicit star-import names rather than adding a new `__all__`. The `ids` shim likewise preserves its historical implicit `annotations`, `hashlib`, and `uuid` names as well as the two identity functions. The promotion shim preserves its historical `Any`, `Iterable`, `annotations`, and `build_promotion_event` names. None of these compatibility-only modules gains a new `__all__`. No runtime deprecation warning is added to these `fossil_core` compatibility paths because that would mix behavior changes into structural migration.
 
-`fossil_core.pack` is not listed as compatibility-only: it remains the active home of `KnowledgePackValidator` while `PackAccess` and `PackBoundaryError` are identity aliases to the pure domain boundary. `fossil_core.source` likewise remains an active mixed module while its pure source lifecycle types/event factory forward to `fossil_core.domain.provenance`. `fossil_core.contracts` is also intentionally not reclassified here: it is now a forwarding aggregate for canonical projection/cognitive ports, and its cleanup status remains a separate migration decision.
+`fossil_core.pack` is not listed as compatibility-only: it remains the active home of `KnowledgePackValidator` while `PackAccess` and `PackBoundaryError` are identity aliases to the pure domain boundary. `fossil_core.source` likewise remains an active mixed module while its pure source-lifecycle and evidence-redaction factories/types forward to canonical domain modules. `fossil_core.contracts` is also intentionally not reclassified here: it is now a forwarding aggregate for canonical projection/cognitive ports, and its cleanup status remains a separate migration decision.
 
 Removal is not authorized by this document. Compatibility modules may be removed only in an explicit cleanup phase after first-party consumers, clean-install tests, cross-repository contracts, and required hosted gates demonstrate that the old paths are no longer needed.
 
