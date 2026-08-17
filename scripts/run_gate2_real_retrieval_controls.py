@@ -4,9 +4,9 @@ import argparse
 import json
 from pathlib import Path
 
+from fossil_core.application.rebuild import retrieval_documents_from_pack_fixtures
 from fossil_core.benchmark import BenchmarkValidator, RetrievalBenchmark
 from fossil_core.benchmark_cases import load_benchmark_case_set, retrieval_cases_from_case_set
-from fossil_core.pack_corpus import retrieval_documents_from_pack_fixtures
 from fossil_core.services import BM25Retriever, EmbeddingRetriever, HashEmbeddingProvider
 
 
