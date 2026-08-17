@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 from fossil_core.adapters.vector import SemanticEmbeddingRetriever
+from fossil_core.adapters.vector.sentence_transformers import SentenceTransformerEmbeddingProvider
 from fossil_core.application.evaluation.benchmark import BenchmarkValidator, RetrievalBenchmark
 from fossil_core.application.evaluation.cases import load_benchmark_case_set, retrieval_cases_from_case_set
 from fossil_core.application.rebuild import retrieval_documents_from_pack_fixtures
@@ -13,7 +14,6 @@ from fossil_core.real_retrieval import (
     LifecycleIntentReranker,
     ReciprocalRankFusionRetriever,
     RerankedRetriever,
-    SentenceTransformerEmbeddingProvider,
 )
 from fossil_core.services import (
     BM25Retriever,

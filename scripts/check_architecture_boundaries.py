@@ -51,6 +51,7 @@ CANONICAL_MODULES = {
     "fossil_core.adapters.s3.storage",
     "fossil_core.adapters.vector",
     "fossil_core.adapters.vector.semantic_retriever",
+    "fossil_core.adapters.vector.sentence_transformers",
 }
 
 COMPATIBILITY_IMPORTS = {
