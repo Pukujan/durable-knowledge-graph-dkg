@@ -57,6 +57,7 @@ COMPATIBILITY_IMPORTS = {
     "fossil_core.answer_pipeline": {"fossil_core.application.query"},
     "fossil_core.benchmark": {"fossil_core.application.evaluation.benchmark"},
     "fossil_core.benchmark_cases": {"fossil_core.application.evaluation.cases"},
+    "fossil_core.contracts": {"fossil_core.ports"},
     "fossil_core.ids": {"fossil_core.domain.identity"},
     "fossil_core.io": {"fossil_core.adapters.filesystem.io"},
     "fossil_core.lifecycle": {"fossil_core.domain.lifecycle"},

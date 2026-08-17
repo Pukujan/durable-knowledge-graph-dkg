@@ -308,6 +308,37 @@
         "expand_context_with_lineage",
         "expand_context_with_lineage_diagnostics"
       ]
+    },
+    "fossil_core.contracts": {
+      "replacement": "fossil_core.ports",
+      "symbols": [
+        "ProjectionReceipt",
+        "ProjectionAdapter",
+        "VersionedCognitiveService",
+        "Retriever",
+        "ContextProvider",
+        "EmbeddingProvider",
+        "Reranker",
+        "ModelService",
+        "VerificationService"
+      ],
+      "star_exported_symbols": null,
+      "implicit_star_exported_symbols": [
+        "Any",
+        "ContextProvider",
+        "EmbeddingProvider",
+        "ModelService",
+        "Path",
+        "ProjectionAdapter",
+        "ProjectionReceipt",
+        "Protocol",
+        "Reranker",
+        "Retriever",
+        "VerificationService",
+        "VersionedCognitiveService",
+        "annotations",
+        "dataclass"
+      ]
     }
   },
   "identity_aliases": [
