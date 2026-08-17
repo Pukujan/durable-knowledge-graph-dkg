@@ -1,1 +1,462 @@
-{"schema":"fossil.python-public-api.v1","policy":{"unlisted_modules":"internal_until_explicitly_promoted","compatibility_modules":"temporary_until_explicit_cleanup_phase","runtime_deprecation_warnings":false},"surfaces":{"package_root":{"module":"fossil_core","status":"supported","symbols":["ArtifactIntegrityError","ArtifactStore","DurableEventStore","IdempotencyConflict","KnowledgeState","LifecycleError","RelationRecord","KnowledgePackValidator","PackAccess","PackBoundaryError","build_promotion_event"]},"storage_ports":{"module":"fossil_core.ports","status":"supported","symbols":["ArtifactStorePort","EventStorePort","ProjectionReceipt","ProjectionAdapter","VersionedCognitiveService","Retriever","ContextProvider","EmbeddingProvider","Reranker","ModelService","VerificationService"]},"projection_port":{"module":"fossil_core.ports.projection","status":"supported","symbols":["ProjectionReceipt","ProjectionAdapter"]},"cognitive_service_port":{"module":"fossil_core.ports.cognitive_service","status":"supported","symbols":["VersionedCognitiveService"]},"retriever_port":{"module":"fossil_core.ports.retriever","status":"supported","symbols":["Retriever"]},"context_provider_port":{"module":"fossil_core.ports.context_provider","status":"supported","symbols":["ContextProvider"]},"embedding_provider_port":{"module":"fossil_core.ports.embedding_provider","status":"supported","symbols":["EmbeddingProvider"]},"reranker_port":{"module":"fossil_core.ports.reranker","status":"supported","symbols":["Reranker"]},"model_service_port":{"module":"fossil_core.ports.model_service","status":"supported","symbols":["ModelService"]},"verification_service_port":{"module":"fossil_core.ports.verification_service","status":"supported","symbols":["VerificationService"]},"filesystem_adapter":{"module":"fossil_core.adapters.filesystem","status":"supported_bounded_adapter","symbols":["ArtifactIntegrityError","ArtifactRedactedError","ArtifactStore","DurableEventStore","EventRedactedError","EventRedactionConflict","IdempotencyConflict"]},"s3_adapter":{"module":"fossil_core.adapters.s3","status":"supported_bounded_adapter","symbols":["RemoteObjectConflict","RemoteStoreUnavailable","S3ArtifactStore","S3DurableEventStore"]},"lifecycle_domain":{"module":"fossil_core.domain.lifecycle","status":"supported_domain_model","symbols":["CLAIM_STATES","RELATION_STATES","RELATION_TYPES","LifecycleError","RelationRecord","KnowledgeState"]},"pack_boundary_domain":{"module":"fossil_core.domain.pack","status":"supported_domain_model","symbols":["PackBoundaryError","PackAccess"]},"identity_domain":{"module":"fossil_core.domain.identity","status":"supported_domain_model","symbols":["new_id","deterministic_event_id"]},"promotion_domain":{"module":"fossil_core.domain.promotion","status":"supported_domain_model","symbols":["build_promotion_event"]},"provenance_domain":{"module":"fossil_core.domain.provenance","status":"supported_domain_model","symbols":["SourceStatus","SourceLifecycleState","build_source_state_event"]},"evidence_domain":{"module":"fossil_core.domain.evidence","status":"supported_domain_model","symbols":["build_redaction_event"]},"application_query":{"module":"fossil_core.application.query","status":"supported_application_service","symbols":["LINEAGE_CONTEXT_RESOLVER","expand_context_with_lineage","expand_context_with_lineage_diagnostics","LineageResolvedModelService"]}},"compatibility_modules":{"fossil_core.storage_ports":{"replacement":"fossil_core.ports","symbols":["ArtifactStorePort","EventStorePort"],"star_exported_symbols":["ArtifactStorePort","EventStorePort"]},"fossil_core.artifact_store":{"replacement":"fossil_core.adapters.filesystem","symbols":["ArtifactIntegrityError","ArtifactRedactedError","ArtifactStore"],"star_exported_symbols":["ArtifactIntegrityError","ArtifactRedactedError","ArtifactStore"]},"fossil_core.event_store":{"replacement":"fossil_core.adapters.filesystem","symbols":["DurableEventStore","EventRedactedError","EventRedactionConflict","IdempotencyConflict"],"star_exported_symbols":["DurableEventStore","EventRedactedError","EventRedactionConflict","IdempotencyConflict"]},"fossil_core.s3_storage":{"replacement":"fossil_core.adapters.s3","symbols":["RemoteObjectConflict","RemoteStoreUnavailable","S3ArtifactStore","S3DurableEventStore"],"star_exported_symbols":["RemoteStoreUnavailable","S3ArtifactStore","S3DurableEventStore"]},"fossil_core.lifecycle":{"replacement":"fossil_core.domain.lifecycle","symbols":["CLAIM_STATES","RELATION_STATES","RELATION_TYPES","LifecycleError","RelationRecord","KnowledgeState"],"star_exported_symbols":null,"implicit_star_exported_symbols":["Any","CLAIM_STATES","Iterable","KnowledgeState","LifecycleError","RELATION_STATES","RELATION_TYPES","RelationRecord","dataclass","field"]},"fossil_core.ids":{"replacement":"fossil_core.domain.identity","symbols":["new_id","deterministic_event_id"],"star_exported_symbols":null,"implicit_star_exported_symbols":["annotations","deterministic_event_id","hashlib","new_id","uuid"]},"fossil_core.promotion":{"replacement":"fossil_core.domain.promotion","symbols":["build_promotion_event"],"star_exported_symbols":null,"implicit_star_exported_symbols":["Any","Iterable","annotations","build_promotion_event"]},"fossil_core.answer_pipeline":{"replacement":"fossil_core.application.query","symbols":["LINEAGE_CONTEXT_RESOLVER","expand_context_with_lineage","expand_context_with_lineage_diagnostics","LineageResolvedModelService"],"star_exported_symbols":null,"implicit_star_exported_symbols":["Any","Iterable","LINEAGE_CONTEXT_RESOLVER","LineageResolvedModelService","Mapping","annotations","copy","expand_context_with_lineage","expand_context_with_lineage_diagnostics"]},"fossil_core.contracts":{"replacement":"fossil_core.ports","symbols":["ProjectionReceipt","ProjectionAdapter","VersionedCognitiveService","Retriever","ContextProvider","EmbeddingProvider","Reranker","ModelService","VerificationService"],"star_exported_symbols":null,"implicit_star_exported_symbols":["Any","ContextProvider","EmbeddingProvider","ModelService","Path","ProjectionAdapter","ProjectionReceipt","Protocol","Reranker","Retriever","VerificationService","VersionedCognitiveService","annotations","dataclass"]}},"identity_aliases":[{"source":"fossil_core.ArtifactIntegrityError","target":"fossil_core.adapters.filesystem.ArtifactIntegrityError"},{"source":"fossil_core.ArtifactStore","target":"fossil_core.adapters.filesystem.ArtifactStore"},{"source":"fossil_core.DurableEventStore","target":"fossil_core.adapters.filesystem.DurableEventStore"},{"source":"fossil_core.IdempotencyConflict","target":"fossil_core.adapters.filesystem.IdempotencyConflict"},{"source":"fossil_core.KnowledgeState","target":"fossil_core.domain.lifecycle.KnowledgeState"},{"source":"fossil_core.LifecycleError","target":"fossil_core.domain.lifecycle.LifecycleError"},{"source":"fossil_core.RelationRecord","target":"fossil_core.domain.lifecycle.RelationRecord"},{"source":"fossil_core.PackAccess","target":"fossil_core.domain.pack.PackAccess"},{"source":"fossil_core.PackBoundaryError","target":"fossil_core.domain.pack.PackBoundaryError"},{"source":"fossil_core.ids.new_id","target":"fossil_core.domain.identity.new_id"},{"source":"fossil_core.ids.deterministic_event_id","target":"fossil_core.domain.identity.deterministic_event_id"},{"source":"fossil_core.build_promotion_event","target":"fossil_core.domain.promotion.build_promotion_event"},{"source":"fossil_core.source.SourceStatus","target":"fossil_core.domain.provenance.SourceStatus"},{"source":"fossil_core.source.SourceLifecycleState","target":"fossil_core.domain.provenance.SourceLifecycleState"},{"source":"fossil_core.source.build_source_state_event","target":"fossil_core.domain.provenance.build_source_state_event"},{"source":"fossil_core.source.build_redaction_event","target":"fossil_core.domain.evidence.build_redaction_event"},{"source":"fossil_core.contracts.ProjectionReceipt","target":"fossil_core.ports.projection.ProjectionReceipt"},{"source":"fossil_core.contracts.ProjectionAdapter","target":"fossil_core.ports.projection.ProjectionAdapter"},{"source":"fossil_core.contracts.VersionedCognitiveService","target":"fossil_core.ports.cognitive_service.VersionedCognitiveService"},{"source":"fossil_core.contracts.Retriever","target":"fossil_core.ports.retriever.Retriever"},{"source":"fossil_core.contracts.ContextProvider","target":"fossil_core.ports.context_provider.ContextProvider"},{"source":"fossil_core.contracts.EmbeddingProvider","target":"fossil_core.ports.embedding_provider.EmbeddingProvider"},{"source":"fossil_core.contracts.Reranker","target":"fossil_core.ports.reranker.Reranker"},{"source":"fossil_core.contracts.ModelService","target":"fossil_core.ports.model_service.ModelService"},{"source":"fossil_core.contracts.VerificationService","target":"fossil_core.ports.verification_service.VerificationService"},{"source":"fossil_core.answer_pipeline.LINEAGE_CONTEXT_RESOLVER","target":"fossil_core.application.query.LINEAGE_CONTEXT_RESOLVER"},{"source":"fossil_core.answer_pipeline.expand_context_with_lineage","target":"fossil_core.application.query.expand_context_with_lineage"},{"source":"fossil_core.answer_pipeline.expand_context_with_lineage_diagnostics","target":"fossil_core.application.query.expand_context_with_lineage_diagnostics"},{"source":"fossil_core.answer_pipeline.LineageResolvedModelService","target":"fossil_core.application.query.LineageResolvedModelService"}]}
+{
+  "schema": "fossil.python-public-api.v1",
+  "policy": {
+    "unlisted_modules": "internal_until_explicitly_promoted",
+    "compatibility_modules": "temporary_until_explicit_cleanup_phase",
+    "runtime_deprecation_warnings": false
+  },
+  "surfaces": {
+    "package_root": {
+      "module": "fossil_core",
+      "status": "supported",
+      "symbols": [
+        "ArtifactIntegrityError",
+        "ArtifactStore",
+        "DurableEventStore",
+        "IdempotencyConflict",
+        "KnowledgeState",
+        "LifecycleError",
+        "RelationRecord",
+        "KnowledgePackValidator",
+        "PackAccess",
+        "PackBoundaryError",
+        "build_promotion_event"
+      ]
+    },
+    "storage_ports": {
+      "module": "fossil_core.ports",
+      "status": "supported",
+      "symbols": [
+        "ArtifactStorePort",
+        "EventStorePort",
+        "ProjectionReceipt",
+        "ProjectionAdapter",
+        "VersionedCognitiveService",
+        "Retriever",
+        "ContextProvider",
+        "EmbeddingProvider",
+        "Reranker",
+        "ModelService",
+        "VerificationService"
+      ]
+    },
+    "projection_port": {
+      "module": "fossil_core.ports.projection",
+      "status": "supported",
+      "symbols": [
+        "ProjectionReceipt",
+        "ProjectionAdapter"
+      ]
+    },
+    "cognitive_service_port": {
+      "module": "fossil_core.ports.cognitive_service",
+      "status": "supported",
+      "symbols": [
+        "VersionedCognitiveService"
+      ]
+    },
+    "retriever_port": {
+      "module": "fossil_core.ports.retriever",
+      "status": "supported",
+      "symbols": [
+        "Retriever"
+      ]
+    },
+    "context_provider_port": {
+      "module": "fossil_core.ports.context_provider",
+      "status": "supported",
+      "symbols": [
+        "ContextProvider"
+      ]
+    },
+    "embedding_provider_port": {
+      "module": "fossil_core.ports.embedding_provider",
+      "status": "supported",
+      "symbols": [
+        "EmbeddingProvider"
+      ]
+    },
+    "reranker_port": {
+      "module": "fossil_core.ports.reranker",
+      "status": "supported",
+      "symbols": [
+        "Reranker"
+      ]
+    },
+    "model_service_port": {
+      "module": "fossil_core.ports.model_service",
+      "status": "supported",
+      "symbols": [
+        "ModelService"
+      ]
+    },
+    "verification_service_port": {
+      "module": "fossil_core.ports.verification_service",
+      "status": "supported",
+      "symbols": [
+        "VerificationService"
+      ]
+    },
+    "filesystem_adapter": {
+      "module": "fossil_core.adapters.filesystem",
+      "status": "supported_bounded_adapter",
+      "symbols": [
+        "ArtifactIntegrityError",
+        "ArtifactRedactedError",
+        "ArtifactStore",
+        "DurableEventStore",
+        "EventRedactedError",
+        "EventRedactionConflict",
+        "IdempotencyConflict"
+      ]
+    },
+    "s3_adapter": {
+      "module": "fossil_core.adapters.s3",
+      "status": "supported_bounded_adapter",
+      "symbols": [
+        "RemoteObjectConflict",
+        "RemoteStoreUnavailable",
+        "S3ArtifactStore",
+        "S3DurableEventStore"
+      ]
+    },
+    "lifecycle_domain": {
+      "module": "fossil_core.domain.lifecycle",
+      "status": "supported_domain_model",
+      "symbols": [
+        "CLAIM_STATES",
+        "RELATION_STATES",
+        "RELATION_TYPES",
+        "LifecycleError",
+        "RelationRecord",
+        "KnowledgeState"
+      ]
+    },
+    "pack_boundary_domain": {
+      "module": "fossil_core.domain.pack",
+      "status": "supported_domain_model",
+      "symbols": [
+        "PackBoundaryError",
+        "PackAccess"
+      ]
+    },
+    "identity_domain": {
+      "module": "fossil_core.domain.identity",
+      "status": "supported_domain_model",
+      "symbols": [
+        "new_id",
+        "deterministic_event_id"
+      ]
+    },
+    "promotion_domain": {
+      "module": "fossil_core.domain.promotion",
+      "status": "supported_domain_model",
+      "symbols": [
+        "build_promotion_event"
+      ]
+    },
+    "provenance_domain": {
+      "module": "fossil_core.domain.provenance",
+      "status": "supported_domain_model",
+      "symbols": [
+        "SourceStatus",
+        "SourceLifecycleState",
+        "build_source_state_event"
+      ]
+    },
+    "evidence_domain": {
+      "module": "fossil_core.domain.evidence",
+      "status": "supported_domain_model",
+      "symbols": [
+        "build_redaction_event"
+      ]
+    },
+    "application_query": {
+      "module": "fossil_core.application.query",
+      "status": "supported_application_service",
+      "symbols": [
+        "LINEAGE_CONTEXT_RESOLVER",
+        "expand_context_with_lineage",
+        "expand_context_with_lineage_diagnostics",
+        "LineageResolvedModelService"
+      ]
+    }
+  },
+  "compatibility_modules": {
+    "fossil_core.storage_ports": {
+      "replacement": "fossil_core.ports",
+      "symbols": [
+        "ArtifactStorePort",
+        "EventStorePort"
+      ],
+      "star_exported_symbols": [
+        "ArtifactStorePort",
+        "EventStorePort"
+      ]
+    },
+    "fossil_core.artifact_store": {
+      "replacement": "fossil_core.adapters.filesystem",
+      "symbols": [
+        "ArtifactIntegrityError",
+        "ArtifactRedactedError",
+        "ArtifactStore"
+      ],
+      "star_exported_symbols": [
+        "ArtifactIntegrityError",
+        "ArtifactRedactedError",
+        "ArtifactStore"
+      ]
+    },
+    "fossil_core.event_store": {
+      "replacement": "fossil_core.adapters.filesystem",
+      "symbols": [
+        "DurableEventStore",
+        "EventRedactedError",
+        "EventRedactionConflict",
+        "IdempotencyConflict"
+      ],
+      "star_exported_symbols": [
+        "DurableEventStore",
+        "EventRedactedError",
+        "EventRedactionConflict",
+        "IdempotencyConflict"
+      ]
+    },
+    "fossil_core.s3_storage": {
+      "replacement": "fossil_core.adapters.s3",
+      "symbols": [
+        "RemoteObjectConflict",
+        "RemoteStoreUnavailable",
+        "S3ArtifactStore",
+        "S3DurableEventStore"
+      ],
+      "star_exported_symbols": [
+        "RemoteStoreUnavailable",
+        "S3ArtifactStore",
+        "S3DurableEventStore"
+      ]
+    },
+    "fossil_core.lifecycle": {
+      "replacement": "fossil_core.domain.lifecycle",
+      "symbols": [
+        "CLAIM_STATES",
+        "RELATION_STATES",
+        "RELATION_TYPES",
+        "LifecycleError",
+        "RelationRecord",
+        "KnowledgeState"
+      ],
+      "star_exported_symbols": null,
+      "implicit_star_exported_symbols": [
+        "Any",
+        "CLAIM_STATES",
+        "Iterable",
+        "KnowledgeState",
+        "LifecycleError",
+        "RELATION_STATES",
+        "RELATION_TYPES",
+        "RelationRecord",
+        "dataclass",
+        "field"
+      ]
+    },
+    "fossil_core.ids": {
+      "replacement": "fossil_core.domain.identity",
+      "symbols": [
+        "new_id",
+        "deterministic_event_id"
+      ],
+      "star_exported_symbols": null,
+      "implicit_star_exported_symbols": [
+        "annotations",
+        "deterministic_event_id",
+        "hashlib",
+        "new_id",
+        "uuid"
+      ]
+    },
+    "fossil_core.promotion": {
+      "replacement": "fossil_core.domain.promotion",
+      "symbols": [
+        "build_promotion_event"
+      ],
+      "star_exported_symbols": null,
+      "implicit_star_exported_symbols": [
+        "Any",
+        "Iterable",
+        "annotations",
+        "build_promotion_event"
+      ]
+    },
+    "fossil_core.answer_pipeline": {
+      "replacement": "fossil_core.application.query",
+      "symbols": [
+        "LINEAGE_CONTEXT_RESOLVER",
+        "expand_context_with_lineage",
+        "expand_context_with_lineage_diagnostics",
+        "LineageResolvedModelService"
+      ],
+      "star_exported_symbols": null,
+      "implicit_star_exported_symbols": [
+        "Any",
+        "Iterable",
+        "LINEAGE_CONTEXT_RESOLVER",
+        "LineageResolvedModelService",
+        "Mapping",
+        "annotations",
+        "copy",
+        "expand_context_with_lineage",
+        "expand_context_with_lineage_diagnostics"
+      ]
+    },
+    "fossil_core.contracts": {
+      "replacement": "fossil_core.ports",
+      "symbols": [
+        "ProjectionReceipt",
+        "ProjectionAdapter",
+        "VersionedCognitiveService",
+        "Retriever",
+        "ContextProvider",
+        "EmbeddingProvider",
+        "Reranker",
+        "ModelService",
+        "VerificationService"
+      ],
+      "star_exported_symbols": null,
+      "implicit_star_exported_symbols": [
+        "Any",
+        "ContextProvider",
+        "EmbeddingProvider",
+        "ModelService",
+        "Path",
+        "ProjectionAdapter",
+        "ProjectionReceipt",
+        "Protocol",
+        "Reranker",
+        "Retriever",
+        "VerificationService",
+        "VersionedCognitiveService",
+        "annotations",
+        "dataclass"
+      ]
+    }
+  },
+  "identity_aliases": [
+    {
+      "source": "fossil_core.ArtifactIntegrityError",
+      "target": "fossil_core.adapters.filesystem.ArtifactIntegrityError"
+    },
+    {
+      "source": "fossil_core.ArtifactStore",
+      "target": "fossil_core.adapters.filesystem.ArtifactStore"
+    },
+    {
+      "source": "fossil_core.DurableEventStore",
+      "target": "fossil_core.adapters.filesystem.DurableEventStore"
+    },
+    {
+      "source": "fossil_core.IdempotencyConflict",
+      "target": "fossil_core.adapters.filesystem.IdempotencyConflict"
+    },
+    {
+      "source": "fossil_core.KnowledgeState",
+      "target": "fossil_core.domain.lifecycle.KnowledgeState"
+    },
+    {
+      "source": "fossil_core.LifecycleError",
+      "target": "fossil_core.domain.lifecycle.LifecycleError"
+    },
+    {
+      "source": "fossil_core.RelationRecord",
+      "target": "fossil_core.domain.lifecycle.RelationRecord"
+    },
+    {
+      "source": "fossil_core.PackAccess",
+      "target": "fossil_core.domain.pack.PackAccess"
+    },
+    {
+      "source": "fossil_core.PackBoundaryError",
+      "target": "fossil_core.domain.pack.PackBoundaryError"
+    },
+    {
+      "source": "fossil_core.ids.new_id",
+      "target": "fossil_core.domain.identity.new_id"
+    },
+    {
+      "source": "fossil_core.ids.deterministic_event_id",
+      "target": "fossil_core.domain.identity.deterministic_event_id"
+    },
+    {
+      "source": "fossil_core.build_promotion_event",
+      "target": "fossil_core.domain.promotion.build_promotion_event"
+    },
+    {
+      "source": "fossil_core.source.SourceStatus",
+      "target": "fossil_core.domain.provenance.SourceStatus"
+    },
+    {
+      "source": "fossil_core.source.SourceLifecycleState",
+      "target": "fossil_core.domain.provenance.SourceLifecycleState"
+    },
+    {
+      "source": "fossil_core.source.build_source_state_event",
+      "target": "fossil_core.domain.provenance.build_source_state_event"
+    },
+    {
+      "source": "fossil_core.source.build_redaction_event",
+      "target": "fossil_core.domain.evidence.build_redaction_event"
+    },
+    {
+      "source": "fossil_core.contracts.ProjectionReceipt",
+      "target": "fossil_core.ports.projection.ProjectionReceipt"
+    },
+    {
+      "source": "fossil_core.contracts.ProjectionAdapter",
+      "target": "fossil_core.ports.projection.ProjectionAdapter"
+    },
+    {
+      "source": "fossil_core.contracts.VersionedCognitiveService",
+      "target": "fossil_core.ports.cognitive_service.VersionedCognitiveService"
+    },
+    {
+      "source": "fossil_core.contracts.Retriever",
+      "target": "fossil_core.ports.retriever.Retriever"
+    },
+    {
+      "source": "fossil_core.contracts.ContextProvider",
+      "target": "fossil_core.ports.context_provider.ContextProvider"
+    },
+    {
+      "source": "fossil_core.contracts.EmbeddingProvider",
+      "target": "fossil_core.ports.embedding_provider.EmbeddingProvider"
+    },
+    {
+      "source": "fossil_core.contracts.Reranker",
+      "target": "fossil_core.ports.reranker.Reranker"
+    },
+    {
+      "source": "fossil_core.contracts.ModelService",
+      "target": "fossil_core.ports.model_service.ModelService"
+    },
+    {
+      "source": "fossil_core.contracts.VerificationService",
+      "target": "fossil_core.ports.verification_service.VerificationService"
+    },
+    {
+      "source": "fossil_core.answer_pipeline.LINEAGE_CONTEXT_RESOLVER",
+      "target": "fossil_core.application.query.LINEAGE_CONTEXT_RESOLVER"
+    },
+    {
+      "source": "fossil_core.answer_pipeline.expand_context_with_lineage",
+      "target": "fossil_core.application.query.expand_context_with_lineage"
+    },
+    {
+      "source": "fossil_core.answer_pipeline.expand_context_with_lineage_diagnostics",
+      "target": "fossil_core.application.query.expand_context_with_lineage_diagnostics"
+    },
+    {
+      "source": "fossil_core.answer_pipeline.LineageResolvedModelService",
+      "target": "fossil_core.application.query.LineageResolvedModelService"
+    }
+  ]
+}
