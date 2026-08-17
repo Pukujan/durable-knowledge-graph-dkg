@@ -11,7 +11,7 @@ from fossil_core.answer_eval import (
     run_answer_reliability_benchmark,
 )
 from fossil_core.answer_pipeline import LineageResolvedModelService
-from fossil_core.pack_corpus import retrieval_documents_from_pack_fixtures
+from fossil_core.application.rebuild import retrieval_documents_from_pack_fixtures
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_PLAN = ROOT / "benchmarks" / "post-gate2" / "answer-reliability-v1.json"
