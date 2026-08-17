@@ -107,9 +107,19 @@ from fossil_core.ports import VersionedCognitiveService
 from fossil_core.ports.cognitive_service import VersionedCognitiveService
 ```
 
-`VersionedCognitiveService` requires the existing `metadata()` surface used to record implementation/provider/model/runtime provenance. This shared prerequisite is intentionally separated before `Retriever` and `ContextProvider` move into their target port modules, so those future ports do not depend on each other or on the legacy aggregate solely to inherit metadata behavior.
+`VersionedCognitiveService` requires the existing `metadata()` surface used to record implementation/provider/model/runtime provenance.
 
-`fossil_core.contracts.ProjectionAdapter`, `fossil_core.contracts.ProjectionReceipt`, and `fossil_core.contracts.VersionedCognitiveService` remain identity-preserving aliases during migration. The entire `fossil_core.contracts` module is **not** classified as compatibility-only yet because it still owns the existing cognitive capability protocols (`Retriever`, `EmbeddingProvider`, `Reranker`, `ContextProvider`, `ModelService`, and `VerificationService`). Those interfaces require separate bounded migrations rather than one broad package move.
+Retrieval capability code should depend on the canonical Retriever port:
+
+```python
+from fossil_core.ports import Retriever
+# equivalent canonical module:
+from fossil_core.ports.retriever import Retriever
+```
+
+`Retriever.search` retains the existing contract: `query`, keyword-only `pack_ids`, and keyword-only `limit=20`, returning ranked candidate dictionaries. Moving the Protocol does not alter lexical, embedding, hybrid, reranking, filtering, or query semantics implemented by concrete services.
+
+`fossil_core.contracts.ProjectionAdapter`, `fossil_core.contracts.ProjectionReceipt`, `fossil_core.contracts.VersionedCognitiveService`, and `fossil_core.contracts.Retriever` remain identity-preserving aliases during migration. The entire `fossil_core.contracts` module is **not** classified as compatibility-only yet because it still owns `EmbeddingProvider`, `Reranker`, `ContextProvider`, `ModelService`, and `VerificationService`. Those interfaces require separate bounded migrations rather than one broad package move.
 
 ## Canonical concrete adapters
 
@@ -145,7 +155,7 @@ The following flat paths remain valid only to prevent migration breakage:
 
 They intentionally preserve object identity with canonical classes/protocols/functions. The lifecycle shim preserves its historical implicit star-import names rather than adding a new `__all__`. The `ids` shim likewise preserves its historical implicit `annotations`, `hashlib`, and `uuid` names as well as the two identity functions. The promotion shim preserves its historical `Any`, `Iterable`, `annotations`, and `build_promotion_event` names. None of these compatibility-only modules gains a new `__all__`. No runtime deprecation warning is added to these `fossil_core` compatibility paths because that would mix behavior changes into structural migration.
 
-`fossil_core.pack` is not listed as compatibility-only: it remains the active home of `KnowledgePackValidator` while `PackAccess` and `PackBoundaryError` are identity aliases to the pure domain boundary. Likewise, `fossil_core.contracts` remains a mixed active module while its projection and shared cognitive-metadata types forward to canonical ports.
+`fossil_core.pack` is not listed as compatibility-only: it remains the active home of `KnowledgePackValidator` while `PackAccess` and `PackBoundaryError` are identity aliases to the pure domain boundary. Likewise, `fossil_core.contracts` remains a mixed active module while migrated projection, cognitive-metadata, and Retriever types forward to canonical ports.
 
 Removal is not authorized by this document. Compatibility modules may be removed only in an explicit cleanup phase after first-party consumers, clean-install tests, cross-repository contracts, and required hosted gates demonstrate that the old paths are no longer needed.
 
