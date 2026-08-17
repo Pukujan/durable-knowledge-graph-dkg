@@ -35,6 +35,7 @@ CANONICAL_MODULES = {
     "fossil_core.adapters.filesystem",
     "fossil_core.adapters.filesystem.artifact_store",
     "fossil_core.adapters.filesystem.event_store",
+    "fossil_core.adapters.filesystem.io",
     "fossil_core.adapters.s3",
     "fossil_core.adapters.s3.storage",
 }
@@ -42,6 +43,7 @@ CANONICAL_MODULES = {
 COMPATIBILITY_IMPORTS = {
     "fossil_core.answer_pipeline": {"fossil_core.application.query"},
     "fossil_core.ids": {"fossil_core.domain.identity"},
+    "fossil_core.io": {"fossil_core.adapters.filesystem.io"},
     "fossil_core.lifecycle": {"fossil_core.domain.lifecycle"},
     "fossil_core.promotion": {"fossil_core.domain.promotion"},
     "fossil_core.storage_ports": {"fossil_core.ports"},

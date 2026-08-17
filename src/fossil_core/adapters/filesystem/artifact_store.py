@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from ...io import publish_immutable
+from .io import publish_immutable
 
 
 class ArtifactIntegrityError(RuntimeError):
