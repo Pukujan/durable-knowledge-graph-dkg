@@ -1,0 +1,126 @@
+name: Hosted reranker live proof
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/reranker-live-proof.yml"
+
+jobs:
+  reranker-proof:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      LITELLM_URL: ${{ vars.LITELLM_URL }}
+      LITELLM_PROXY_KEY: ${{ secrets.LITELLM_PROXY_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run one bounded non-sensitive rerank request
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          CONNECT_TIMEOUT_SECONDS=5
+          MAX_TIME_SECONDS=30
+          REQUESTED_MODEL="rerank-v4-pro"
+          base="${LITELLM_URL:-https://litellm-production-8656.up.railway.app/v1}"
+          base="${base%/}"
+
+          test -n "${LITELLM_PROXY_KEY:-}" || { echo 'LITELLM_PROXY_KEY missing'; exit 1; }
+
+          echo "requested_model=$REQUESTED_MODEL"
+          echo "request_count_bound=1"
+          echo "connect_timeout_seconds=$CONNECT_TIMEOUT_SECONDS"
+          echo "max_time_seconds=$MAX_TIME_SECONDS"
+          echo "streaming_supported=false"
+          echo "streaming_required=false"
+          echo "response_mode=buffered-json"
+          echo "automatic_retries=0"
+          echo "fallback=disabled"
+
+          http_code="$(
+            curl -sS \
+              --connect-timeout "$CONNECT_TIMEOUT_SECONDS" \
+              --max-time "$MAX_TIME_SECONDS" \
+              --retry 0 \
+              -D rerank.headers \
+              -H "Authorization: Bearer ${LITELLM_PROXY_KEY}" \
+              -H 'Content-Type: application/json' \
+              -H 'Accept: application/json' \
+              -X POST "$base/rerank" \
+              --data '{"model":"rerank-v4-pro","query":"Which statement describes FOSSIL architecture?","documents":["FOSSIL keeps durable evidence and provenance separate from candidate ranking.","A weather forecast predicts rain tomorrow.","Retrieved text may directly mutate durable truth without validation."],"top_n":3}' \
+              -o rerank.json \
+              -w '%{http_code}'
+          )"
+
+          echo "rerank_http=$http_code"
+          test "$http_code" = "200" || { echo 'rerank request failed'; exit 1; }
+
+          REQUESTED_MODEL="$REQUESTED_MODEL" python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          payload = json.loads(Path("rerank.json").read_text(encoding="utf-8"))
+          rows = payload.get("results") or payload.get("data") or []
+          if not isinstance(rows, list) or len(rows) != 3:
+              raise SystemExit("expected exactly three ranking rows")
+
+          indices = [row.get("index") for row in rows]
+          if sorted(indices) != [0, 1, 2]:
+              raise SystemExit(f"unexpected rerank indices: {indices!r}")
+
+          scores = [row.get("relevance_score", row.get("score")) for row in rows]
+          if any(isinstance(score, bool) or not isinstance(score, (int, float)) for score in scores):
+              raise SystemExit("rerank response did not provide numeric scores")
+
+          metadata = payload.get("metadata") if isinstance(payload.get("metadata"), dict) else {}
+          meta = payload.get("meta") if isinstance(payload.get("meta"), dict) else {}
+          reported_model = next(
+              (
+                  str(value)
+                  for value in (
+                      payload.get("model"),
+                      metadata.get("bridge_actual_model"),
+                      metadata.get("actual_model"),
+                      meta.get("model"),
+                      meta.get("actual_model"),
+                  )
+                  if value is not None and str(value).strip()
+              ),
+              None,
+          )
+          reported_provider = next(
+              (
+                  str(value)
+                  for value in (
+                      payload.get("provider"),
+                      metadata.get("bridge_actual_provider"),
+                      metadata.get("actual_provider"),
+                      meta.get("provider"),
+                  )
+                  if value is not None and str(value).strip()
+              ),
+              None,
+          )
+
+          print("rerank_result_count=", len(rows))
+          print("rerank_indices=", indices)
+          print("requested_model=", os.environ["REQUESTED_MODEL"])
+          print("reported_actual_model=", reported_model or "unreported")
+          print("reported_actual_provider=", reported_provider or "unreported")
+          print("actual_model_verified=", bool(reported_model))
+          print("promotion_identity_grade=", bool(reported_model))
+          print("usage=", json.dumps(payload.get("usage") or meta.get("billed_units") or {}, sort_keys=True))
+          PY
+
+          privacy_warning="$(grep -i '^x-litellm-data-privacy-warning:' rerank.headers || true)"
+          if [ -n "$privacy_warning" ]; then
+            echo "privacy_warning_present=true"
+            printf '%s\n' "$privacy_warning"
+          else
+            echo "privacy_warning_present=false"
+          fi
+
+          echo 'proof_complete=true'
