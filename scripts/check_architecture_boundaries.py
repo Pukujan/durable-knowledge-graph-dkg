@@ -11,6 +11,7 @@ from architecture_inventory import inventory
 PACKAGE = "fossil_core"
 CANONICAL_MODULES = {
     "fossil_core.domain",
+    "fossil_core.domain.identity",
     "fossil_core.domain.lifecycle",
     "fossil_core.domain.pack",
     "fossil_core.ports",
@@ -25,6 +26,7 @@ CANONICAL_MODULES = {
 }
 
 COMPATIBILITY_IMPORTS = {
+    "fossil_core.ids": {"fossil_core.domain.identity"},
     "fossil_core.lifecycle": {"fossil_core.domain.lifecycle"},
     "fossil_core.storage_ports": {"fossil_core.ports"},
     "fossil_core.artifact_store": {

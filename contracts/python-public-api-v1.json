@@ -73,6 +73,14 @@
         "PackBoundaryError",
         "PackAccess"
       ]
+    },
+    "identity_domain": {
+      "module": "fossil_core.domain.identity",
+      "status": "supported_domain_model",
+      "symbols": [
+        "new_id",
+        "deterministic_event_id"
+      ]
     }
   },
   "compatibility_modules": {
@@ -152,6 +160,21 @@
         "dataclass",
         "field"
       ]
+    },
+    "fossil_core.ids": {
+      "replacement": "fossil_core.domain.identity",
+      "symbols": [
+        "new_id",
+        "deterministic_event_id"
+      ],
+      "star_exported_symbols": null,
+      "implicit_star_exported_symbols": [
+        "annotations",
+        "deterministic_event_id",
+        "hashlib",
+        "new_id",
+        "uuid"
+      ]
     }
   },
   "identity_aliases": [
@@ -190,6 +213,14 @@
     {
       "source": "fossil_core.PackBoundaryError",
       "target": "fossil_core.domain.pack.PackBoundaryError"
+    },
+    {
+      "source": "fossil_core.ids.new_id",
+      "target": "fossil_core.domain.identity.new_id"
+    },
+    {
+      "source": "fossil_core.ids.deterministic_event_id",
+      "target": "fossil_core.domain.identity.deterministic_event_id"
     }
   ]
 }
