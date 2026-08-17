@@ -170,6 +170,16 @@
       "symbols": [
         "build_redaction_event"
       ]
+    },
+    "application_query": {
+      "module": "fossil_core.application.query",
+      "status": "supported_application_service",
+      "symbols": [
+        "LINEAGE_CONTEXT_RESOLVER",
+        "expand_context_with_lineage",
+        "expand_context_with_lineage_diagnostics",
+        "LineageResolvedModelService"
+      ]
     }
   },
   "compatibility_modules": {
@@ -277,6 +287,27 @@
         "annotations",
         "build_promotion_event"
       ]
+    },
+    "fossil_core.answer_pipeline": {
+      "replacement": "fossil_core.application.query",
+      "symbols": [
+        "LINEAGE_CONTEXT_RESOLVER",
+        "expand_context_with_lineage",
+        "expand_context_with_lineage_diagnostics",
+        "LineageResolvedModelService"
+      ],
+      "star_exported_symbols": null,
+      "implicit_star_exported_symbols": [
+        "Any",
+        "Iterable",
+        "LINEAGE_CONTEXT_RESOLVER",
+        "LineageResolvedModelService",
+        "Mapping",
+        "annotations",
+        "copy",
+        "expand_context_with_lineage",
+        "expand_context_with_lineage_diagnostics"
+      ]
     }
   },
   "identity_aliases": [
@@ -379,6 +410,22 @@
     {
       "source": "fossil_core.contracts.VerificationService",
       "target": "fossil_core.ports.verification_service.VerificationService"
+    },
+    {
+      "source": "fossil_core.answer_pipeline.LINEAGE_CONTEXT_RESOLVER",
+      "target": "fossil_core.application.query.LINEAGE_CONTEXT_RESOLVER"
+    },
+    {
+      "source": "fossil_core.answer_pipeline.expand_context_with_lineage",
+      "target": "fossil_core.application.query.expand_context_with_lineage"
+    },
+    {
+      "source": "fossil_core.answer_pipeline.expand_context_with_lineage_diagnostics",
+      "target": "fossil_core.application.query.expand_context_with_lineage_diagnostics"
+    },
+    {
+      "source": "fossil_core.answer_pipeline.LineageResolvedModelService",
+      "target": "fossil_core.application.query.LineageResolvedModelService"
     }
   ]
 }
