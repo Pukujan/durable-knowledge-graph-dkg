@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import json
 import socket
 from collections.abc import Callable, Iterable, Mapping
@@ -287,7 +288,7 @@ class LiteLLMReranker:
             retrieval = candidate.get("retrieval")
             retrieval_mapping = dict(retrieval) if isinstance(retrieval, Mapping) else {}
             base_rank = int(retrieval_mapping.get("rank", index + 1))
-            result = json.loads(json.dumps(candidate))
+            result = copy.deepcopy(candidate)
             result["rerank"] = {
                 "base_rank": base_rank,
                 "score": score,
