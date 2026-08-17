@@ -7,7 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from fossil_core.contracts import ProjectionReceipt
+from fossil_core.ports.projection import ProjectionReceipt
 from fossil_core.projection.ledger import ProjectionLedger
 from fossil_core.projection.migration import ordered_events
 
