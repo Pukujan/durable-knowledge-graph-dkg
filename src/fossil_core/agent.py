@@ -9,7 +9,7 @@ from typing import Any, Mapping
 from jsonschema import Draft202012Validator, FormatChecker
 
 from fossil_core.event_store import DurableEventStore
-from fossil_core.pack import PackAccess
+from fossil_core.pack import PackAccess, PackBoundaryError
 from fossil_core.promotion import build_promotion_event
 
 
@@ -127,7 +127,16 @@ class CorpusService:
     knowledge mutation. Projection workers operate downstream of accepted events.
     """
 
-    CAPABILITIES = ("search", "read", "lineage", "propose", "validate", "commit", "manage")
+    CAPABILITIES = (
+        "search",
+        "context",
+        "read",
+        "lineage",
+        "propose",
+        "validate",
+        "commit",
+        "manage",
+    )
 
     def __init__(
         self,
@@ -135,11 +144,15 @@ class CorpusService:
         event_store: DurableEventStore,
         skills: SkillRegistry,
         lineages: Mapping[str, tuple[str, Any]] | None = None,
+        retriever: Any | None = None,
+        context_provider: Any | None = None,
         service_version: str = "1",
     ):
         self.event_store = event_store
         self.skills = skills
         self.lineages = dict(lineages or {})
+        self.retriever = retriever
+        self.context_provider = context_provider
         self.service_version = service_version
 
     def _authorize(self, context: AgentContext, capability: str) -> dict[str, Any]:
@@ -158,6 +171,32 @@ class CorpusService:
                 "agent event actor/model/harness/skill provenance does not match session context"
             )
 
+    @staticmethod
+    def _authorized_pack_ids(requested: Any, *, access: PackAccess) -> list[str]:
+        if requested is None:
+            return sorted(access.read_mounts)
+        if not isinstance(requested, (list, tuple, set, frozenset)):
+            raise TypeError("pack_ids must be a sequence of pack IDs")
+        pack_ids = list(dict.fromkeys(str(item) for item in requested if str(item)))
+        if not pack_ids:
+            raise ValueError("pack_ids must contain at least one readable pack")
+        for pack_id in pack_ids:
+            access.require_read(pack_id)
+        return pack_ids
+
+    @staticmethod
+    def _require_result_scope(
+        items: list[dict[str, Any]], *, allowed_pack_ids: set[str]
+    ) -> None:
+        for item in items:
+            pack_id = str(item.get("pack_id") or "")
+            if not pack_id:
+                raise PackBoundaryError("retrieval result is missing pack_id")
+            if pack_id not in allowed_pack_ids:
+                raise PackBoundaryError(
+                    f"retrieval result from unmounted pack {pack_id} crossed query boundary"
+                )
+
     def search(
         self,
         query: str,
@@ -169,6 +208,16 @@ class CorpusService:
         self._authorize(context, "search")
         if limit < 1 or limit > 100:
             raise ValueError("search limit must be between 1 and 100")
+
+        if self.retriever is not None:
+            pack_ids = sorted(access.read_mounts)
+            results = [
+                copy.deepcopy(dict(item))
+                for item in self.retriever.search(query, pack_ids=pack_ids, limit=limit)
+            ]
+            self._require_result_scope(results, allowed_pack_ids=set(pack_ids))
+            return results[:limit]
+
         needle = query.lower().strip()
         results: list[dict[str, Any]] = []
         for event in self.event_store.iter_events():
@@ -191,6 +240,27 @@ class CorpusService:
             if len(results) >= limit:
                 break
         return results
+
+    def context(
+        self,
+        request: Mapping[str, Any],
+        *,
+        access: PackAccess,
+        context: AgentContext,
+    ) -> dict[str, Any]:
+        self._authorize(context, "context")
+        if self.context_provider is None:
+            raise CapabilityError("FOSSIL context provider is not configured")
+
+        safe_request = copy.deepcopy(dict(request))
+        pack_ids = self._authorized_pack_ids(safe_request.get("pack_ids"), access=access)
+        safe_request["pack_ids"] = pack_ids
+        result = copy.deepcopy(dict(self.context_provider.build_context(safe_request)))
+        items = [copy.deepcopy(dict(item)) for item in result.get("items", [])]
+        self._require_result_scope(items, allowed_pack_ids=set(pack_ids))
+        result["items"] = items
+        result["pack_ids"] = pack_ids
+        return result
 
     def read(
         self,
