@@ -29,7 +29,7 @@
       "minItems": 1,
       "uniqueItems": true,
       "items": {
-        "enum": ["search", "read", "lineage", "propose", "validate", "commit", "manage"]
+        "enum": ["search", "context", "read", "lineage", "propose", "validate", "commit", "manage"]
       }
     },
     "triggers": {
