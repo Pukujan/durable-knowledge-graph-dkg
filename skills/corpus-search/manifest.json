@@ -5,7 +5,7 @@
   "name": "Corpus search",
   "summary": "Find durable FOSSIL knowledge across readable packs while preserving stable IDs and provenance.",
   "methodology_ref": "SKILL.md",
-  "capabilities": ["search", "read", "lineage"],
+  "capabilities": ["search", "context", "read", "lineage"],
   "triggers": ["search", "find", "locate", "what do we know", "history", "lineage"],
-  "risk_notes": "Search results are evidence pointers and corpus state, not permission to mutate graph storage."
+  "risk_notes": "Search and context results are evidence pointers and corpus state, not permission to mutate graph storage."
 }
