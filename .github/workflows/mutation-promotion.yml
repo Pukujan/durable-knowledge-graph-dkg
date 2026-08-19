@@ -89,20 +89,20 @@ jobs:
               mutmut show "${mutant}"
               echo "::endgroup::"
             done
-      - name: Characterize promotion mutation strength
+      - name: Enforce promotion mutation strength
         run: |
           python scripts/check_mutation_assurance.py \
             mutants/mutmut-cicd-stats.json \
             --scope promotion \
-            --minimum-score 0 \
-            --maximum-survivors 999 \
-            --maximum-no-tests 999 \
+            --minimum-score 79 \
+            --maximum-survivors 40 \
+            --maximum-no-tests 0 \
             --receipt build/assurance/mutation-promotion.json
-      - name: Emit characterization receipt
+      - name: Emit compact promotion mutation receipt
         shell: bash
         run: |
           {
-            echo "## Promotion mutation characterization"
+            echo "## Promotion mutation assurance"
             echo '```json'
             cat build/assurance/mutation-promotion.json
             echo '```'
@@ -115,6 +115,7 @@ jobs:
             echo "- property: FOSSIL-PROP-PROMOTION-001"
             echo "- mutable source: src/fossil_core/domain/promotion.py only"
             echo "- tests: test_promotion.py + test_promotion_source_pin.py + test_promotion_mutation_oracles.py"
-            echo "- characterization only: floor intentionally non-enforcing until survivors are reviewed"
+            echo "- enforced floor: score >=79%; survivors <=40; no_tests = 0"
+            echo "- reviewed residuals: exception-message/default-value equivalents behind the validated promotion envelope"
             echo "- security: secretless; contents:read"
           } >> "$GITHUB_STEP_SUMMARY"
