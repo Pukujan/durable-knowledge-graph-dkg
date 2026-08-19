@@ -5,7 +5,14 @@ from typing import Any, Mapping
 
 from jsonschema import Draft202012Validator, FormatChecker
 
-from .lifecycle import CLAIM_STATES, RELATION_STATES, RELATION_TYPES
+from .lifecycle import CLAIM_STATES, RELATION_STATES
+from .ontology import (
+    CORE_ONTOLOGY_REF,
+    ENTITY_TYPES,
+    RELATION_TYPES,
+    OntologyConstraintError,
+    validate_relation_endpoints,
+)
 
 
 EVENT_TYPE_REGISTRY_VERSION = "dkg.event-type-registry.v1"
@@ -38,7 +45,7 @@ class EventTypeContract:
     commit_eligibility: str
     payload_schema: Mapping[str, Any]
     evidence_policy: EvidencePolicy
-    ontology_constraints: Mapping[str, str] | None
+    ontology_constraints: Mapping[str, Any] | None
     property_ids: tuple[str, ...]
     oracle_ids: tuple[str, ...]
 
@@ -97,7 +104,7 @@ def _contract(
     commit_eligibility: str,
     payload_schema: Mapping[str, Any],
     evidence_policy: EvidencePolicy = EvidencePolicy(),
-    ontology_constraints: Mapping[str, str] | None = None,
+    ontology_constraints: Mapping[str, Any] | None = None,
     property_ids: tuple[str, ...],
     oracle_ids: tuple[str, ...] = ("tests/test_event_contracts.py",),
 ) -> EventTypeContract:
@@ -116,7 +123,32 @@ def _contract(
 _CLAIM_STATE = {"type": "string", "enum": sorted(CLAIM_STATES)}
 _RELATION_STATE = {"type": "string", "enum": sorted(RELATION_STATES)}
 _RELATION_TYPE = {"type": "string", "enum": sorted(RELATION_TYPES)}
+_ENTITY_TYPE = {"type": "string", "enum": sorted(ENTITY_TYPES)}
 _PACK_ID = {"type": "string", "pattern": "^pack_[A-Za-z0-9_-]{16,}$"}
+_RELATION_ENDPOINT_REQUIRED = (
+    "ontology_ref",
+    "relation_type",
+    "source_ref",
+    "source_type",
+    "target_ref",
+    "target_type",
+)
+_RELATION_ENDPOINT_PROPERTIES: Mapping[str, Any] = {
+    "ontology_ref": _string(),
+    "relation_type": _RELATION_TYPE,
+    "source_ref": _string(),
+    "source_type": _ENTITY_TYPE,
+    "target_ref": _string(),
+    "target_type": _ENTITY_TYPE,
+}
+_RELATION_ONTOLOGY_CONSTRAINTS: Mapping[str, Any] = {
+    "ontology_ref": CORE_ONTOLOGY_REF,
+    "relation_type_field": "relation_type",
+    "source_ref_field": "source_ref",
+    "source_type_field": "source_type",
+    "target_ref_field": "target_ref",
+    "target_type_field": "target_type",
+}
 
 
 EVENT_TYPE_CONTRACTS: Mapping[str, EventTypeContract] = {
@@ -174,46 +206,50 @@ EVENT_TYPE_CONTRACTS: Mapping[str, EventTypeContract] = {
             required=("relation_id", "relation_type", "source_ref", "target_ref"),
             properties={
                 "relation_id": _string(),
-                "relation_type": _RELATION_TYPE,
-                "source_ref": _string(),
-                "target_ref": _string(),
+                **_RELATION_ENDPOINT_PROPERTIES,
                 "state": _RELATION_STATE,
             },
         ),
-        ontology_constraints={
-            "ontology_ref": "dkg.core@1.0.0",
-            "relation_type_field": "relation_type",
-            "source_ref_field": "source_ref",
-            "target_ref_field": "target_ref",
-        },
-        property_ids=("FOSSIL-PROP-HISTORY-001",),
+        ontology_constraints=_RELATION_ONTOLOGY_CONSTRAINTS,
+        property_ids=("FOSSIL-PROP-HISTORY-001", "FOSSIL-PROP-LIFECYCLE-DEPENDENCY-001"),
+        oracle_ids=(
+            "tests/test_event_contracts.py",
+            "tests/test_ontology_contracts.py",
+            "tests/test_relation_acceptance.py",
+        ),
     ),
     "relation.state_changed": _contract(
         "relation.state_changed",
         commit_eligibility="accepted",
         payload_schema=_payload_schema(
             "relation.state_changed",
-            required=("relation_id", "to_state"),
+            required=("relation_id", "to_state", *_RELATION_ENDPOINT_REQUIRED),
             properties={
                 "relation_id": _string(),
                 "from_state": _RELATION_STATE,
                 "to_state": _RELATION_STATE,
+                **_RELATION_ENDPOINT_PROPERTIES,
             },
         ),
-        property_ids=("FOSSIL-PROP-HISTORY-001",),
+        ontology_constraints=_RELATION_ONTOLOGY_CONSTRAINTS,
+        property_ids=("FOSSIL-PROP-HISTORY-001", "FOSSIL-PROP-LIFECYCLE-DEPENDENCY-001"),
+        oracle_ids=("tests/test_relation_acceptance.py", "tests/test_ontology_contracts.py"),
     ),
     "relation.superseded": _contract(
         "relation.superseded",
         commit_eligibility="accepted",
         payload_schema=_payload_schema(
             "relation.superseded",
-            required=("relation_id",),
+            required=("relation_id", *_RELATION_ENDPOINT_REQUIRED),
             properties={
                 "relation_id": _string(),
                 "from_state": _RELATION_STATE,
+                **_RELATION_ENDPOINT_PROPERTIES,
             },
         ),
-        property_ids=("FOSSIL-PROP-HISTORY-001",),
+        ontology_constraints=_RELATION_ONTOLOGY_CONSTRAINTS,
+        property_ids=("FOSSIL-PROP-HISTORY-001", "FOSSIL-PROP-LIFECYCLE-DEPENDENCY-001"),
+        oracle_ids=("tests/test_relation_acceptance.py", "tests/test_ontology_contracts.py"),
     ),
     **{
         event_type: _contract(
@@ -342,6 +378,34 @@ def _require_nonempty_refs(event: Mapping[str, Any], field: str) -> None:
         )
 
 
+def _validate_relation_semantics(event_type: str, payload: Mapping[str, Any]) -> None:
+    if event_type == "relation.proposed":
+        if payload.get("state", "proposed") != "proposed":
+            raise EventContractError(
+                "relation.proposed must remain proposed; use an accepted relation state transition"
+            )
+
+        optional_endpoint_fields = ("ontology_ref", "source_type", "target_type")
+        if not any(field in payload for field in optional_endpoint_fields):
+            return
+        missing = [field for field in optional_endpoint_fields if not payload.get(field)]
+        if missing:
+            raise EventContractError(
+                "relation.proposed ontology metadata must be complete when supplied: "
+                + ", ".join(missing)
+            )
+
+    try:
+        validate_relation_endpoints(
+            relation_type=str(payload["relation_type"]),
+            source_type=str(payload["source_type"]),
+            target_type=str(payload["target_type"]),
+            ontology_ref=str(payload["ontology_ref"]),
+        )
+    except OntologyConstraintError as exc:
+        raise EventContractError(str(exc)) from exc
+
+
 def validate_event_for_commit(event: Mapping[str, Any]) -> EventTypeContract:
     """Validate one prepared event against the versioned acceptance registry.
 
@@ -355,6 +419,10 @@ def validate_event_for_commit(event: Mapping[str, Any]) -> EventTypeContract:
         dict(contract.payload_schema),
         format_checker=FormatChecker(),
     ).validate(event.get("payload"))
+
+    payload = event.get("payload")
+    if contract.ontology_constraints is not None and isinstance(payload, Mapping):
+        _validate_relation_semantics(contract.event_type, payload)
 
     policy = contract.evidence_policy
     if policy.evidence_refs == "required":
