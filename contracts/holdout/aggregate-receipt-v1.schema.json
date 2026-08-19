@@ -80,12 +80,6 @@
         "policy_not_approved"
       ]
     },
-    "public_run_ref": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 200,
-      "description": "Optional public execution reference. Do not place private storage or credential references here."
-    },
     "sealed_material_disclosed": {"const": false},
     "private_oracle_disclosed": {"const": false},
     "credentials_disclosed": {"const": false}
