@@ -26,6 +26,7 @@ jobs:
     timeout-minutes: 10
     env:
       FOSSIL_SOFTWARE_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+      TLA_TOOLS_JAR: ${{ runner.temp }}/tla2tools-v1.7.2.jar
     steps:
       - uses: actions/checkout@v4
         with:
@@ -38,16 +39,40 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - name: Download pinned TLA+ tools
+      - name: Restore pinned TLA+ tools cache
+        id: tla-tools-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/tla2tools-v1.7.2.jar
+          key: tla2tools-v1.7.2-sha1-7f21faa2cdae3189e7d5fadb4488f0dfcc658407
+      - name: Download pinned TLA+ tools on cache miss
+        if: steps.tla-tools-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
           curl --fail --silent --show-error --location \
-            --output /tmp/tla2tools.jar \
+            --output "${TLA_TOOLS_JAR}" \
             https://github.com/tlaplus/tlaplus/releases/download/v1.7.2/tla2tools.jar
-          echo "7f21faa2cdae3189e7d5fadb4488f0dfcc658407  /tmp/tla2tools.jar" \
+      - name: Verify pinned TLA+ tools checksum
+        shell: bash
+        run: |
+          echo "7f21faa2cdae3189e7d5fadb4488f0dfcc658407  ${TLA_TOOLS_JAR}" \
             | sha1sum --check --strict
       - name: Parse DurableStore model
-        run: java -cp /tmp/tla2tools.jar tla2sany.SANY formal/tla/DurableStore.tla
+        run: java -cp "${TLA_TOOLS_JAR}" tla2sany.SANY formal/tla/DurableStore.tla
       - name: Model-check bounded DurableStore protocol
         working-directory: formal/tla
-        run: java -jar /tmp/tla2tools.jar -config DurableStore.cfg DurableStore.tla
+        run: java -jar "${TLA_TOOLS_JAR}" -config DurableStore.cfg DurableStore.tla
+      - name: Emit compact TLA+ assurance receipt
+        shell: bash
+        run: |
+          {
+            echo "## DurableStore TLA+ assurance receipt"
+            echo "- issue: #176"
+            echo "- model: formal/tla/DurableStore.tla"
+            echo "- config: formal/tla/DurableStore.cfg"
+            echo "- commit_sha: ${FOSSIL_SOFTWARE_COMMIT}"
+            echo "- tool: tla2tools v1.7.2 sha1=7f21faa2cdae3189e7d5fadb4488f0dfcc658407"
+            echo "- checks: SANY PASS; bounded TLC PASS"
+            echo "- evidence_scope: formal model only; not proof of Python implementation"
+            echo "- security: secretless; contents:read"
+          } >> "$GITHUB_STEP_SUMMARY"
