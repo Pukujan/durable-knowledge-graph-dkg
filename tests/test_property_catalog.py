@@ -59,11 +59,25 @@ def test_property_catalog_is_unique_sorted_and_grounded_in_public_oracles() -> N
             spec = path.read_text(encoding="utf-8")
             assert f"{symbol} ==" in spec, f"{item['property_id']}: missing TLA+ symbol {symbol} in {path_ref}"
 
-        # Lean references may still point to later Phase 5 artifacts where the
-        # corresponding semantic law is intentionally deferred (for example
-        # Promotion while #111 remains unresolved).
+        # Landed Phase 5 Lean references are executable traceability links too.
+        # Bare refs remain valid only for genuinely future theorem files whose
+        # semantic law is intentionally deferred (for example Promotion while
+        # #111 remains unresolved, or the optional Identity proof).
         for ref in item["lean_refs"]:
             assert ref.startswith("formal/lean/"), f"{item['property_id']}: invalid Lean ref {ref}"
+            path_ref, separator, theorem = ref.partition("::")
+            path = ROOT / path_ref
+            if separator:
+                assert theorem, f"{item['property_id']}: Lean ref must name a theorem: {ref}"
+                assert path.exists(), f"{item['property_id']}: missing Lean file {path_ref}"
+                source = path.read_text(encoding="utf-8")
+                assert f"theorem {theorem}" in source, (
+                    f"{item['property_id']}: missing Lean theorem {theorem} in {path_ref}"
+                )
+            else:
+                assert not path.exists(), (
+                    f"{item['property_id']}: landed Lean ref must name a theorem: {ref}"
+                )
 
         # Hidden acceptance cases remain outside this public repository. The
         # catalog records only whether sealed acceptance is required.
