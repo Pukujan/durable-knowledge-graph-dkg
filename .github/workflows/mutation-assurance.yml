@@ -1,0 +1,82 @@
+name: Mutation assurance
+
+on:
+  pull_request:
+    paths:
+      - "src/fossil_core/domain/lifecycle.py"
+      - "src/fossil_core/domain/pack.py"
+      - "tests/test_lifecycle.py"
+      - "tests/test_lifecycle_properties.py"
+      - "tests/test_temporal_benchmark.py"
+      - "tests/test_rebuild_temporal_properties.py"
+      - "tests/test_pack.py"
+      - "tests/test_pack_properties.py"
+      - "tests/test_agent_query_composition.py"
+      - "tests/test_agent_query_composition_properties.py"
+      - "tests/test_mutation_assurance.py"
+      - "scripts/check_mutation_assurance.py"
+      - ".github/workflows/mutation-assurance.yml"
+      - "pyproject.toml"
+  push:
+    branches: [main]
+    paths:
+      - "src/fossil_core/domain/lifecycle.py"
+      - "src/fossil_core/domain/pack.py"
+      - "tests/test_lifecycle.py"
+      - "tests/test_lifecycle_properties.py"
+      - "tests/test_temporal_benchmark.py"
+      - "tests/test_rebuild_temporal_properties.py"
+      - "tests/test_pack.py"
+      - "tests/test_pack_properties.py"
+      - "tests/test_agent_query_composition.py"
+      - "tests/test_agent_query_composition_properties.py"
+      - "tests/test_mutation_assurance.py"
+      - "scripts/check_mutation_assurance.py"
+      - ".github/workflows/mutation-assurance.yml"
+      - "pyproject.toml"
+
+permissions:
+  contents: read
+
+jobs:
+  lifecycle-pack:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install targeted mutation toolchain
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e '.[test,mutation]'
+          python -m pip check
+          mutmut --version
+      - name: Run lifecycle and pack mutants
+        run: |
+          rm -rf mutants
+          mutmut run
+          mutmut export-cicd-stats
+      - name: Characterize mutation strength
+        run: |
+          python scripts/check_mutation_assurance.py \
+            mutants/mutmut-cicd-stats.json \
+            --scope lifecycle-pack \
+            --minimum-score 0 \
+            --receipt build/assurance/mutation-lifecycle-pack.json
+      - name: Emit compact mutation receipt
+        shell: bash
+        run: |
+          {
+            echo "## Lifecycle + pack mutation receipt"
+            echo '```json'
+            cat build/assurance/mutation-lifecycle-pack.json
+            echo '```'
+            echo "- issue: #176"
+            echo "- coordination: #94"
+            echo "- tool: mutmut 3.7.0"
+            echo "- mode: characterization; score threshold will be set from this baseline"
+            echo "- security: secretless; contents:read"
+          } >> "$GITHUB_STEP_SUMMARY"
