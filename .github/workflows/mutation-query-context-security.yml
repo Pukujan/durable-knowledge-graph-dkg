@@ -82,6 +82,16 @@ jobs:
           mkdir -p build/assurance
           mutmut results | tee build/assurance/mutation-query-context-security-survivors.txt
           mutmut export-cicd-stats
+      - name: Diagnose surviving mutants
+        shell: bash
+        run: |
+          sed -n 's/^[[:space:]]*\(.*\): survived$/\1/p' \
+            build/assurance/mutation-query-context-security-survivors.txt \
+            > build/assurance/mutation-query-context-security-survivor-names.txt
+          while IFS= read -r mutant; do
+            echo "===== ${mutant} ====="
+            mutmut show "${mutant}"
+          done < build/assurance/mutation-query-context-security-survivor-names.txt
       - name: Characterize query/context-security mutation strength
         run: |
           python scripts/check_mutation_assurance.py \
