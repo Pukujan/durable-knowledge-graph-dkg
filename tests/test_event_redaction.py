@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -45,11 +46,41 @@ def event() -> dict:
     }
 
 
+def test_get_redaction_returns_none_when_no_tombstone_exists(tmp_path):
+    events = store(tmp_path)
+    assert events.get_redaction("evt_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa") is None
+
+
+@pytest.mark.parametrize("missing", ["reason", "authority", "redacted_at"])
+def test_event_redaction_requires_complete_authorization_metadata(tmp_path, missing):
+    events = store(tmp_path)
+    committed = events.commit(event())
+    event_id = committed["event_id"]
+    kwargs = {
+        "reason": "privacy erasure request",
+        "authority": "fixture-data-controller",
+        "redacted_at": "2026-08-10T00:41:00Z",
+        "request_ref": "erase-request-required-fields",
+    }
+    kwargs[missing] = ""
+
+    with pytest.raises(ValueError):
+        events.redact(event_id, **kwargs)
+
+    assert events.get(event_id) == committed
+    assert events.get_redaction(event_id) is None
+
+
 def test_event_redaction_tombstones_before_delete_and_blocks_resurrection(tmp_path):
     events = store(tmp_path)
     committed = events.commit(event())
     event_id = committed["event_id"]
     event_path = events._event_path(event_id)
+    expected_digest = hashlib.sha256(DurableEventStore._canonical(committed)).hexdigest()
+    suffix = event_id.removeprefix("evt_")
+    expected_tombstone_path = (
+        events.root / "_redactions" / suffix[:2] / f"{event_id}.json"
+    )
     assert event_path.exists()
     assert events.get(event_id)["payload"]["claim_text"].startswith("sensitive")
 
@@ -65,11 +96,13 @@ def test_event_redaction_tombstones_before_delete_and_blocks_resurrection(tmp_pa
     assert tombstone["pack_id"] == PACK_ID
     assert tombstone["event_type"] == "claim.proposed"
     assert tombstone["canonical_hash"]["algorithm"] == "sha256"
-    assert len(tombstone["canonical_hash"]["digest"]) == 64
+    assert tombstone["canonical_hash"]["digest"] == expected_digest
     assert "payload" not in tombstone
     assert "subject_refs" not in tombstone
     assert "evidence_refs" not in tombstone
     assert "provenance" not in tombstone
+    assert expected_tombstone_path.exists()
+    assert expected_tombstone_path.read_bytes() == DurableEventStore._canonical(tombstone)
     assert not event_path.exists()
     assert events.is_redacted(event_id)
 
@@ -83,7 +116,18 @@ def test_event_redaction_tombstones_before_delete_and_blocks_resurrection(tmp_pa
     assert events.get_redaction(event_id) == tombstone
 
 
-def test_event_redaction_is_idempotent_but_conflicting_tombstone_is_rejected(tmp_path):
+@pytest.mark.parametrize(
+    ("field", "replacement"),
+    [
+        ("reason", "different reason"),
+        ("authority", "different-authority"),
+        ("redacted_at", "2026-08-10T00:42:01Z"),
+        ("request_ref", "different-request"),
+    ],
+)
+def test_event_redaction_is_idempotent_but_any_conflicting_metadata_is_rejected(
+    tmp_path, field, replacement
+):
     events = store(tmp_path)
     event_id = events.commit(event())["event_id"]
     kwargs = {
@@ -95,14 +139,10 @@ def test_event_redaction_is_idempotent_but_conflicting_tombstone_is_rejected(tmp
     first = events.redact(event_id, **kwargs)
     assert events.redact(event_id, **kwargs) == first
 
+    conflicting = dict(kwargs)
+    conflicting[field] = replacement
     with pytest.raises(EventRedactionConflict, match="different redaction tombstone"):
-        events.redact(
-            event_id,
-            reason="different reason",
-            authority="privacy-officer",
-            redacted_at="2026-08-10T00:42:00Z",
-            request_ref="legal-42",
-        )
+        events.redact(event_id, **conflicting)
 
 
 class FakeGraphitiEventRedaction:
