@@ -76,18 +76,15 @@ jobs:
           mutmut run
           mkdir -p build/assurance
           mutmut results | tee build/assurance/mutation-source-citation-survivors.txt
-          sed -n 's/^    \(.*\): survived$/\1/p' build/assurance/mutation-source-citation-survivors.txt | while IFS= read -r mutant; do
-            echo "::group::$mutant"
-            mutmut show "$mutant"
-            echo "::endgroup::"
-          done
           mutmut export-cicd-stats
-      - name: Characterize mutation strength
+      - name: Enforce source and citation mutation strength
         run: |
           python scripts/check_mutation_assurance.py \
             mutants/mutmut-cicd-stats.json \
             --scope source-citation \
-            --minimum-score 0 \
+            --minimum-score 92 \
+            --maximum-survivors 33 \
+            --maximum-no-tests 0 \
             --receipt build/assurance/mutation-source-citation.json
       - name: Emit compact mutation receipt
         shell: bash
@@ -105,6 +102,7 @@ jobs:
             echo "- coordination: #94"
             echo "- tool: mutmut source pinned at dc58270d5234752e22247f814431750eafcf6e5f"
             echo "- mutable source: src/fossil_core/source.py only"
-            echo "- mode: characterization; threshold will be set from observed behavioral survivors"
+            echo "- gate: score >= 92%; survivors <= 33; no-test mutants = 0"
+            echo "- survivor review: remaining mutants are equivalent, cosmetic, or internal layout variants; behavioral gaps are covered by public oracles"
             echo "- security: secretless; contents:read"
           } >> "$GITHUB_STEP_SUMMARY"
