@@ -63,6 +63,7 @@ jobs:
           also_copy = ["schemas", "examples", "skills"]
           pytest_add_cli_args_test_selection = [
             "tests/test_agent_boundary.py",
+            "tests/test_agent_authorization_mutation_oracles.py",
           ]
           '''
           path.write_text(prefix + scoped, encoding="utf-8")
