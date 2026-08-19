@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -24,13 +25,18 @@ NONBLANK_TEXT = st.text(
 ).filter(lambda value: bool(value.strip()))
 
 
-def source_store(tmp_path: Path) -> SourceSnapshotStore:
+def source_store(root: Path) -> SourceSnapshotStore:
     return SourceSnapshotStore(
-        tmp_path / "sources",
-        ArtifactStore(tmp_path / "artifacts"),
+        root / "sources",
+        ArtifactStore(root / "artifacts"),
         SOURCE_SCHEMA,
         CITATION_SCHEMA,
     )
+
+
+def isolated_source_store() -> tuple[tempfile.TemporaryDirectory, SourceSnapshotStore]:
+    temporary = tempfile.TemporaryDirectory()
+    return temporary, source_store(Path(temporary.name))
 
 
 def quality() -> dict:
@@ -76,159 +82,168 @@ def test_source_identity_is_deterministic_for_normalized_locator(key: str, value
 
 @settings(max_examples=80, derandomize=True)
 @given(payload=st.binary(min_size=0, max_size=128), locator_value=NONBLANK_TEXT)
-def test_identical_snapshot_publish_is_idempotent(
-    tmp_path: Path,
-    payload: bytes,
-    locator_value: str,
-) -> None:
-    store = source_store(tmp_path)
-    kwargs = {
-        "locator": {"identifier": locator_value},
-        "retrieved_at": "2026-08-19T01:55:00Z",
-        "source_role": "local",
-        "quality": quality(),
-        "media_type": "application/octet-stream",
-    }
+def test_identical_snapshot_publish_is_idempotent(payload: bytes, locator_value: str) -> None:
+    temporary, store = isolated_source_store()
+    try:
+        kwargs = {
+            "locator": {"identifier": locator_value},
+            "retrieved_at": "2026-08-19T01:55:00Z",
+            "source_role": "local",
+            "quality": quality(),
+            "media_type": "application/octet-stream",
+        }
 
-    first = store.put_snapshot(payload, **kwargs)
-    second = store.put_snapshot(payload, **kwargs)
+        first = store.put_snapshot(payload, **kwargs)
+        second = store.put_snapshot(payload, **kwargs)
 
-    assert first == second
-    assert first["snapshot_id"] == second["snapshot_id"]
-    assert first["source_id"] == second["source_id"]
-    assert first["content_hash"]["digest"] == hashlib.sha256(payload).hexdigest()
+        assert first == second
+        assert first["snapshot_id"] == second["snapshot_id"]
+        assert first["source_id"] == second["source_id"]
+        assert first["content_hash"]["digest"] == hashlib.sha256(payload).hexdigest()
+    finally:
+        temporary.cleanup()
 
 
 @settings(max_examples=80, derandomize=True)
 @given(payload=st.binary(min_size=0, max_size=128), locator_value=NONBLANK_TEXT)
 def test_distinct_versions_coexist_under_one_source_identity(
-    tmp_path: Path,
     payload: bytes,
     locator_value: str,
 ) -> None:
-    store = source_store(tmp_path)
-    locator = {"repository_ref": locator_value}
-    first = put_local_snapshot(
-        store,
-        payload,
-        locator=locator,
-        retrieved_at="2026-08-19T01:55:00Z",
-    )
-    second = put_local_snapshot(
-        store,
-        payload + b"\x00",
-        locator=locator,
-        retrieved_at="2026-08-19T01:56:00Z",
-    )
+    temporary, store = isolated_source_store()
+    try:
+        locator = {"repository_ref": locator_value}
+        first = put_local_snapshot(
+            store,
+            payload,
+            locator=locator,
+            retrieved_at="2026-08-19T01:55:00Z",
+        )
+        second = put_local_snapshot(
+            store,
+            payload + b"\x00",
+            locator=locator,
+            retrieved_at="2026-08-19T01:56:00Z",
+        )
 
-    assert first["source_id"] == second["source_id"]
-    assert first["snapshot_id"] != second["snapshot_id"]
-    assert [item["snapshot_id"] for item in store.versions(first["source_id"])] == [
-        first["snapshot_id"],
-        second["snapshot_id"],
-    ]
+        assert first["source_id"] == second["source_id"]
+        assert first["snapshot_id"] != second["snapshot_id"]
+        assert [item["snapshot_id"] for item in store.versions(first["source_id"])] == [
+            first["snapshot_id"],
+            second["snapshot_id"],
+        ]
+    finally:
+        temporary.cleanup()
 
 
 @settings(max_examples=120, derandomize=True)
 @given(payload=st.binary(min_size=1, max_size=128), draw=st.data())
-def test_bounded_citation_resolves_exact_bytes_and_hash(
-    tmp_path: Path,
-    payload: bytes,
-    draw: st.DataObject,
-) -> None:
-    store = source_store(tmp_path)
-    snapshot = put_local_snapshot(store, payload)
-    start = draw.draw(st.integers(min_value=0, max_value=len(payload) - 1), label="byte_start")
-    end = draw.draw(st.integers(min_value=start + 1, max_value=len(payload)), label="byte_end")
+def test_bounded_citation_resolves_exact_bytes_and_hash(payload: bytes, draw) -> None:
+    temporary, store = isolated_source_store()
+    try:
+        snapshot = put_local_snapshot(store, payload)
+        start = draw.draw(
+            st.integers(min_value=0, max_value=len(payload) - 1), label="byte_start"
+        )
+        end = draw.draw(
+            st.integers(min_value=start + 1, max_value=len(payload)), label="byte_end"
+        )
 
-    citation = store.create_citation(snapshot["snapshot_id"], byte_start=start, byte_end=end)
-    resolved = store.resolve_citation(citation)
-    expected = payload[start:end]
+        citation = store.create_citation(snapshot["snapshot_id"], byte_start=start, byte_end=end)
+        resolved = store.resolve_citation(citation)
+        expected = payload[start:end]
 
-    assert resolved["bytes"] == expected
-    assert citation["snapshot_id"] == snapshot["snapshot_id"]
-    assert citation["artifact_id"] == snapshot["artifact_id"]
-    assert citation["passage_hash"] == {
-        "algorithm": "sha256",
-        "digest": hashlib.sha256(expected).hexdigest(),
-    }
+        assert resolved["bytes"] == expected
+        assert citation["snapshot_id"] == snapshot["snapshot_id"]
+        assert citation["artifact_id"] == snapshot["artifact_id"]
+        assert citation["passage_hash"] == {
+            "algorithm": "sha256",
+            "digest": hashlib.sha256(expected).hexdigest(),
+        }
+    finally:
+        temporary.cleanup()
 
 
 @settings(max_examples=80, derandomize=True)
 @given(payload=st.binary(min_size=1, max_size=128))
-def test_invalid_citation_spans_fail_closed(tmp_path: Path, payload: bytes) -> None:
-    store = source_store(tmp_path)
-    snapshot = put_local_snapshot(store, payload)
-    snapshot_id = snapshot["snapshot_id"]
+def test_invalid_citation_spans_fail_closed(payload: bytes) -> None:
+    temporary, store = isolated_source_store()
+    try:
+        snapshot = put_local_snapshot(store, payload)
+        snapshot_id = snapshot["snapshot_id"]
 
-    invalid_spans = [
-        (-1, 1),
-        (0, 0),
-        (len(payload), len(payload)),
-        (0, len(payload) + 1),
-    ]
-    for start, end in invalid_spans:
-        with pytest.raises(ValueError, match="outside source artifact bounds"):
-            store.create_citation(snapshot_id, byte_start=start, byte_end=end)
+        invalid_spans = [
+            (-1, 1),
+            (0, 0),
+            (len(payload), len(payload)),
+            (0, len(payload) + 1),
+        ]
+        for start, end in invalid_spans:
+            with pytest.raises(ValueError, match="outside source artifact bounds"):
+                store.create_citation(snapshot_id, byte_start=start, byte_end=end)
 
-    with pytest.raises(ValueError, match="supplied together"):
-        store.create_citation(snapshot_id, byte_start=0)
-    with pytest.raises(ValueError, match="supplied together"):
-        store.create_citation(snapshot_id, byte_end=1)
+        with pytest.raises(ValueError, match="supplied together"):
+            store.create_citation(snapshot_id, byte_start=0)
+        with pytest.raises(ValueError, match="supplied together"):
+            store.create_citation(snapshot_id, byte_end=1)
+    finally:
+        temporary.cleanup()
 
 
 @settings(max_examples=60, derandomize=True)
 @given(role=st.sampled_from(SOURCE_ROLES_WITHOUT_DERIVATION), payload=st.binary(max_size=96))
 def test_primary_secondary_and_local_snapshots_cannot_claim_derivation(
-    tmp_path: Path,
     role: str,
     payload: bytes,
 ) -> None:
-    store = source_store(tmp_path)
-
-    with pytest.raises(ValueError, match="must not claim derivation"):
-        store.put_snapshot(
-            payload,
-            locator={"identifier": f"property:{role}"},
-            retrieved_at="2026-08-19T01:55:00Z",
-            source_role=role,
-            quality=quality(),
-            derivation={
-                "method": "invalid generated derivation",
-                "parent_snapshot_refs": ["snap_missing_parent_0001"],
-            },
-        )
+    temporary, store = isolated_source_store()
+    try:
+        with pytest.raises(ValueError, match="must not claim derivation"):
+            store.put_snapshot(
+                payload,
+                locator={"identifier": f"property:{role}"},
+                retrieved_at="2026-08-19T01:55:00Z",
+                source_role=role,
+                quality=quality(),
+                derivation={
+                    "method": "invalid generated derivation",
+                    "parent_snapshot_refs": ["snap_missing_parent_0001"],
+                },
+            )
+    finally:
+        temporary.cleanup()
 
 
 @settings(max_examples=60, derandomize=True)
 @given(role=st.sampled_from(DERIVED_SOURCE_ROLES), payload=st.binary(max_size=96))
 def test_derived_and_reconstructed_snapshots_require_resolvable_parent(
-    tmp_path: Path,
     role: str,
     payload: bytes,
 ) -> None:
-    store = source_store(tmp_path)
+    temporary, store = isolated_source_store()
+    try:
+        with pytest.raises(ValueError, match="requires explicit parent_snapshot_refs"):
+            store.put_snapshot(
+                payload,
+                locator={"identifier": f"property:{role}:missing-parent"},
+                retrieved_at="2026-08-19T01:55:00Z",
+                source_role=role,
+                quality=quality(),
+            )
 
-    with pytest.raises(ValueError, match="requires explicit parent_snapshot_refs"):
-        store.put_snapshot(
+        parent = put_local_snapshot(store, b"parent evidence")
+        child = store.put_snapshot(
             payload,
-            locator={"identifier": f"property:{role}:missing-parent"},
-            retrieved_at="2026-08-19T01:55:00Z",
+            locator={"identifier": f"property:{role}:child"},
+            retrieved_at="2026-08-19T01:56:00Z",
             source_role=role,
             quality=quality(),
+            derivation={
+                "method": "generated derivation",
+                "parent_snapshot_refs": [parent["snapshot_id"]],
+            },
         )
 
-    parent = put_local_snapshot(store, b"parent evidence")
-    child = store.put_snapshot(
-        payload,
-        locator={"identifier": f"property:{role}:child"},
-        retrieved_at="2026-08-19T01:56:00Z",
-        source_role=role,
-        quality=quality(),
-        derivation={
-            "method": "generated derivation",
-            "parent_snapshot_refs": [parent["snapshot_id"]],
-        },
-    )
-
-    assert child["derivation"]["parent_snapshot_refs"] == [parent["snapshot_id"]]
+        assert child["derivation"]["parent_snapshot_refs"] == [parent["snapshot_id"]]
+    finally:
+        temporary.cleanup()
