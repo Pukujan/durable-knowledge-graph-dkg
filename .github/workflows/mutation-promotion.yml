@@ -66,6 +66,7 @@ jobs:
           pytest_add_cli_args_test_selection = [
             "tests/test_promotion.py",
             "tests/test_promotion_source_pin.py",
+            "tests/test_promotion_mutation_oracles.py",
           ]
           '''
           path.write_text(prefix + scoped, encoding="utf-8")
@@ -113,7 +114,7 @@ jobs:
             echo "- coordination: #94"
             echo "- property: FOSSIL-PROP-PROMOTION-001"
             echo "- mutable source: src/fossil_core/domain/promotion.py only"
-            echo "- tests: test_promotion.py + test_promotion_source_pin.py"
+            echo "- tests: test_promotion.py + test_promotion_source_pin.py + test_promotion_mutation_oracles.py"
             echo "- characterization only: floor intentionally non-enforcing until survivors are reviewed"
             echo "- security: secretless; contents:read"
           } >> "$GITHUB_STEP_SUMMARY"
