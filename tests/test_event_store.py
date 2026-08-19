@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 from jsonschema import ValidationError
 
+from fossil_core.domain.event_contracts import EventContractError
 from fossil_core.event_store import DurableEventStore, IdempotencyConflict
 from fossil_core.ids import deterministic_event_id
 
@@ -149,4 +150,17 @@ def test_invalid_event_rejected_before_write(tmp_path):
     del bad["pack_id"]
     with pytest.raises(ValidationError):
         store.commit(bad)
+    assert list(store.iter_events()) == []
+
+
+def test_unknown_event_type_is_prepare_only_and_fails_validate_and_commit(tmp_path):
+    store = DurableEventStore(tmp_path / "events", SCHEMA)
+    unknown = event()
+    unknown["event_type"] = "ontology.concept_split"
+
+    assert store.prepare(unknown)["event_type"] == "ontology.concept_split"
+    with pytest.raises(EventContractError, match="unregistered event type"):
+        store.validate(unknown)
+    with pytest.raises(EventContractError, match="unregistered event type"):
+        store.commit(unknown)
     assert list(store.iter_events()) == []

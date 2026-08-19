@@ -9,6 +9,7 @@ from typing import Any, Iterator
 from jsonschema import Draft202012Validator, FormatChecker
 
 from ...artifact_store import ArtifactIntegrityError, ArtifactRedactedError
+from ...domain.event_contracts import validate_event_for_commit
 from ...event_store import (
     EventRedactedError,
     EventRedactionConflict,
@@ -395,7 +396,9 @@ class S3DurableEventStore:
         return candidate
 
     def validate(self, event: dict[str, Any]) -> dict[str, Any]:
-        return self.prepare(event)
+        candidate = self.prepare(event)
+        validate_event_for_commit(candidate)
+        return candidate
 
     def is_redacted(self, event_id: str) -> bool:
         return self.backend.exists(self._redaction_key(event_id))
@@ -417,6 +420,7 @@ class S3DurableEventStore:
 
     def commit(self, event: dict[str, Any]) -> dict[str, Any]:
         candidate = self.prepare(event)
+        validate_event_for_commit(candidate)
         event_id = candidate["event_id"]
         if self.is_redacted(event_id):
             raise EventRedactedError(
