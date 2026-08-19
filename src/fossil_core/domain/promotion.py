@@ -136,10 +136,6 @@ def validate_promotion_source(
     return resolved
 
 
-__all__ = [
-    "PROMOTION_CONTRACT_VERSION",
-    "PromotionSourceError",
-    "PromotionSourceResolver",
-    "build_promotion_event",
-    "validate_promotion_source",
-]
+# Preserve the supported canonical public surface. The resolver contract remains
+# available to internal modules through explicit imports without broadening __all__.
+__all__ = ["build_promotion_event"]
