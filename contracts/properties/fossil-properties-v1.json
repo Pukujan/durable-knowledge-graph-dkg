@@ -58,12 +58,12 @@
       "deterministic_oracles": ["tests/test_event_store.py", "tests/test_s3_storage_adapter.py"],
       "property_oracles": ["tests/test_identity_properties.py", "tests/test_storage_contract_properties.py"],
       "mutation_scope": ["src/fossil_core/domain/identity.py", "src/fossil_core/adapters/filesystem/event_store.py", "src/fossil_core/adapters/s3/storage.py"],
-      "tla_refs": ["formal/tla/DurableStore.tla"],
+      "tla_refs": ["formal/tla/DurableStore.tla::ImmutableFirstValue"],
       "lean_refs": [],
       "hidden_acceptance_required": false,
       "status": "active",
       "source_refs": ["ARCHITECTURE.md"],
-      "notes": "TLA+ reference is planned; the file is intentionally absent until Phase 4."
+      "notes": "Phase 4 DurableStore model checks immutable first-value behavior across create/replay/conflict interleavings; implementation conformance remains covered by Python storage oracles."
     },
     {
       "property_id": "FOSSIL-PROP-LIFECYCLE-DEPENDENCY-001",
@@ -122,12 +122,12 @@
       "deterministic_oracles": ["tests/test_graphiti_projection.py", "tests/test_projection_migration.py"],
       "property_oracles": [],
       "mutation_scope": ["src/fossil_core/projection"],
-      "tla_refs": ["formal/tla/ProjectionLifecycle.tla"],
+      "tla_refs": ["formal/tla/ProjectionLifecycle.tla::ProjectionCannotManufactureAuthority"],
       "lean_refs": [],
       "hidden_acceptance_required": false,
       "status": "active",
       "source_refs": ["ARCHITECTURE.md"],
-      "notes": "TLA+ reference is planned; the file is intentionally absent until Phase 4."
+      "notes": "Phase 4 ProjectionLifecycle model checks that every projection slot remains a subset of durable authority; implementation conformance remains covered by projection tests."
     },
     {
       "property_id": "FOSSIL-PROP-PROMOTION-001",
@@ -170,12 +170,12 @@
       "deterministic_oracles": ["tests/test_disposable_rebuild_proof.py", "tests/test_projection_migration.py", "tests/test_pack_corpus.py", "scripts/live_object_store_rebuild_proof.py"],
       "property_oracles": ["tests/test_rebuild_temporal_properties.py"],
       "mutation_scope": ["src/fossil_core/application/rebuild/pack_corpus.py", "src/fossil_core/projection"],
-      "tla_refs": ["formal/tla/ProjectionLifecycle.tla"],
+      "tla_refs": ["formal/tla/ProjectionLifecycle.tla::FreshCandidateIdentity"],
       "lean_refs": [],
       "hidden_acceptance_required": false,
       "status": "active",
       "source_refs": ["ARCHITECTURE.md"],
-      "notes": "TLA+ reference is planned; the file is intentionally absent until Phase 4."
+      "notes": "Phase 4 ProjectionLifecycle model checks that an in-progress rebuild candidate cannot reuse the active projection identity; Python/live rebuild evidence remains authoritative for implementation conformance."
     },
     {
       "property_id": "FOSSIL-PROP-REDACTION-NONRESURRECTION-001",
@@ -186,12 +186,12 @@
       "deterministic_oracles": ["tests/test_event_redaction.py", "tests/test_s3_storage_adapter.py", "scripts/live_redaction_smoke.py"],
       "property_oracles": ["tests/test_storage_contract_properties.py"],
       "mutation_scope": ["src/fossil_core/adapters/filesystem/artifact_store.py", "src/fossil_core/adapters/filesystem/event_store.py", "src/fossil_core/adapters/s3/storage.py"],
-      "tla_refs": ["formal/tla/DurableStore.tla"],
+      "tla_refs": ["formal/tla/DurableStore.tla::TombstoneRequiresHistory", "formal/tla/DurableStore.tla::DeleteRequiresTombstone", "formal/tla/DurableStore.tla::DeletedRedactedIdentityAbsent"],
       "lean_refs": [],
       "hidden_acceptance_required": true,
       "status": "active",
       "source_refs": ["ARCHITECTURE.md"],
-      "notes": "TLA+ reference is planned; the file is intentionally absent until Phase 4."
+      "notes": "Phase 4 DurableStore model checks tombstone-before-delete and post-redaction absence/non-resurrection invariants; Python/live storage tests remain implementation conformance evidence."
     },
     {
       "property_id": "FOSSIL-PROP-STABLE-ID-001",
