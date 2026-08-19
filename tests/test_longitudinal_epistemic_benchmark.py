@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from jsonschema import Draft202012Validator
@@ -24,10 +25,12 @@ DEPENDS_CLAIM = "rel_longitudinal_depends_claim_000001"
 DEPENDS_DECISION = "rel_longitudinal_depends_decision_000001"
 CONTRADICTS = "rel_longitudinal_contradicts_000001"
 LATER_ONTOLOGY = "rel_longitudinal_later_ontology_000001"
+_BASE_TIME = datetime(2026, 8, 19, 17, 0, tzinfo=timezone.utc)
 
 
 def _timestamp(index: int) -> str:
-    return f"2026-08-19T17:{index:02d}:00Z"
+    value = _BASE_TIME + timedelta(minutes=index)
+    return value.isoformat(timespec="seconds").replace("+00:00", "Z")
 
 
 def _event(
@@ -63,6 +66,7 @@ def _write_fixture(root: Path, events: list[dict]) -> Path:
         json.dumps({"pack_id": PACK, "event_roots": ["events"]}),
         encoding="utf-8",
     )
+    # Write out of order so replay correctness cannot depend on filesystem order.
     for event in reversed(events):
         event_id = str(event["event_id"])
         suffix = event_id.removeprefix("evt_")
@@ -212,9 +216,11 @@ def _evolution_events() -> list[dict]:
 
 
 def _phases(events: list[dict]) -> list[LongitudinalPhase]:
-    current_old = TemporalQueryCase(
+    historical_old = TemporalQueryCase(
         case_id="historical-sqlite",
-        query="What was the canonical SQLite premise?",
+        # Existing retrieval policy intentionally requires an explicit temporal cue;
+        # bare "Was ...?" remains neutral because it can ask about current acceptance.
+        query="What historical canonical SQLite premise was superseded?",
         pack_ids=(PACK,),
         relevant_ids=frozenset({ASSUMPTION}),
     )
@@ -232,7 +238,7 @@ def _phases(events: list[dict]) -> list[LongitudinalPhase]:
             phase_id="before-challenge",
             as_of_recorded_at=_timestamp(5),
             expected_states={ASSUMPTION: "supported", DEPENDENT: "supported"},
-            queries=(current_old,),
+            queries=(historical_old,),
         ),
         LongitudinalPhase(
             phase_id="disputed",
@@ -243,7 +249,7 @@ def _phases(events: list[dict]) -> list[LongitudinalPhase]:
                 REPLACEMENT: "supported",
                 CONTRADICTS: "active",
             },
-            queries=(current_new, current_old),
+            queries=(current_new, historical_old),
             expected_position_changes=(
                 PositionChangeExpectation(
                     subject_id=ASSUMPTION,
@@ -286,7 +292,7 @@ def _phases(events: list[dict]) -> list[LongitudinalPhase]:
                 CONTRADICTS: "active",
                 LATER_ONTOLOGY: "active",
             },
-            queries=(current_new, current_old),
+            queries=(current_new, historical_old),
             expected_position_changes=(
                 PositionChangeExpectation(
                     subject_id=ASSUMPTION,
@@ -343,7 +349,9 @@ def test_longitudinal_benchmark_answers_epistemic_history_and_dependency_questio
 
     assert report["schema_version"] == "fossil.longitudinal-benchmark.v1"
     assert report["passed"] is True
-    assert report["authority_rule"] == "durable event replay determines epistemic state; retrieval is observational"
+    assert report["authority_rule"] == (
+        "durable event replay determines epistemic state; retrieval is observational"
+    )
     assert report["measurement_boundary"] == {
         "canonical_source": "local durable pack replay",
         "remote_canonical_object_scans_during_query": 0,
@@ -357,6 +365,7 @@ def test_longitudinal_benchmark_answers_epistemic_history_and_dependency_questio
     ]
     assert disputed["beliefs"][ASSUMPTION]["state"] == "disputed"
     assert final["beliefs"][ASSUMPTION]["state"] == "superseded"
+    assert final["ontology_refs_observed"] == ["dkg.core@1.0.0", "dkg.core@2.0.0"]
 
     change = next(
         item for item in disputed["position_changes"] if item["subject_id"] == ASSUMPTION
@@ -372,23 +381,32 @@ def test_longitudinal_benchmark_answers_epistemic_history_and_dependency_questio
         "caused_by_event_ids": [events[8]["event_id"]],
     }
 
-    impacts = {(item["dependent_ref"], item["premise_ref"]): item for item in final["dependency_impacts"]}
+    impacts = {
+        (item["dependent_ref"], item["premise_ref"]): item
+        for item in final["dependency_impacts"]
+    }
     assert impacts[(DECISION, ASSUMPTION)]["dependent_type"] == "Decision"
     assert impacts[(DECISION, ASSUMPTION)]["premise_state"] == "superseded"
     assert impacts[(DEPENDENT, ASSUMPTION)]["dependent_state"] == "stale_pending_review"
 
-    disagreement = next(item for item in final["disagreements"] if item["relation_id"] == CONTRADICTS)
+    disagreement = next(
+        item for item in final["disagreements"] if item["relation_id"] == CONTRADICTS
+    )
     assert disagreement["relation_type"] == "CONTRADICTS"
     assert disagreement["ontology_ref"] == "dkg.core@1.0.0"
 
     assert all(phase["rebuild_equivalent"] for phase in report["phases"])
-    assert report["historical_answer_stability"]["historical-sqlite"]["all_full_recall"] is True
-    assert report["historical_answer_stability"]["historical-sqlite"]["observations"] == 3
+    assert report["historical_answer_stability"]["historical-sqlite"] == {
+        "observations": 3,
+        "all_full_recall": True,
+        "no_current_state_leakage": True,
+    }
 
     schema = json.loads(
-        (Path(__file__).parents[1] / "schemas/benchmark/longitudinal-v1.schema.json").read_text(
-            encoding="utf-8"
-        )
+        (
+            Path(__file__).parents[1]
+            / "schemas/benchmark/longitudinal-v1.schema.json"
+        ).read_text(encoding="utf-8")
     )
     Draft202012Validator(schema).validate(report)
 
@@ -478,14 +496,17 @@ def test_longitudinal_benchmark_measures_materially_larger_local_replay_without_
 
     phase = report["phases"][0]
     assert report["passed"] is True
-    assert phase["event_count"] == len(events)
+    assert phase["event_count"] == len(events) == 720
     assert phase["claim_count"] == 320
     assert phase["decision_count"] == 80
     assert phase["relation_count"] == 80
     assert phase["projection_build_ms"] >= 0
     assert phase["query_latency_ms"] >= 0
     assert phase["rebuild_equivalent"] is True
-    assert report["scale"]["max_event_count"] >= 720
-    assert report["scale"]["max_claim_count"] >= 320
-    assert report["scale"]["max_decision_count"] >= 80
+    assert report["scale"] == {
+        "max_event_count": 720,
+        "max_claim_count": 320,
+        "max_decision_count": 80,
+        "max_relation_count": 80,
+    }
     assert report["measurement_boundary"]["remote_canonical_object_scans_during_query"] == 0
