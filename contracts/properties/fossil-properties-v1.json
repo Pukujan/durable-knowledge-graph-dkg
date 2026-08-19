@@ -131,19 +131,19 @@
     },
     {
       "property_id": "FOSSIL-PROP-PROMOTION-001",
-      "statement": "Cross-pack promotion is explicit, requires different source and target packs, and records a new target-pack event rather than silently mutating the source pack.",
+      "statement": "Cross-pack promotion is explicit, requires different source and target packs, pins the exact source pack revision and source event in a new target-pack event, preserves promoted subjects from that source event, and never mutates the source event.",
       "criticality": "high",
       "semantic_owner": "domain promotion",
       "modules": ["src/fossil_core/domain/promotion.py"],
-      "deterministic_oracles": ["tests/test_promotion.py", "tests/test_agent_boundary.py"],
+      "deterministic_oracles": ["tests/test_promotion.py", "tests/test_promotion_source_pin.py", "tests/test_promotion_mutation_oracles.py", "tests/test_agent_boundary.py"],
       "property_oracles": [],
       "mutation_scope": ["src/fossil_core/domain/promotion.py"],
       "tla_refs": [],
-      "lean_refs": ["formal/lean/Fossil/Promotion.lean"],
+      "lean_refs": ["formal/lean/Fossil/Promotion.lean::promote_does_not_mutate_source", "formal/lean/Fossil/Promotion.lean::promote_pins_source_exactly", "formal/lean/Fossil/Promotion.lean::promote_targets_requested_pack", "formal/lean/Fossil/Promotion.lean::validPromotion_requires_different_packs", "formal/lean/Fossil/Promotion.lean::validPromotion_pins_source_exactly", "formal/lean/Fossil/Promotion.lean::validPromotion_subjects_come_from_source"],
       "hidden_acceptance_required": false,
       "status": "active",
       "source_refs": ["ARCHITECTURE.md"],
-      "notes": "Final source-revision/event pinning law is intentionally deferred to #111 before Lean proof work."
+      "notes": "Lean 4.30.0 checks the named source-pin, target-authority, subject-containment, and source-nonmutation theorems with no sorry/admit placeholders. The isolated promotion mutation lane enforces the measured 79% / <=40 survivor / zero-no-test boundary; reviewed residual survivors are exception-message or default-value equivalents behind the validated event envelope. Lean evidence does not prove the Python implementation."
     },
     {
       "property_id": "FOSSIL-PROP-PROVENANCE-001",
