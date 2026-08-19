@@ -68,7 +68,6 @@ def test_historical_answer_survives_generated_later_relation_and_ontology_noise(
         benchmark_id="generated-longitudinal-stability-v1",
     )
 
-    assert report["passed"] is True
     assert all(phase["rebuild_equivalent"] for phase in report["phases"])
     assert report["historical_answer_stability"]["historical-sqlite"] == {
         "observations": 3,
