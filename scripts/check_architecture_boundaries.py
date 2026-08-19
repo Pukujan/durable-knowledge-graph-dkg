@@ -34,6 +34,7 @@ CANONICAL_MODULES = {
     "fossil_core.domain.provenance",
     "fossil_core.ports",
     "fossil_core.ports.artifact_store",
+    "fossil_core.ports.capability",
     "fossil_core.ports.cognitive_service",
     "fossil_core.ports.context_provider",
     "fossil_core.ports.embedding_provider",
@@ -51,6 +52,7 @@ CANONICAL_MODULES = {
     "fossil_core.adapters.litellm",
     "fossil_core.adapters.litellm.embedding",
     "fossil_core.adapters.litellm.reranker",
+    "fossil_core.adapters.mcp",
     "fossil_core.adapters.s3",
     "fossil_core.adapters.s3.storage",
     "fossil_core.adapters.vector",
@@ -107,6 +109,7 @@ ADAPTER_SELF_SHIMS = {
         "fossil_core.artifact_store",
         "fossil_core.event_store",
     },
+    "fossil_core.adapters.mcp": {"fossil_core.agent"},
     "fossil_core.adapters.s3": {"fossil_core.s3_storage"},
 }
 
