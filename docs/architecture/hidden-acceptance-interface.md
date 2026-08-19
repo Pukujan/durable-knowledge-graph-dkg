@@ -6,11 +6,10 @@ Status: Phase 3 public foundation for #176. This document defines only the non-s
 
 Public FOSSIL source may define:
 
-- which public `FOSSIL-PROP-*` properties require hidden acceptance;
+- which active public `FOSSIL-PROP-*` properties require hidden acceptance;
 - a versioned aggregate receipt schema;
 - deterministic validation of that receipt;
-- safe aggregate result counts and coarse failure classes;
-- an optional public execution reference.
+- safe aggregate result counts and coarse failure classes.
 
 Public FOSSIL source must not contain or require:
 
@@ -18,7 +17,7 @@ Public FOSSIL source must not contain or require:
 - exact private oracle expectations;
 - credentials, tokens, secret references, or secret-bearing configuration;
 - a private bucket, repository, path, endpoint, runner, or other placement/access mechanism;
-- free-form failure payloads that could reconstruct private cases.
+- free-form notes, execution references, or failure payloads that could reconstruct private cases or leak placement.
 
 The private placement/access decision remains a separately approved least-privilege concern. This Phase 3 slice does not invent it.
 
@@ -34,7 +33,7 @@ Schema version:
 
 A receipt names a public logical `suite_id`, exact public software commit, one or more public property IDs, a result (`PASS`, `FAIL`, or `BLOCKED`), aggregate case counts, and enumerated aggregate failure classes. Disclosure flags are required and fixed to `false`.
 
-The public validator additionally requires every referenced property to be present in the property catalog with `hidden_acceptance_required: true`, enforces count/result consistency, and rejects unclassified failures.
+The public validator additionally requires every referenced property to be active in the property catalog with `hidden_acceptance_required: true`, enforces count/result consistency, and rejects unclassified failures.
 
 Validator:
 
@@ -52,7 +51,7 @@ Validator:
 
 The aggregate receipt is operational acceptance evidence, not a new source of semantic authority. Architecture and accepted FOSSIL property/contracts remain authoritative. A green receipt cannot weaken deterministic public oracles, mutation gates, live integration gates, or any other required acceptance surface.
 
-The schema intentionally uses `additionalProperties: false` and has no free-form notes field. This makes accidental insertion of case IDs, prompts, exact expected answers, private locations, or credential references fail closed at the public boundary.
+The schema intentionally uses `additionalProperties: false` and has no free-form notes or execution-reference field. This makes accidental insertion of case IDs, prompts, exact expected answers, private locations, credential references, or arbitrary text fail closed at the public boundary.
 
 ## Phase separation
 
