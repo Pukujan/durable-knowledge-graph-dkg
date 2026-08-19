@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 from jsonschema import ValidationError
 
+from fossil_core.adapters.s3.storage import S3DurableEventStore
 from fossil_core.domain.event_contracts import EventContractError
 from fossil_core.domain.lifecycle import KnowledgeState
 from fossil_core.event_store import DurableEventStore
@@ -63,6 +64,14 @@ def _acceptance(**overrides: str) -> dict:
     return _event("relation.state_changed", payload, key="relation-acceptance")
 
 
+def _resolver(endpoint_types: dict[str, str]):
+    return endpoint_types.get
+
+
+def _claim_resolver():
+    return _resolver({SOURCE: "Claim", TARGET: "Claim"})
+
+
 def test_new_relation_proposal_cannot_smuggle_active_state_into_durable_projection(tmp_path):
     store = DurableEventStore(tmp_path / "events", SCHEMA)
 
@@ -81,7 +90,11 @@ def test_relation_proposal_remains_cheap_and_durable_as_proposed(tmp_path):
 
 
 def test_accepted_relation_transition_requires_self_contained_ontology_fields(tmp_path):
-    store = DurableEventStore(tmp_path / "events", SCHEMA)
+    store = DurableEventStore(
+        tmp_path / "events",
+        SCHEMA,
+        endpoint_type_resolver=_claim_resolver(),
+    )
     candidate = _acceptance()
     candidate["payload"].pop("source_type")
 
@@ -89,28 +102,82 @@ def test_accepted_relation_transition_requires_self_contained_ontology_fields(tm
         store.commit(candidate)
 
 
-def test_accepted_relation_transition_rejects_wrong_ontology_revision(tmp_path):
+def test_accepted_relation_transition_fails_closed_without_identity_resolver(tmp_path):
     store = DurableEventStore(tmp_path / "events", SCHEMA)
+
+    with pytest.raises(EventContractError, match="endpoint identity.*resolver"):
+        store.commit(_acceptance())
+    assert list(store.iter_events()) == []
+
+
+def test_accepted_relation_transition_fails_when_endpoint_identity_is_unresolved(tmp_path):
+    store = DurableEventStore(
+        tmp_path / "events",
+        SCHEMA,
+        endpoint_type_resolver=_resolver({SOURCE: "Claim"}),
+    )
+
+    with pytest.raises(EventContractError, match="target endpoint identity.*could not be resolved"):
+        store.commit(_acceptance())
+
+
+def test_accepted_relation_transition_rejects_wrong_ontology_revision(tmp_path):
+    store = DurableEventStore(
+        tmp_path / "events",
+        SCHEMA,
+        endpoint_type_resolver=_claim_resolver(),
+    )
 
     with pytest.raises(EventContractError, match="ontology_ref"):
         store.commit(_acceptance(ontology_ref="dkg.core@0.9.0"))
 
 
-def test_accepted_relation_transition_rejects_illegal_endpoint_kind(tmp_path):
-    store = DurableEventStore(tmp_path / "events", SCHEMA)
+def test_declared_endpoint_kind_must_match_independent_resolution(tmp_path):
+    store = DurableEventStore(
+        tmp_path / "events",
+        SCHEMA,
+        endpoint_type_resolver=_claim_resolver(),
+    )
 
-    with pytest.raises(EventContractError, match="source_type"):
+    with pytest.raises(EventContractError, match="source_type.*does not match resolved"):
+        store.commit(_acceptance(source_type="Concept"))
+
+
+def test_accepted_relation_transition_rejects_ontology_invalid_resolved_kind(tmp_path):
+    store = DurableEventStore(
+        tmp_path / "events",
+        SCHEMA,
+        endpoint_type_resolver=_resolver({SOURCE: "Evidence", TARGET: "Claim"}),
+    )
+
+    with pytest.raises(EventContractError, match="source_type.*not valid"):
         store.commit(_acceptance(source_type="Evidence"))
 
 
-def test_valid_accepted_relation_transition_is_self_contained_and_replayable(tmp_path):
-    store = DurableEventStore(tmp_path / "events", SCHEMA)
+def test_valid_accepted_relation_transition_is_resolved_and_replayable(tmp_path):
+    store = DurableEventStore(
+        tmp_path / "events",
+        SCHEMA,
+        endpoint_type_resolver=_claim_resolver(),
+    )
     proposed = store.commit(_proposal())
     accepted = store.commit(_acceptance())
 
     state = KnowledgeState.replay([proposed, accepted])
     assert state.relations[RELATION].state == "active"
     assert state.relation_history[RELATION] == ["proposed", "active"]
+
+
+def test_s3_validate_uses_the_same_endpoint_identity_resolver_seam():
+    store = S3DurableEventStore(
+        bucket="ontology-gate-fixture",
+        schema_path=SCHEMA,
+        client=object(),
+        endpoint_type_resolver=_claim_resolver(),
+    )
+
+    validated = store.validate(_acceptance())
+    assert validated["payload"]["to_state"] == "active"
 
 
 def test_historical_active_relation_proposal_remains_replayable_without_revalidation(tmp_path):
