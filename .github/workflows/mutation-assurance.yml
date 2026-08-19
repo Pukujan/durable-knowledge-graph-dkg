@@ -55,9 +55,38 @@ jobs:
           python -m pip check
           mutmut --version
       - name: Run lifecycle and pack mutants
+        shell: bash
         run: |
           rm -rf mutants
-          mutmut run
+          status=0
+          mutmut run || status=$?
+          if [ "$status" -ne 0 ]; then
+            echo "::group::Mutation trampoline diagnostics"
+            grep -n -m 20 -E 'wrap_in_trampoline|__mutmut|_mutmut_orig' mutants/src/fossil_core/domain/pack.py || true
+            grep -n -m 20 -E 'wrap_in_trampoline|__mutmut|_mutmut_orig' mutants/src/fossil_core/domain/lifecycle.py || true
+            PYTHONPATH="$PWD/mutants/src" MUTANT_UNDER_TEST=stats python - <<'PY'
+          from pathlib import Path
+          import inspect
+          import mutmut
+          from fossil_core.domain.pack import PackAccess
+
+          print("PackAccess module:", PackAccess.__module__)
+          print("PackAccess file:", inspect.getsourcefile(PackAccess))
+          access = PackAccess(
+              pack_id="pack_diagnostic_owner_0001",
+              read_mounts=frozenset({"pack_diagnostic_owner_0001"}),
+              write_targets=frozenset({"pack_diagnostic_owner_0001"}),
+          )
+          access.require_read("pack_diagnostic_owner_0001")
+          print("Recorded trampoline keys:", sorted(mutmut._stats))
+          print("Generated pack exists:", Path("mutants/src/fossil_core/domain/pack.py").exists())
+          PY
+            if [ -f mutants/mutmut-stats.json ]; then
+              cat mutants/mutmut-stats.json
+            fi
+            echo "::endgroup::"
+            exit "$status"
+          fi
           mutmut export-cicd-stats
       - name: Characterize mutation strength
         run: |
