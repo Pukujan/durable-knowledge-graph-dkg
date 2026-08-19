@@ -15,6 +15,12 @@ from .ontology import (
     validate_relation_endpoints,
     validate_resolved_relation_endpoints,
 )
+from .promotion import (
+    PROMOTION_CONTRACT_VERSION,
+    PromotionSourceError,
+    PromotionSourceResolver,
+    validate_promotion_source,
+)
 
 
 EVENT_TYPE_REGISTRY_VERSION = "dkg.event-type-registry.v1"
@@ -65,6 +71,7 @@ def _payload_schema(
     required: tuple[str, ...],
     properties: Mapping[str, Any],
     additional_properties: bool = True,
+    schema_version: int = 1,
 ) -> dict[str, Any]:
     """Return the registry-owned payload contract for one event type.
 
@@ -78,7 +85,7 @@ def _payload_schema(
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "$id": (
             "https://pukujan.github.io/fossil-core/schemas/event-types/"
-            f"{event_type}/v1.schema.json"
+            f"{event_type}/v{schema_version}.schema.json"
         ),
         "type": "object",
         "additionalProperties": additional_properties,
@@ -109,10 +116,11 @@ def _contract(
     ontology_constraints: Mapping[str, Any] | None = None,
     property_ids: tuple[str, ...],
     oracle_ids: tuple[str, ...] = ("tests/test_event_contracts.py",),
+    contract_version: int = 1,
 ) -> EventTypeContract:
     return EventTypeContract(
         event_type=event_type,
-        contract_version=f"dkg.event-contract.{event_type}.v1",
+        contract_version=f"dkg.event-contract.{event_type}.v{contract_version}",
         commit_eligibility=commit_eligibility,
         payload_schema=payload_schema,
         evidence_policy=evidence_policy,
@@ -305,11 +313,23 @@ EVENT_TYPE_CONTRACTS: Mapping[str, EventTypeContract] = {
     "knowledge.promoted": _contract(
         "knowledge.promoted",
         commit_eligibility="accepted",
+        contract_version=2,
         payload_schema=_payload_schema(
             "knowledge.promoted",
-            required=("source_pack_id", "target_pack_id", "reason"),
+            schema_version=2,
+            required=(
+                "contract_version",
+                "source_pack_id",
+                "source_pack_revision",
+                "source_event_id",
+                "target_pack_id",
+                "reason",
+            ),
             properties={
+                "contract_version": {"const": PROMOTION_CONTRACT_VERSION},
                 "source_pack_id": _PACK_ID,
+                "source_pack_revision": _string(),
+                "source_event_id": _string(),
                 "target_pack_id": _PACK_ID,
                 "reason": _string(min_length=0),
             },
@@ -319,6 +339,7 @@ EVENT_TYPE_CONTRACTS: Mapping[str, EventTypeContract] = {
             required_provenance_fields=("method",),
         ),
         property_ids=("FOSSIL-PROP-PROMOTION-001", "FOSSIL-PROP-PROVENANCE-001"),
+        oracle_ids=("tests/test_event_contracts.py", "tests/test_promotion_source_pin.py"),
     ),
     "conversation.ingested": _contract(
         "conversation.ingested",
@@ -430,6 +451,7 @@ def validate_event_for_commit(
     event: Mapping[str, Any],
     *,
     endpoint_type_resolver: EndpointTypeResolver | None = None,
+    promotion_source_resolver: PromotionSourceResolver | None = None,
 ) -> EventTypeContract:
     """Validate one prepared event against the versioned acceptance registry.
 
@@ -437,7 +459,8 @@ def validate_event_for_commit(
     historical/external metadata. It cannot override this registry: payload
     validation always uses the registered contract below. Accepted relation
     events additionally require an independently configured endpoint resolver;
-    self-declared endpoint kinds are never sufficient for acceptance.
+    self-declared endpoint kinds are never sufficient for acceptance. Accepted
+    promotions likewise require an independently configured exact-source resolver.
     """
 
     contract = event_contract(str(event.get("event_type", "")))
@@ -453,6 +476,12 @@ def validate_event_for_commit(
             payload,
             endpoint_type_resolver=endpoint_type_resolver,
         )
+
+    if contract.event_type == "knowledge.promoted":
+        try:
+            validate_promotion_source(event, resolver=promotion_source_resolver)
+        except PromotionSourceError as exc:
+            raise EventContractError(str(exc)) from exc
 
     policy = contract.evidence_policy
     if policy.evidence_refs == "required":

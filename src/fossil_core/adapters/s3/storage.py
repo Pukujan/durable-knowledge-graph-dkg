@@ -11,6 +11,7 @@ from jsonschema import Draft202012Validator, FormatChecker
 from ...artifact_store import ArtifactIntegrityError, ArtifactRedactedError
 from ...domain.event_contracts import validate_event_for_commit
 from ...domain.ontology import EndpointTypeResolver
+from ...domain.promotion import PromotionSourceResolver
 from ...event_store import (
     EventRedactedError,
     EventRedactionConflict,
@@ -352,6 +353,7 @@ class S3DurableEventStore:
         endpoint_url: str | None = None,
         region_name: str | None = None,
         endpoint_type_resolver: EndpointTypeResolver | None = None,
+        promotion_source_resolver: PromotionSourceResolver | None = None,
     ):
         self.backend = _S3ObjectBackend(
             bucket=bucket,
@@ -363,6 +365,7 @@ class S3DurableEventStore:
         schema = json.loads(Path(schema_path).read_text(encoding="utf-8"))
         self.validator = Draft202012Validator(schema, format_checker=FormatChecker())
         self.endpoint_type_resolver = endpoint_type_resolver
+        self.promotion_source_resolver = promotion_source_resolver
 
     @staticmethod
     def _canonical(event: dict[str, Any]) -> bytes:
@@ -403,6 +406,7 @@ class S3DurableEventStore:
         validate_event_for_commit(
             candidate,
             endpoint_type_resolver=self.endpoint_type_resolver,
+            promotion_source_resolver=self.promotion_source_resolver,
         )
         return candidate
 
@@ -429,6 +433,7 @@ class S3DurableEventStore:
         validate_event_for_commit(
             candidate,
             endpoint_type_resolver=self.endpoint_type_resolver,
+            promotion_source_resolver=self.promotion_source_resolver,
         )
         event_id = candidate["event_id"]
         if self.is_redacted(event_id):

@@ -11,6 +11,7 @@ from fossil_core.domain.event_contracts import (
     EVENT_TYPE_REGISTRY_VERSION,
     EventContractError,
 )
+from fossil_core.domain.promotion import PROMOTION_CONTRACT_VERSION
 from fossil_core.event_store import DurableEventStore
 
 
@@ -69,9 +70,12 @@ def test_registry_is_versioned_and_covers_the_characterized_write_vocabulary():
 
     for event_type, contract in EVENT_TYPE_CONTRACTS.items():
         assert contract.event_type == event_type
-        assert contract.contract_version.endswith(".v1")
+        expected_version = 2 if event_type == "knowledge.promoted" else 1
+        assert contract.contract_version.endswith(f".v{expected_version}")
         assert contract.commit_eligibility in {"proposal_only", "accepted"}
-        assert contract.payload_schema["$id"].endswith("v1.schema.json")
+        assert contract.payload_schema["$id"].endswith(
+            f"v{expected_version}.schema.json"
+        )
         assert contract.evidence_policy is not None
         assert contract.property_ids
         assert contract.oracle_ids
@@ -132,11 +136,37 @@ def test_registered_payload_contract_is_registry_owned_and_rejects_missing_field
 
 
 def test_promotion_evidence_policy_and_provenance_fail_closed(tmp_path):
-    store = DurableEventStore(tmp_path / "events", SCHEMA)
+    source_pack = "pack_f024177f89a5442db84171c3dd7f58e5"
+    source_revision = "git:source@01234567"
+    source_event_id = "evt_event_contract_source_000001"
+    subject = "clm_event_contract_fixture"
+    source_event = {
+        "event_id": source_event_id,
+        "pack_id": source_pack,
+        "subject_refs": [subject],
+    }
+
+    def resolver(pack_id: str, revision: str, event_id: str):
+        if (pack_id, revision, event_id) == (
+            source_pack,
+            source_revision,
+            source_event_id,
+        ):
+            return source_event
+        return None
+
+    store = DurableEventStore(
+        tmp_path / "events",
+        SCHEMA,
+        promotion_source_resolver=resolver,
+    )
     promotion = event(
         "knowledge.promoted",
         payload={
-            "source_pack_id": "pack_f024177f89a5442db84171c3dd7f58e5",
+            "contract_version": PROMOTION_CONTRACT_VERSION,
+            "source_pack_id": source_pack,
+            "source_pack_revision": source_revision,
+            "source_event_id": source_event_id,
             "target_pack_id": PACK,
             "reason": "reviewed reuse",
         },

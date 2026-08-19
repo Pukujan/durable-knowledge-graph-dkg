@@ -266,7 +266,27 @@ def test_lineage_is_protocol_independent_and_pack_gated(tmp_path):
 
 
 def test_knowledge_promotion_is_new_durable_target_event(tmp_path):
-    service = CorpusService(event_store=store(tmp_path), skills=registry())
+    source_revision = "git:ai@aaaaaaaa"
+    source_event_id = "evt_agent_source_promotion_0001"
+    subject = "clm_reusable_agent_method"
+    calls: list[tuple[str, str, str]] = []
+
+    def resolver(pack_id: str, revision: str, event_id: str):
+        calls.append((pack_id, revision, event_id))
+        if (pack_id, revision, event_id) == (AI, source_revision, source_event_id):
+            return {
+                "event_id": source_event_id,
+                "pack_id": AI,
+                "subject_refs": [subject],
+            }
+        return None
+
+    events = DurableEventStore(
+        tmp_path / "events",
+        root() / "schemas" / "events" / "v1.schema.json",
+        promotion_source_resolver=resolver,
+    )
+    service = CorpusService(event_store=events, skills=registry())
     ctx = context("skill_knowledge-promotion")
     access = PackAccess(
         pack_id=AI,
@@ -275,11 +295,13 @@ def test_knowledge_promotion_is_new_durable_target_event(tmp_path):
     )
     proposal = service.propose_promotion(
         source_pack_id=AI,
+        source_pack_revision=source_revision,
+        source_event_id=source_event_id,
         target_pack_id=COMMON,
-        subject_refs=["clm_reusable_agent_method"],
+        subject_refs=[subject],
         occurred_at="2026-08-09T23:26:00Z",
         recorded_at="2026-08-09T23:26:00Z",
-        idempotency_key="agent-promotion-v1",
+        idempotency_key="agent-promotion-v2",
         evidence_refs=["art_promotion_evidence"],
         reason="reusable across projects",
         access=access,
@@ -288,9 +310,12 @@ def test_knowledge_promotion_is_new_durable_target_event(tmp_path):
     assert proposal["event_type"] == "knowledge.promoted"
     assert proposal["pack_id"] == COMMON
     assert proposal["payload"]["source_pack_id"] == AI
+    assert proposal["payload"]["source_pack_revision"] == source_revision
+    assert proposal["payload"]["source_event_id"] == source_event_id
     assert proposal["actor"]["skill_id"] == "skill_knowledge-promotion"
     accepted = service.commit(proposal, access=access, context=ctx)
     assert accepted["event_id"] == proposal["event_id"]
+    assert calls == [(AI, source_revision, source_event_id)]
 
 
 def test_thin_mcp_adapter_has_allowlisted_surface_and_no_graph_escape_hatch(tmp_path):
