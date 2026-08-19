@@ -83,20 +83,20 @@ jobs:
           mkdir -p build/assurance
           mutmut results | tee build/assurance/mutation-identity-survivors.txt
           mutmut export-cicd-stats
-      - name: Show characterization survivor
-        run: mutmut show fossil_core.domain.identity.x_deterministic_event_id__mutmut_5
-      - name: Characterize identity mutation strength
+      - name: Enforce identity mutation strength
         run: |
           python scripts/check_mutation_assurance.py \
             mutants/mutmut-cicd-stats.json \
             --scope identity \
-            --minimum-score 0 \
+            --minimum-score 83.33 \
+            --maximum-survivors 1 \
+            --maximum-no-tests 0 \
             --receipt build/assurance/mutation-identity.json
       - name: Emit compact mutation receipt
         shell: bash
         run: |
           {
-            echo "## Identity mutation characterization receipt"
+            echo "## Identity mutation receipt"
             echo '```json'
             cat build/assurance/mutation-identity.json
             echo '```'
@@ -108,6 +108,7 @@ jobs:
             echo "- coordination: #94"
             echo "- tool: mutmut source pinned at dc58270d5234752e22247f814431750eafcf6e5f"
             echo "- mutable source: src/fossil_core/domain/identity.py only"
-            echo "- characterization floor: 0%; threshold will be derived after survivor review"
+            echo "- gate: score >= 83.33%; survivors <= 1; no-test mutants = 0"
+            echo "- reviewed survivor: UTF-8 codec name casing only (utf-8 -> UTF-8), behaviorally equivalent"
             echo "- security: secretless; contents:read"
           } >> "$GITHUB_STEP_SUMMARY"
