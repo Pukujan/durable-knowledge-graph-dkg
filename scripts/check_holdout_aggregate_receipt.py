@@ -55,6 +55,10 @@ def evaluate(
             f"counts total {total} must equal passed+failed ({passed + failed})"
         )
 
+    class_ids = [item["class_id"] for item in receipt["failure_classes"]]
+    if len(class_ids) != len(set(class_ids)):
+        failures.append("failure_classes must contain each class_id at most once")
+
     classified_failures = sum(item["count"] for item in receipt["failure_classes"])
     if classified_failures != failed:
         failures.append(
