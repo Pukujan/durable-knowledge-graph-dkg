@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import copy
 import hashlib
-import json
 from dataclasses import dataclass
 from typing import Any, Mapping, Sequence
 
@@ -202,9 +201,8 @@ class ReviewedEvidenceIngestService:
                 },
                 "provenance": {
                     "method": "reviewed_evidence_ingest",
-                    "review_ref": review_ref,
-                    "source_snapshot_ref": snapshot_id,
                     "prompt_or_policy_ref": "skills/research-ingestion/manifest.json",
+                    "benchmark_ref": review_ref,
                 },
             }
             prepared_events.append(self.event_store.validate(event))
