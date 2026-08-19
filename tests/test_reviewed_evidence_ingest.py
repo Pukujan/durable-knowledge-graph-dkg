@@ -144,8 +144,10 @@ def test_reviewed_ingest_preserves_source_first_and_emits_proposals_with_compact
         assert event["evidence_refs"] == [snapshot["artifact_id"]]
         assert event["source_snapshot_refs"] == [snapshot["snapshot_id"]]
         assert event["provenance"]["method"] == "reviewed_evidence_ingest"
-        assert event["provenance"]["review_ref"] == receipt["review_ref"]
-        assert event["provenance"]["source_snapshot_ref"] == snapshot["snapshot_id"]
+        assert event["provenance"]["benchmark_ref"] == receipt["review_ref"]
+        assert event["provenance"]["prompt_or_policy_ref"] == (
+            "skills/research-ingestion/manifest.json"
+        )
         assert "Primary research says" not in json.dumps(event["payload"])
 
     schema = json.loads(
