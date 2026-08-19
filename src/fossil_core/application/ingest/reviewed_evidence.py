@@ -11,6 +11,7 @@ from ...source import SourceSnapshotStore
 
 REVIEWED_EVIDENCE_RECEIPT_VERSION = "fossil.reviewed-evidence-ingest-receipt.v1"
 _RAW_LOG_SOURCE_KINDS = frozenset({"raw_ci_log", "raw_build_log", "raw_runtime_log"})
+_SHARED_PACK_KINDS = frozenset({"common", "domain"})
 
 
 class ReviewedEvidenceIngestError(ValueError):
@@ -45,6 +46,15 @@ def _receipt_id(correlation_id: str, review_ref: str, pack_id: str) -> str:
     return f"ingest_receipt_{digest[:24]}"
 
 
+def _normalize_source_kind(source_kind: str) -> str:
+    normalized = source_kind.strip().lower()
+    if not normalized:
+        raise ReviewedEvidenceIngestError(
+            "reviewed evidence ingest requires a non-empty source_kind"
+        )
+    return normalized
+
+
 class ReviewedEvidenceIngestService:
     """Provenance-first reviewed evidence ingestion over existing durable contracts.
 
@@ -73,6 +83,7 @@ class ReviewedEvidenceIngestService:
         source_kind: str,
         review_ref: str,
         correlation_id: str,
+        requires_explicit_promotion: bool,
     ) -> dict[str, Any]:
         return {
             "schema_version": REVIEWED_EVIDENCE_RECEIPT_VERSION,
@@ -98,7 +109,7 @@ class ReviewedEvidenceIngestService:
             "proposal_event_ids": [],
             "proposal_count": 0,
             "accepted_count": 0,
-            "requires_explicit_promotion": True,
+            "requires_explicit_promotion": requires_explicit_promotion,
             "rejection_reason": None,
         }
 
@@ -132,14 +143,16 @@ class ReviewedEvidenceIngestService:
                 "reviewed evidence ingest emits proposals only"
             )
 
+        source_kind = _normalize_source_kind(source.source_kind)
         receipt = self._base_receipt(
             pack_id=pack_id,
-            source_kind=source.source_kind,
+            source_kind=source_kind,
             review_ref=review_ref,
             correlation_id=correlation_id,
+            requires_explicit_promotion=str(manifest.get("kind", "")) in _SHARED_PACK_KINDS,
         )
 
-        if source.source_kind in _RAW_LOG_SOURCE_KINDS:
+        if source_kind in _RAW_LOG_SOURCE_KINDS:
             receipt["status"] = "rejected"
             receipt["rejection_reason"] = "raw_ci_or_log_noise_not_wholesale_ingestable"
             receipt["validation"]["source"] = "rejected_by_ingest_policy"
@@ -159,7 +172,7 @@ class ReviewedEvidenceIngestService:
         artifact_id = str(snapshot["artifact_id"])
         snapshot_id = str(snapshot["snapshot_id"])
         receipt["source"] = {
-            "source_kind": source.source_kind,
+            "source_kind": source_kind,
             "preserved": True,
             "artifact_id": artifact_id,
             "snapshot_id": snapshot_id,
