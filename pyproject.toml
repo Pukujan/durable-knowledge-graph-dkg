@@ -32,6 +32,7 @@ only_mutate = [
   "src/fossil_core/domain/lifecycle.py",
   "src/fossil_core/domain/pack.py",
 ]
+also_copy = ["schemas", "examples"]
 pytest_add_cli_args_test_selection = [
   "tests/test_lifecycle.py",
   "tests/test_lifecycle_properties.py",
