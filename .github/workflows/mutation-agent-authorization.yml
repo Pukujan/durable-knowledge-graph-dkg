@@ -178,18 +178,20 @@ jobs:
               mutmut show "${mutant}"
               echo "::endgroup::"
             done
-      - name: Characterize agent authorization mutation strength
+      - name: Enforce agent authorization mutation strength
         run: |
           python scripts/check_mutation_assurance.py \
             build/assurance/mutation-agent-authorization-stats.json \
             --scope agent-authorization \
-            --minimum-score 0 \
+            --minimum-score 98 \
+            --maximum-survivors 2 \
+            --maximum-no-tests 0 \
             --receipt build/assurance/mutation-agent-authorization.json
       - name: Emit compact mutation receipt
         shell: bash
         run: |
           {
-            echo "## Agent authorization mutation characterization"
+            echo "## Agent authorization mutation assurance"
             echo '```json'
             cat build/assurance/mutation-agent-authorization.json
             echo '```'
@@ -205,6 +207,7 @@ jobs:
             echo "- selected methods only: CorpusService._authorize, _require_actor_match, propose, validate, commit"
             echo "- excluded: CorpusService.propose_promotion and all search/context/read/lineage/manage/ThinMCP mutants"
             echo "- scoped receipt: counts only selected mutant keys; unselected generated keys are excluded from the denominator"
-            echo "- mode: characterization; threshold will be set from selected-survivor evidence"
+            echo "- enforced gate: score >= 98%, survivors <= 2, no-test = 0"
+            echo "- reviewed residuals: skill-version mismatch exception-message-only and actor-provenance exception-message decoration only"
             echo "- security: secretless; contents:read"
           } >> "$GITHUB_STEP_SUMMARY"
