@@ -88,14 +88,14 @@
       "semantic_owner": "pack access / agent query boundary",
       "modules": ["src/fossil_core/domain/pack.py", "src/fossil_core/agent.py", "src/fossil_core/application/query/security.py"],
       "deterministic_oracles": ["tests/test_pack.py", "tests/test_agent_boundary.py", "tests/test_context_security.py"],
-      "property_oracles": ["tests/test_pack_properties.py"],
+      "property_oracles": ["tests/test_agent_query_composition_properties.py", "tests/test_pack_properties.py"],
       "mutation_scope": ["src/fossil_core/domain/pack.py", "src/fossil_core/agent.py", "src/fossil_core/application/query/security.py"],
       "tla_refs": [],
       "lean_refs": ["formal/lean/Fossil/PackAccess.lean"],
       "hidden_acceptance_required": true,
       "status": "active",
       "source_refs": ["ARCHITECTURE.md"],
-      "notes": "PR #175 adds stronger composed retrieval/context scope oracles; catalog remains valid before that draft is merged."
+      "notes": "Composed rich retrieval/context scope is exercised through the agent-facing CorpusService boundary; provider leakage fails closed."
     },
     {
       "property_id": "FOSSIL-PROP-PACK-MANIFEST-001",
@@ -231,7 +231,7 @@
       "semantic_owner": "application query security",
       "modules": ["src/fossil_core/application/query/security.py", "src/fossil_core/agent.py"],
       "deterministic_oracles": ["tests/test_context_security.py", "tests/test_agent_boundary.py"],
-      "property_oracles": [],
+      "property_oracles": ["tests/test_agent_query_composition_properties.py"],
       "mutation_scope": ["src/fossil_core/application/query/security.py", "src/fossil_core/agent.py"],
       "tla_refs": [],
       "lean_refs": [],
