@@ -90,18 +90,20 @@ jobs:
               mutmut show "${mutant}"
               echo "::endgroup::"
             done
-      - name: Characterize filesystem artifact-store mutation strength
+      - name: Enforce filesystem artifact-store mutation strength
         run: |
           python scripts/check_mutation_assurance.py \
             mutants/mutmut-cicd-stats.json \
             --scope filesystem-artifact-store \
-            --minimum-score 0 \
+            --minimum-score 92 \
+            --maximum-survivors 18 \
+            --maximum-no-tests 0 \
             --receipt build/assurance/mutation-filesystem-artifact-store.json
       - name: Emit compact mutation receipt
         shell: bash
         run: |
           {
-            echo "## Filesystem artifact-store mutation characterization"
+            echo "## Filesystem artifact-store mutation receipt"
             echo '```json'
             cat build/assurance/mutation-filesystem-artifact-store.json
             echo '```'
@@ -113,6 +115,7 @@ jobs:
             echo "- coordination: #94"
             echo "- tool: mutmut source pinned at dc58270d5234752e22247f814431750eafcf6e5f"
             echo "- mutable source: src/fossil_core/adapters/filesystem/artifact_store.py only"
-            echo "- mode: characterization; threshold will be set from survivor evidence"
+            echo "- gate: score >= 92%; survivors <= 18; no-test mutants = 0"
+            echo "- survivor review: remaining mutants are behaviorally equivalent/default variants (already-created directory parents flags, UTF-8/default codec aliases, ensure_ascii falsey alias) or exception-message-only changes; storage integrity and redaction behavior remain directly asserted"
             echo "- security: secretless; contents:read"
           } >> "$GITHUB_STEP_SUMMARY"
