@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pukujan.github.io/fossil-core/schemas/reviewed-evidence-ingest/receipt-v1.schema.json",
+  "title": "FOSSIL Reviewed Evidence Ingest Receipt v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "receipt_id",
+    "authority",
+    "status",
+    "pack_id",
+    "review_ref",
+    "correlation_id",
+    "source",
+    "validation",
+    "proposal_event_ids",
+    "proposal_count",
+    "accepted_count",
+    "requires_explicit_promotion",
+    "rejection_reason"
+  ],
+  "properties": {
+    "schema_version": {"const": "fossil.reviewed-evidence-ingest-receipt.v1"},
+    "receipt_id": {"type": "string", "pattern": "^ingest_receipt_[A-Za-z0-9_-]{16,}$"},
+    "authority": {"const": "non_authoritative_receipt"},
+    "status": {"enum": ["proposed", "rejected"]},
+    "pack_id": {"type": "string", "minLength": 1},
+    "review_ref": {"type": "string", "minLength": 1},
+    "correlation_id": {"type": "string", "minLength": 1},
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_kind", "preserved", "artifact_id", "snapshot_id"],
+      "properties": {
+        "source_kind": {"type": "string", "minLength": 1},
+        "preserved": {"type": "boolean"},
+        "artifact_id": {"type": ["string", "null"]},
+        "snapshot_id": {"type": ["string", "null"]}
+      }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pack", "source", "events", "provenance", "evidence", "ontology"],
+      "properties": {
+        "pack": {"enum": ["passed", "not_run"]},
+        "source": {"enum": ["passed", "not_run", "rejected_by_ingest_policy"]},
+        "events": {"enum": ["passed", "not_run"]},
+        "provenance": {"enum": ["passed", "not_run"]},
+        "evidence": {"enum": ["passed", "not_run"]},
+        "ontology": {"enum": ["passed", "not_applicable", "not_run"]}
+      }
+    },
+    "proposal_event_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "proposal_count": {"type": "integer", "minimum": 0},
+    "accepted_count": {"const": 0},
+    "requires_explicit_promotion": {"const": true},
+    "rejection_reason": {"type": ["string", "null"]}
+  }
+}
