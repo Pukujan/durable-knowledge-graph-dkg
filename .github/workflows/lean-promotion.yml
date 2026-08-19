@@ -1,0 +1,80 @@
+name: Promotion Lean assurance
+
+on:
+  pull_request:
+    paths:
+      - "lean-toolchain"
+      - "formal/lean/Fossil/Promotion.lean"
+      - "formal/lean/README.md"
+      - "contracts/properties/fossil-properties-v1.json"
+      - ".github/workflows/lean-promotion.yml"
+  push:
+    branches: [main]
+    paths:
+      - "lean-toolchain"
+      - "formal/lean/Fossil/Promotion.lean"
+      - "formal/lean/README.md"
+      - "contracts/properties/fossil-properties-v1.json"
+      - ".github/workflows/lean-promotion.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  promotion:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      FOSSIL_SOFTWARE_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Verify exact target checkout
+        shell: bash
+        run: test "$(git rev-parse HEAD)" = "${FOSSIL_SOFTWARE_COMMIT}"
+      - name: Restore pinned Lean toolchain cache
+        id: lean-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.elan
+          key: lean-${{ runner.os }}-${{ hashFiles('lean-toolchain') }}
+      - name: Install pinned elan and Lean toolchain on cache miss
+        if: steps.lean-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          curl --fail --silent --show-error --location \
+            https://raw.githubusercontent.com/leanprover/elan/464c9d28395000a2a0128e07081e4956d50eced2/elan-init.sh \
+            --output /tmp/elan-init.sh
+          sh /tmp/elan-init.sh -y --default-toolchain "$(cat lean-toolchain)"
+      - name: Add elan to PATH
+        shell: bash
+        run: echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: Verify Lean toolchain identity
+        shell: bash
+        run: |
+          lean --version | tee /tmp/lean-version.txt
+          grep -F "version 4.30.0" /tmp/lean-version.txt
+      - name: Reject incomplete theorem placeholders
+        shell: bash
+        run: |
+          if grep -En '\b(sorry|admit)\b' formal/lean/Fossil/Promotion.lean; then
+            echo "incomplete Lean proof placeholder detected" >&2
+            exit 1
+          fi
+      - name: Check Promotion semantic kernel
+        run: lean formal/lean/Fossil/Promotion.lean
+      - name: Emit compact Lean assurance receipt
+        shell: bash
+        run: |
+          {
+            echo "## Promotion Lean assurance receipt"
+            echo "- issue: #176"
+            echo "- property: FOSSIL-PROP-PROMOTION-001"
+            echo "- theorem_file: formal/lean/Fossil/Promotion.lean"
+            echo "- commit_sha: ${FOSSIL_SOFTWARE_COMMIT}"
+            echo "- toolchain: $(cat lean-toolchain)"
+            echo "- checks: version PASS; no sorry/admit; theorem compile PASS"
+            echo "- evidence_scope: exact source-pin, target authority, subject containment, source non-mutation semantic kernel; not proof of Python implementation"
+            echo "- security: secretless; contents:read"
+          } >> "$GITHUB_STEP_SUMMARY"
