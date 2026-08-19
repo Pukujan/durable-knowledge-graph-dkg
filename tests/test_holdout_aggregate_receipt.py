@@ -116,6 +116,25 @@ def test_count_and_result_consistency_fail_closed() -> None:
     )
 
 
+def test_duplicate_failure_classes_are_rejected() -> None:
+    schema = _load(SCHEMA_PATH)
+    catalog = _load(CATALOG_PATH)
+    receipt = _pass_receipt()
+    receipt.update(
+        result="FAIL",
+        counts={"total": 12, "passed": 9, "failed": 3},
+        failure_classes=[
+            {"class_id": "property_violation", "count": 1},
+            {"class_id": "property_violation", "count": 2},
+        ],
+    )
+
+    assert any(
+        "each class_id at most once" in item
+        for item in evaluate(receipt, schema=schema, catalog=catalog)
+    )
+
+
 def test_private_case_oracle_credential_location_and_freeform_refs_are_rejected() -> None:
     schema = _load(SCHEMA_PATH)
     catalog = _load(CATALOG_PATH)
