@@ -8,7 +8,7 @@ EXTENDS Naturals, FiniteSets
  * This model is assurance evidence for the protocol. It is not a proof    *
  * of the Python implementation and does not authorize multi-writer        *
  * semantics.                                                              *
- *************************************************************************** )
+ *************************************************************************)
 
 CONSTANTS Identities, Values, NoValue
 
