@@ -12,6 +12,15 @@ class PromotionSourceError(ValueError):
     """The exact source meaning for a promotion cannot be resolved safely."""
 
 
+def _required_source_pin(payload: Mapping[str, Any], field: str) -> str:
+    value = payload.get(field)
+    if not isinstance(value, str) or not value.strip():
+        raise PromotionSourceError(
+            f"promotion requires a non-empty string {field} source pin"
+        )
+    return value
+
+
 def build_promotion_event(
     *,
     source_pack_id: str,
@@ -81,9 +90,9 @@ def validate_promotion_source(
     if not isinstance(payload, Mapping):
         raise PromotionSourceError("promotion payload must be an object")
 
-    source_pack_id = str(payload.get("source_pack_id", ""))
-    source_revision = str(payload.get("source_pack_revision", ""))
-    source_event_id = str(payload.get("source_event_id", ""))
+    source_pack_id = _required_source_pin(payload, "source_pack_id")
+    source_revision = _required_source_pin(payload, "source_pack_revision")
+    source_event_id = _required_source_pin(payload, "source_event_id")
     target_pack_id = str(payload.get("target_pack_id", ""))
     durable_pack_id = str(event.get("pack_id", ""))
 
