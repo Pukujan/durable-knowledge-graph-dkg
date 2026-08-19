@@ -31,6 +31,7 @@ CURRENT_WRITE_EVENT_TYPES = {
     "evidence.redacted",
     "knowledge.promoted",
     "conversation.ingested",
+    "review.completed",
 }
 
 
@@ -76,6 +77,7 @@ def test_registry_is_versioned_and_covers_the_characterized_write_vocabulary():
         assert contract.oracle_ids
 
     assert EVENT_TYPE_CONTRACTS["claim.proposed"].commit_eligibility == "proposal_only"
+    assert EVENT_TYPE_CONTRACTS["relation.proposed"].commit_eligibility == "proposal_only"
     relation = EVENT_TYPE_CONTRACTS["relation.proposed"]
     assert relation.ontology_constraints == {
         "ontology_ref": "dkg.core@1.0.0",
@@ -115,9 +117,10 @@ def test_s3_durable_commit_uses_the_same_fail_closed_acceptance_gate():
         store.commit(unknown)
 
 
-def test_registered_payload_contract_rejects_semantically_empty_claim_before_write(tmp_path):
+def test_registered_payload_contract_is_registry_owned_and_rejects_missing_fields(tmp_path):
     store = DurableEventStore(tmp_path / "events", SCHEMA)
     bad = event("claim.proposed", payload={})
+    bad["payload_schema"] = "schemas/legacy/external-payload-reference.json"
 
     with pytest.raises(ValidationError):
         store.validate(bad)
