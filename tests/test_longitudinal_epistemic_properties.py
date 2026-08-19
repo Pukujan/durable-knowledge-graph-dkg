@@ -4,7 +4,7 @@ import importlib.util
 import shutil
 from pathlib import Path
 
-from hypothesis import given, settings, strategies as st
+from hypothesis import HealthCheck, given, settings, strategies as st
 
 from fossil_core.temporal_benchmark import run_longitudinal_epistemic_benchmark
 
@@ -19,7 +19,11 @@ FIXTURE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(FIXTURE)
 
 
-@settings(max_examples=12, deadline=None)
+@settings(
+    max_examples=12,
+    deadline=None,
+    suppress_health_check=[HealthCheck.function_scoped_fixture],
+)
 @given(later_relation_count=st.integers(min_value=0, max_value=24))
 def test_historical_answer_survives_generated_later_relation_and_ontology_noise(
     tmp_path: Path,
