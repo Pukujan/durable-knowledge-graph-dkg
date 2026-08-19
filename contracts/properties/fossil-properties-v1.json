@@ -43,11 +43,11 @@
       "property_oracles": ["tests/test_lifecycle_properties.py"],
       "mutation_scope": ["src/fossil_core/domain/lifecycle.py"],
       "tla_refs": [],
-      "lean_refs": ["formal/lean/Fossil/Lifecycle.lean"],
+      "lean_refs": ["formal/lean/Fossil/Lifecycle.lean::append_history_preserves_prior_states"],
       "hidden_acceptance_required": false,
       "status": "active",
       "source_refs": ["ARCHITECTURE.md"],
-      "notes": "Lean reference is planned; the file is intentionally absent until Phase 5."
+      "notes": "Lean 4.30.0 checks the named Lifecycle theorem with no sorry/admit placeholders; this formal theorem is semantic-kernel evidence, not proof of the Python implementation."
     },
     {
       "property_id": "FOSSIL-PROP-IDEMPOTENCY-001",
@@ -75,11 +75,11 @@
       "property_oracles": ["tests/test_lifecycle_properties.py"],
       "mutation_scope": ["src/fossil_core/domain/lifecycle.py"],
       "tla_refs": [],
-      "lean_refs": ["formal/lean/Fossil/Lifecycle.lean"],
+      "lean_refs": ["formal/lean/Fossil/Lifecycle.lean::terminal_dependent_is_preserved", "formal/lean/Fossil/Lifecycle.lean::nonterminal_dependent_becomes_stale", "formal/lean/Fossil/Lifecycle.lean::superseding_premise_does_not_revive_terminal_dependent"],
       "hidden_acceptance_required": false,
       "status": "active",
       "source_refs": ["ARCHITECTURE.md"],
-      "notes": "Lean reference is planned; the file is intentionally absent until Phase 5."
+      "notes": "Lean 4.30.0 checks the named Lifecycle dependency theorems with no sorry/admit placeholders; this formal theorem evidence does not prove the Python implementation."
     },
     {
       "property_id": "FOSSIL-PROP-PACK-ISOLATION-001",
@@ -91,11 +91,11 @@
       "property_oracles": ["tests/test_agent_query_composition_properties.py", "tests/test_pack_properties.py"],
       "mutation_scope": ["src/fossil_core/domain/pack.py", "src/fossil_core/agent.py", "src/fossil_core/application/query/security.py"],
       "tla_refs": [],
-      "lean_refs": ["formal/lean/Fossil/PackAccess.lean"],
+      "lean_refs": ["formal/lean/Fossil/PackAccess.lean::requested_scope_cannot_widen_mounts", "formal/lean/Fossil/PackAccess.lean::requested_scope_cannot_add_unrequested_pack", "formal/lean/Fossil/PackAccess.lean::returned_scope_preserves_mount_authority", "formal/lean/Fossil/PackAccess.lean::returned_scope_preserves_request_authority"],
       "hidden_acceptance_required": true,
       "status": "active",
       "source_refs": ["ARCHITECTURE.md"],
-      "notes": "Composed rich retrieval/context scope is exercised through the agent-facing CorpusService boundary; provider leakage fails closed."
+      "notes": "Lean 4.30.0 checks the named PackAccess authority-subset theorems with no sorry/admit placeholders. Composed runtime scope remains exercised through executable CorpusService oracles; Lean evidence does not prove the Python implementation."
     },
     {
       "property_id": "FOSSIL-PROP-PACK-MANIFEST-001",
@@ -107,11 +107,11 @@
       "property_oracles": ["tests/test_pack_properties.py"],
       "mutation_scope": ["src/fossil_core/application/ingest/pack_validation.py"],
       "tla_refs": [],
-      "lean_refs": ["formal/lean/Fossil/PackAccess.lean"],
+      "lean_refs": ["formal/lean/Fossil/PackAccess.lean::write_authority_implies_read_authority"],
       "hidden_acceptance_required": false,
       "status": "active",
       "source_refs": ["ARCHITECTURE.md", "schemas/knowledge-pack/v1.schema.json"],
-      "notes": "Dependency-cycle and exact pack-set lock semantics remain owned by #111 and are not asserted here yet."
+      "notes": "Lean 4.30.0 checks write-authority-implies-read-authority. Dependency-cycle and exact pack-set lock semantics remain owned by #111 and are not asserted by the theorem."
     },
     {
       "property_id": "FOSSIL-PROP-PROJECTION-NONAUTHORITY-001",
