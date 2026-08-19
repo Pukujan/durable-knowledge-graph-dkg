@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "src/fossil_core/adapters/filesystem/artifact_store.py"
+      - "tests/test_artifact_store.py"
       - "tests/test_source_provenance.py"
       - "tests/test_storage_contract_properties.py"
       - "scripts/check_mutation_assurance.py"
@@ -13,6 +14,7 @@ on:
     branches: [main]
     paths:
       - "src/fossil_core/adapters/filesystem/artifact_store.py"
+      - "tests/test_artifact_store.py"
       - "tests/test_source_provenance.py"
       - "tests/test_storage_contract_properties.py"
       - "scripts/check_mutation_assurance.py"
@@ -62,6 +64,7 @@ jobs:
           only_mutate = ["src/fossil_core/adapters/filesystem/artifact_store.py"]
           also_copy = ["schemas", "examples", "skills"]
           pytest_add_cli_args_test_selection = [
+            "tests/test_artifact_store.py",
             "tests/test_source_provenance.py",
             "tests/test_storage_contract_properties.py",
           ]
