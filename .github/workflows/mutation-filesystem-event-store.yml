@@ -1,0 +1,121 @@
+name: Filesystem event-store mutation assurance
+
+on:
+  pull_request:
+    paths:
+      - "src/fossil_core/adapters/filesystem/event_store.py"
+      - "tests/test_event_store.py"
+      - "tests/test_event_redaction.py"
+      - "tests/test_storage_contract_properties.py"
+      - "scripts/check_mutation_assurance.py"
+      - ".github/workflows/mutation-filesystem-event-store.yml"
+      - "pyproject.toml"
+  push:
+    branches: [main]
+    paths:
+      - "src/fossil_core/adapters/filesystem/event_store.py"
+      - "tests/test_event_store.py"
+      - "tests/test_event_redaction.py"
+      - "tests/test_storage_contract_properties.py"
+      - "scripts/check_mutation_assurance.py"
+      - ".github/workflows/mutation-filesystem-event-store.yml"
+      - "pyproject.toml"
+
+permissions:
+  contents: read
+
+jobs:
+  filesystem-event-store:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      FOSSIL_SOFTWARE_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Verify exact target checkout
+        shell: bash
+        run: test "$(git rev-parse HEAD)" = "${FOSSIL_SOFTWARE_COMMIT}"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install mutation toolchain
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e '.[test,mutation,s3]'
+          python -m pip check
+          mutmut --version
+      - name: Configure isolated filesystem event-store mutation scope
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("pyproject.toml")
+          text = path.read_text(encoding="utf-8")
+          marker = "[tool.mutmut]\n"
+          if marker not in text:
+              raise SystemExit("missing [tool.mutmut] block")
+          prefix, _old = text.split(marker, 1)
+          scoped = '''[tool.mutmut]
+          source_paths = ["src/fossil_core"]
+          only_mutate = ["src/fossil_core/adapters/filesystem/event_store.py"]
+          also_copy = ["schemas", "examples", "skills"]
+          pytest_add_cli_args_test_selection = [
+            "tests/test_event_store.py",
+            "tests/test_event_redaction.py",
+            "tests/test_storage_contract_properties.py",
+          ]
+          '''
+          path.write_text(prefix + scoped, encoding="utf-8")
+          print(path.read_text(encoding="utf-8"))
+          PY
+      - name: Run filesystem event-store mutants
+        shell: bash
+        run: |
+          rm -rf mutants
+          mutmut run
+          mkdir -p build/assurance
+          mutmut results | tee build/assurance/mutation-filesystem-event-store-survivors.txt
+          mutmut export-cicd-stats
+      - name: Show surviving mutant diffs
+        shell: bash
+        run: |
+          awk -F': ' '/: (survived|no tests)$/ {gsub(/^[[:space:]]+/, "", $1); print $1}' \
+            build/assurance/mutation-filesystem-event-store-survivors.txt \
+          | while IFS= read -r mutant; do
+              echo "::group::${mutant}"
+              mutmut show "${mutant}"
+              echo "::endgroup::"
+            done
+      - name: Enforce filesystem event-store mutation strength
+        run: |
+          python scripts/check_mutation_assurance.py \
+            mutants/mutmut-cicd-stats.json \
+            --scope filesystem-event-store \
+            --minimum-score 87 \
+            --maximum-survivors 29 \
+            --maximum-no-tests 0 \
+            --receipt build/assurance/mutation-filesystem-event-store.json
+      - name: Emit compact mutation receipt
+        shell: bash
+        run: |
+          {
+            echo "## Filesystem event-store mutation assurance"
+            echo '```json'
+            cat build/assurance/mutation-filesystem-event-store.json
+            echo '```'
+            echo "### Surviving mutants"
+            echo '```text'
+            cat build/assurance/mutation-filesystem-event-store-survivors.txt
+            echo '```'
+            echo "- issue: #176"
+            echo "- coordination: #94"
+            echo "- tool: mutmut source pinned at dc58270d5234752e22247f814431750eafcf6e5f"
+            echo "- mutable source: src/fossil_core/adapters/filesystem/event_store.py only"
+            echo "- gate: score >= 87%; survivors <= 29; no-test mutants = 0"
+            echo "- survivor review: remaining mutants are predominantly equivalent mkdir/UTF-8 spelling variants, platform-default UTF-8 read variants in this environment, and exception-message-only variants; core idempotency and redaction branch mutations are killed by direct behavioral oracles"
+            echo "- security: secretless; contents:read"
+          } >> "$GITHUB_STEP_SUMMARY"
