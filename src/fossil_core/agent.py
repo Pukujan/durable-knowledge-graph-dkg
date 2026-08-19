@@ -346,6 +346,8 @@ class CorpusService:
         self,
         *,
         source_pack_id: str,
+        source_pack_revision: str,
+        source_event_id: str,
         target_pack_id: str,
         subject_refs: list[str],
         occurred_at: str,
@@ -361,6 +363,8 @@ class CorpusService:
         access.require_write(target_pack_id)
         event = build_promotion_event(
             source_pack_id=source_pack_id,
+            source_pack_revision=source_pack_revision,
+            source_event_id=source_event_id,
             target_pack_id=target_pack_id,
             subject_refs=subject_refs,
             actor=context.durable_actor(),
