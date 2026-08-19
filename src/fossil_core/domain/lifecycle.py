@@ -3,6 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Iterable
 
+from .ontology import RELATION_TYPES
+
+
 CLAIM_STATES = frozenset({
     "proposed",
     "open",
@@ -14,20 +17,6 @@ CLAIM_STATES = frozenset({
     "stale_pending_review",
 })
 RELATION_STATES = frozenset({"proposed", "active", "disputed", "superseded", "invalidated"})
-RELATION_TYPES = frozenset({
-    "SUPPORTS",
-    "CHALLENGES",
-    "CONTRADICTS",
-    "REFINES",
-    "DEPENDS_ON",
-    "ASSUMES",
-    "DERIVED_FROM",
-    "EXEMPLIFIES",
-    "SUPERSEDES",
-    "RELATED_TO",
-    "BROADER_THAN",
-    "NARROWER_THAN",
-})
 
 
 class LifecycleError(ValueError):
