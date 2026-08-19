@@ -83,6 +83,8 @@ jobs:
           mkdir -p build/assurance
           mutmut results | tee build/assurance/mutation-identity-survivors.txt
           mutmut export-cicd-stats
+      - name: Show characterization survivor
+        run: mutmut show fossil_core.domain.identity.x_deterministic_event_id__mutmut_5
       - name: Characterize identity mutation strength
         run: |
           python scripts/check_mutation_assurance.py \
