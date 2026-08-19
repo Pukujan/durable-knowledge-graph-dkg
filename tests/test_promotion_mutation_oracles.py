@@ -15,6 +15,7 @@ TARGET_PACK = "pack_target_0123456789abcdef"
 SOURCE_REVISION = "rev_source_0123456789abcdef"
 SOURCE_EVENT = "evt_source_0123456789abcdef"
 SUBJECT = "clm_subject_0123456789abcdef"
+ACTOR = {"actor_type": "human", "actor_id": "reviewer"}
 
 
 def _promotion_event() -> dict:
@@ -24,7 +25,7 @@ def _promotion_event() -> dict:
         source_event_id=SOURCE_EVENT,
         target_pack_id=TARGET_PACK,
         subject_refs=[SUBJECT],
-        actor_id="reviewer",
+        actor=ACTOR,
         occurred_at="2026-08-19T20:00:00Z",
         recorded_at="2026-08-19T20:00:01Z",
         idempotency_key="promotion-mutation-oracle",
@@ -64,7 +65,7 @@ def test_builder_rejects_whitespace_only_exact_source_pins(field: str, value: st
         "source_event_id": SOURCE_EVENT,
         "target_pack_id": TARGET_PACK,
         "subject_refs": [SUBJECT],
-        "actor_id": "reviewer",
+        "actor": ACTOR,
         "occurred_at": "2026-08-19T20:00:00Z",
         "recorded_at": "2026-08-19T20:00:01Z",
         "idempotency_key": "promotion-whitespace-pin",
