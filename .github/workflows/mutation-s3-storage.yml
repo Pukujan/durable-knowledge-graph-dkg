@@ -76,18 +76,20 @@ jobs:
           mkdir -p build/assurance
           mutmut results | tee build/assurance/mutation-s3-storage-survivors.txt
           mutmut export-cicd-stats
-      - name: Show bounded surviving mutant diffs
+      - name: Collect surviving mutant evidence
         shell: bash
         run: |
           awk -F': ' '/: (survived|no tests)$/ {gsub(/^[[:space:]]+/, "", $1); print $1}' \
             build/assurance/mutation-s3-storage-survivors.txt \
             > build/assurance/mutation-s3-storage-survivor-names.txt
-          sed -n '1,120p' build/assurance/mutation-s3-storage-survivor-names.txt \
-          | while IFS= read -r mutant; do
-              echo "::group::${mutant}"
+          : > build/assurance/mutation-s3-storage-survivor-diffs.txt
+          while IFS= read -r mutant; do
+            {
+              echo "===== ${mutant} ====="
               mutmut show "${mutant}"
-              echo "::endgroup::"
-            done
+              echo
+            } >> build/assurance/mutation-s3-storage-survivor-diffs.txt
+          done < build/assurance/mutation-s3-storage-survivor-names.txt
       - name: Characterize S3 storage mutation strength
         run: |
           python scripts/check_mutation_assurance.py \
@@ -95,6 +97,16 @@ jobs:
             --scope s3-storage \
             --minimum-score 0 \
             --receipt build/assurance/mutation-s3-storage.json
+      - name: Upload S3 mutation evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: s3-storage-mutation-evidence
+          path: |
+            build/assurance/mutation-s3-storage.json
+            build/assurance/mutation-s3-storage-survivors.txt
+            build/assurance/mutation-s3-storage-survivor-names.txt
+            build/assurance/mutation-s3-storage-survivor-diffs.txt
+          retention-days: 7
       - name: Emit compact mutation receipt
         shell: bash
         run: |
@@ -113,6 +125,7 @@ jobs:
             echo "- tool: mutmut source pinned at dc58270d5234752e22247f814431750eafcf6e5f"
             echo "- mutable source: src/fossil_core/adapters/s3/storage.py only"
             echo "- tests: deterministic in-memory FakeS3Client only; no credentials or live object-store calls"
+            echo "- evidence: uploaded as s3-storage-mutation-evidence artifact; no job-log scraping required"
             echo "- mode: characterization; threshold will be set from survivor evidence"
             echo "- security: secretless; contents:read"
           } >> "$GITHUB_STEP_SUMMARY"
