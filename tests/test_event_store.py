@@ -15,6 +15,11 @@ ROOT = Path(__file__).parents[1]
 SCHEMA = ROOT / "schemas/events/v1.schema.json"
 SOURCE = "clm_event_store_source_000001"
 TARGET = "clm_event_store_target_000001"
+PROMOTION_SOURCE_PACK = "pack_f024177f89a5442db84171c3dd7f58e5"
+PROMOTION_TARGET_PACK = "pack_269099f7b2ba43b7a99b9427d64092de"
+PROMOTION_SOURCE_REVISION = "git:source@aaaaaaaa"
+PROMOTION_SOURCE_EVENT = "evt_event_store_promotion_source_0001"
+PROMOTION_SUBJECT = "clm_event_store_promotion_subject_0001"
 
 
 def event():
@@ -57,6 +62,29 @@ def accepted_relation(*, source_type: str = "Claim") -> dict:
     }
 
 
+def promotion_event() -> dict:
+    return {
+        "schema_version": "dkg.event.v1",
+        "event_type": "knowledge.promoted",
+        "occurred_at": "2026-08-19T16:30:00Z",
+        "recorded_at": "2026-08-19T16:30:01Z",
+        "pack_id": PROMOTION_TARGET_PACK,
+        "actor": {"actor_type": "system", "actor_id": "event-store-oracle"},
+        "subject_refs": [PROMOTION_SUBJECT],
+        "idempotency_key": "event-store:pinned-promotion",
+        "evidence_refs": ["art_event_store_promotion_evidence"],
+        "payload": {
+            "contract_version": "dkg.promotion.v2",
+            "source_pack_id": PROMOTION_SOURCE_PACK,
+            "source_pack_revision": PROMOTION_SOURCE_REVISION,
+            "source_event_id": PROMOTION_SOURCE_EVENT,
+            "target_pack_id": PROMOTION_TARGET_PACK,
+            "reason": "reviewed reusable knowledge",
+        },
+        "provenance": {"method": "explicit_cross_pack_promotion"},
+    }
+
+
 def test_constructor_creates_nested_store_and_stable_redaction_namespace(tmp_path):
     root = tmp_path / "nested" / "durable" / "events"
     first = DurableEventStore(root, SCHEMA)
@@ -66,6 +94,7 @@ def test_constructor_creates_nested_store_and_stable_redaction_namespace(tmp_pat
     assert first.redactions == root / "_redactions"
     assert first.redactions.is_dir()
     assert first.endpoint_type_resolver is None
+    assert first.promotion_source_resolver is None
 
     reopened = DurableEventStore(root, SCHEMA)
     assert reopened.root == root
@@ -81,6 +110,38 @@ def test_constructor_preserves_exact_endpoint_resolver_identity(tmp_path):
     )
 
     assert store.endpoint_type_resolver is resolver
+
+
+def test_promotion_source_resolver_is_retained_and_forwarded_by_validate_and_commit(tmp_path):
+    calls: list[tuple[str, str, str]] = []
+
+    def resolver(pack_id: str, revision: str, event_id: str):
+        calls.append((pack_id, revision, event_id))
+        return {
+            "event_id": PROMOTION_SOURCE_EVENT,
+            "pack_id": PROMOTION_SOURCE_PACK,
+            "subject_refs": [PROMOTION_SUBJECT],
+        }
+
+    store = DurableEventStore(
+        tmp_path / "events",
+        SCHEMA,
+        promotion_source_resolver=resolver,
+    )
+    assert store.promotion_source_resolver is resolver
+
+    validated = store.validate(promotion_event())
+    assert validated["event_type"] == "knowledge.promoted"
+    assert calls == [
+        (PROMOTION_SOURCE_PACK, PROMOTION_SOURCE_REVISION, PROMOTION_SOURCE_EVENT)
+    ]
+
+    calls.clear()
+    committed = store.commit(promotion_event())
+    assert committed["event_type"] == "knowledge.promoted"
+    assert calls == [
+        (PROMOTION_SOURCE_PACK, PROMOTION_SOURCE_REVISION, PROMOTION_SOURCE_EVENT)
+    ]
 
 
 def test_validate_is_non_mutating_and_assigns_deterministic_identity(tmp_path):
