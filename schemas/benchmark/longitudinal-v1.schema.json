@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pukujan.github.io/fossil-core/schemas/benchmark/longitudinal-v1.schema.json",
+  "title": "FOSSIL Longitudinal Epistemic Benchmark Report v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema_version",
+    "benchmark_id",
+    "authority_rule",
+    "measurement_boundary",
+    "phase_count",
+    "phases",
+    "historical_answer_stability",
+    "scale",
+    "passed"
+  ],
+  "properties": {
+    "schema_version": {"const": "fossil.longitudinal-benchmark.v1"},
+    "benchmark_id": {"type": "string", "minLength": 1},
+    "authority_rule": {
+      "const": "durable event replay determines epistemic state; retrieval is observational"
+    },
+    "measurement_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["canonical_source", "remote_canonical_object_scans_during_query"],
+      "properties": {
+        "canonical_source": {"const": "local durable pack replay"},
+        "remote_canonical_object_scans_during_query": {"const": 0}
+      }
+    },
+    "phase_count": {"type": "integer", "minimum": 1},
+    "phases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "phase_id",
+          "event_count",
+          "claim_count",
+          "decision_count",
+          "relation_count",
+          "projection_build_ms",
+          "query_latency_ms",
+          "rebuild_equivalent",
+          "beliefs",
+          "position_changes",
+          "dependency_impacts",
+          "disagreements",
+          "state_checks",
+          "queries",
+          "passed"
+        ],
+        "properties": {
+          "phase_id": {"type": "string", "minLength": 1},
+          "as_of_recorded_at": {"type": ["string", "null"]},
+          "event_count": {"type": "integer", "minimum": 0},
+          "claim_count": {"type": "integer", "minimum": 0},
+          "decision_count": {"type": "integer", "minimum": 0},
+          "relation_count": {"type": "integer", "minimum": 0},
+          "projection_build_ms": {"type": "number", "minimum": 0},
+          "query_latency_ms": {"type": "number", "minimum": 0},
+          "rebuild_equivalent": {"type": "boolean"},
+          "beliefs": {"type": "object"},
+          "position_changes": {"type": "array"},
+          "dependency_impacts": {"type": "array"},
+          "disagreements": {"type": "array"},
+          "state_checks": {"type": "array"},
+          "queries": {"type": "array"},
+          "passed": {"type": "boolean"}
+        }
+      }
+    },
+    "historical_answer_stability": {"type": "object"},
+    "scale": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["max_event_count", "max_claim_count", "max_decision_count", "max_relation_count"],
+      "properties": {
+        "max_event_count": {"type": "integer", "minimum": 0},
+        "max_claim_count": {"type": "integer", "minimum": 0},
+        "max_decision_count": {"type": "integer", "minimum": 0},
+        "max_relation_count": {"type": "integer", "minimum": 0}
+      }
+    },
+    "passed": {"type": "boolean"}
+  }
+}
