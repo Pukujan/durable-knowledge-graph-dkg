@@ -55,24 +55,20 @@ jobs:
           python -m pip check
           mutmut --version
       - name: Run lifecycle and pack mutants
-        shell: bash
         run: |
           rm -rf mutants
           mutmut run
           mkdir -p build/assurance
           mutmut results | tee build/assurance/mutation-lifecycle-pack-survivors.txt
-          sed -n 's/^    \(.*\): survived$/\1/p' build/assurance/mutation-lifecycle-pack-survivors.txt | while IFS= read -r mutant; do
-            echo "::group::$mutant"
-            mutmut show "$mutant"
-            echo "::endgroup::"
-          done
           mutmut export-cicd-stats
-      - name: Characterize mutation strength
+      - name: Enforce mutation strength
         run: |
           python scripts/check_mutation_assurance.py \
             mutants/mutmut-cicd-stats.json \
             --scope lifecycle-pack \
-            --minimum-score 0 \
+            --minimum-score 92 \
+            --maximum-survivors 13 \
+            --maximum-no-tests 0 \
             --receipt build/assurance/mutation-lifecycle-pack.json
       - name: Emit compact mutation receipt
         shell: bash
@@ -89,6 +85,7 @@ jobs:
             echo "- issue: #176"
             echo "- coordination: #94"
             echo "- tool: mutmut 3.7.0 source pinned at dc58270d5234752e22247f814431750eafcf6e5f"
-            echo "- mode: characterization; score threshold will be set from this baseline"
+            echo "- baseline: 167/180 killed (92.78%); 13 message-only survivors; 0 no-test mutants"
+            echo "- gate: score >= 92%; survivors <= 13; no-test mutants = 0"
             echo "- security: secretless; contents:read"
           } >> "$GITHUB_STEP_SUMMARY"
