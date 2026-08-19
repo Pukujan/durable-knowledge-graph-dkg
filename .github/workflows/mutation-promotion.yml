@@ -81,7 +81,7 @@ jobs:
       - name: Show surviving mutant diffs
         shell: bash
         run: |
-          awk -F': ' '/: (survived|no_tests)$/ {print $1}' \
+          awk -F': ' '/: (survived|no_tests)$/ {name=$1; gsub(/^[[:space:]]+|[[:space:]]+$/, "", name); print name}' \
             build/assurance/mutation-promotion-survivors.txt \
           | while IFS= read -r mutant; do
               echo "::group::${mutant}"
