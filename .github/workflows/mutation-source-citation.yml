@@ -1,0 +1,104 @@
+name: Source citation mutation assurance
+
+on:
+  pull_request:
+    paths:
+      - "src/fossil_core/source.py"
+      - "tests/test_source_citation_properties.py"
+      - "tests/test_source_provenance.py"
+      - "scripts/check_mutation_assurance.py"
+      - ".github/workflows/mutation-source-citation.yml"
+      - "pyproject.toml"
+  push:
+    branches: [main]
+    paths:
+      - "src/fossil_core/source.py"
+      - "tests/test_source_citation_properties.py"
+      - "tests/test_source_provenance.py"
+      - "scripts/check_mutation_assurance.py"
+      - ".github/workflows/mutation-source-citation.yml"
+      - "pyproject.toml"
+
+permissions:
+  contents: read
+
+jobs:
+  source-citation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      FOSSIL_SOFTWARE_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Verify exact target checkout
+        shell: bash
+        run: test "$(git rev-parse HEAD)" = "${FOSSIL_SOFTWARE_COMMIT}"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install mutation toolchain
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e '.[test,mutation]'
+          python -m pip check
+          mutmut --version
+      - name: Configure isolated source/citation mutation scope
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("pyproject.toml")
+          text = path.read_text(encoding="utf-8")
+          marker = "[tool.mutmut]\n"
+          if marker not in text:
+              raise SystemExit("missing [tool.mutmut] block")
+          prefix, _old = text.split(marker, 1)
+          scoped = '''[tool.mutmut]
+          source_paths = ["src/fossil_core"]
+          only_mutate = ["src/fossil_core/source.py"]
+          also_copy = ["schemas", "examples", "skills"]
+          pytest_add_cli_args_test_selection = [
+            "tests/test_source_citation_properties.py",
+            "tests/test_source_provenance.py",
+          ]
+          '''
+          path.write_text(prefix + scoped, encoding="utf-8")
+          print(path.read_text(encoding="utf-8"))
+          PY
+      - name: Run source and citation mutants
+        run: |
+          rm -rf mutants
+          mutmut run
+          mkdir -p build/assurance
+          mutmut results | tee build/assurance/mutation-source-citation-survivors.txt
+          mutmut export-cicd-stats
+      - name: Characterize mutation strength
+        run: |
+          python scripts/check_mutation_assurance.py \
+            mutants/mutmut-cicd-stats.json \
+            --scope source-citation \
+            --minimum-score 0 \
+            --receipt build/assurance/mutation-source-citation.json
+      - name: Emit compact mutation receipt
+        shell: bash
+        run: |
+          {
+            echo "## Source + citation mutation receipt"
+            echo '```json'
+            cat build/assurance/mutation-source-citation.json
+            echo '```'
+            echo "### Surviving mutants"
+            echo '```text'
+            cat build/assurance/mutation-source-citation-survivors.txt
+            echo '```'
+            echo "- issue: #176"
+            echo "- coordination: #94"
+            echo "- tool: mutmut source pinned at dc58270d5234752e22247f814431750eafcf6e5f"
+            echo "- mutable source: src/fossil_core/source.py only"
+            echo "- mode: characterization; threshold will be set from observed behavioral survivors"
+            echo "- security: secretless; contents:read"
+          } >> "$GITHUB_STEP_SUMMARY"
