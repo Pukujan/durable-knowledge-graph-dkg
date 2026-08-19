@@ -8,6 +8,7 @@ from typing import Any, Iterator
 
 from jsonschema import Draft202012Validator, FormatChecker
 
+from ...domain.event_contracts import validate_event_for_commit
 from ...ids import deterministic_event_id, new_id
 from .io import publish_immutable
 
@@ -57,7 +58,7 @@ class DurableEventStore:
         ).encode("utf-8")
 
     def prepare(self, event: dict[str, Any]) -> dict[str, Any]:
-        """Assign durable identity and validate without publishing anything."""
+        """Assign durable identity and validate the envelope without accepting it."""
 
         candidate = copy.deepcopy(event)
         pack_id = candidate.get("pack_id")
@@ -78,9 +79,11 @@ class DurableEventStore:
         return candidate
 
     def validate(self, event: dict[str, Any]) -> dict[str, Any]:
-        """Public non-mutating validation path used by agent/API boundaries."""
+        """Non-mutating validation for the durable acceptance boundary."""
 
-        return self.prepare(event)
+        candidate = self.prepare(event)
+        validate_event_for_commit(candidate)
+        return candidate
 
     def is_redacted(self, event_id: str) -> bool:
         return self._redaction_path(event_id).exists()
@@ -97,6 +100,7 @@ class DurableEventStore:
 
     def commit(self, event: dict[str, Any]) -> dict[str, Any]:
         candidate = self.prepare(event)
+        validate_event_for_commit(candidate)
         event_id = candidate["event_id"]
         if self.is_redacted(event_id):
             raise EventRedactedError(
