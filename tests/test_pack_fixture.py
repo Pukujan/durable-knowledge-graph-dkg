@@ -103,8 +103,16 @@ def write_artifact_index(root: Path) -> None:
     (root / "artifacts" / "manifest.jsonl").write_text(content, encoding="utf-8")
 
 
-def event_store(root: Path) -> DurableEventStore:
-    return DurableEventStore(root / "events", schemas_root() / "events" / "v1.schema.json")
+def event_store(
+    root: Path,
+    *,
+    endpoint_types: dict[str, str] | None = None,
+) -> DurableEventStore:
+    return DurableEventStore(
+        root / "events",
+        schemas_root() / "events" / "v1.schema.json",
+        endpoint_type_resolver=endpoint_types.get if endpoint_types is not None else None,
+    )
 
 
 def claim_event(
@@ -208,7 +216,10 @@ def build_two_pack_fixture(tmp_path: Path):
     )
 
     ai_claim = "clm_ai_candidate_authority_000001"
-    ai_store = event_store(ai)
+    ai_store = event_store(
+        ai,
+        endpoint_types={ai_claim: "Claim", common_claim: "Claim"},
+    )
     proposed_ai = ai_store.commit(
         claim_event(
             pack_id=AI,
@@ -257,7 +268,37 @@ def build_two_pack_fixture(tmp_path: Path):
                 "relation_type": "DEPENDS_ON",
                 "source_ref": ai_claim,
                 "target_ref": common_claim,
-                "state": "active",
+                "state": "proposed",
+            },
+            "provenance": {"method": "fixture"},
+        }
+    )
+    ai_store.commit(
+        {
+            "schema_version": "dkg.event.v1",
+            "event_type": "relation.state_changed",
+            "occurred_at": "2026-08-10T05:02:05Z",
+            "recorded_at": "2026-08-10T05:02:05Z",
+            "pack_id": AI,
+            "actor": {"actor_type": "importer", "actor_id": "fixture"},
+            "subject_refs": [relation_id, ai_claim, common_claim],
+            "caused_by_event_ids": [relation["event_id"]],
+            "idempotency_key": "ai:depends-common:active",
+            "evidence_refs": [ai_snapshot["artifact_id"], common_snapshot["artifact_id"]],
+            "source_snapshot_refs": [
+                ai_snapshot["snapshot_id"],
+                common_snapshot["snapshot_id"],
+            ],
+            "payload": {
+                "relation_id": relation_id,
+                "from_state": "proposed",
+                "to_state": "active",
+                "ontology_ref": "dkg.core@1.0.0",
+                "relation_type": "DEPENDS_ON",
+                "source_ref": ai_claim,
+                "source_type": "Claim",
+                "target_ref": common_claim,
+                "target_type": "Claim",
             },
             "provenance": {"method": "fixture"},
         }
@@ -284,7 +325,7 @@ def test_pack_fixture_audit_validates_content_identity_citations_mounts_and_repl
     assert report.pack_ids == (COMMON, AI)
     assert report.artifact_count == 2
     assert report.snapshot_count == 2
-    assert report.event_count == 5
+    assert report.event_count == 6
     assert report.citation_count == 4
     assert report.claim_count == 2
     assert report.relation_count == 1
