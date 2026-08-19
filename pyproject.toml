@@ -14,6 +14,7 @@ dependencies = [
 
 [project.optional-dependencies]
 test = ["pytest>=8,<9", "hypothesis>=6,<7"]
+mutation = ["mutmut @ git+https://github.com/boxed/mutmut.git@dc58270d5234752e22247f814431750eafcf6e5f"]
 graphiti = ["graphiti-core==0.29.3", "httpx>=0.27,<1"]
 semantic = ["sentence-transformers==5.2.2"]
 s3 = ["boto3>=1.40,<2"]
@@ -24,3 +25,21 @@ where = ["src"]
 [tool.pytest.ini_options]
 pythonpath = ["src", "."]
 testpaths = ["tests"]
+
+[tool.mutmut]
+source_paths = ["src/fossil_core"]
+only_mutate = [
+  "src/fossil_core/domain/lifecycle.py",
+  "src/fossil_core/domain/pack.py",
+]
+also_copy = ["schemas", "examples", "skills"]
+pytest_add_cli_args_test_selection = [
+  "tests/test_lifecycle.py",
+  "tests/test_lifecycle_properties.py",
+  "tests/test_temporal_benchmark.py",
+  "tests/test_rebuild_temporal_properties.py",
+  "tests/test_pack.py",
+  "tests/test_pack_properties.py",
+  "tests/test_agent_query_composition.py",
+  "tests/test_agent_query_composition_properties.py",
+]
