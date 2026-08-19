@@ -1,13 +1,17 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Iterable, Mapping
 
 from jsonschema import Draft202012Validator, FormatChecker
 
-from ...domain.pack import PackAccess, PackBoundaryError
+from ...domain.pack import PackBoundaryError
+from ...domain.packset import (
+    build_packset_lock as build_validated_packset_lock,
+    validate_pack_dependency_graph,
+    validate_packset_lock as validate_existing_packset_lock,
+)
 
 
 class KnowledgePackValidator:
@@ -42,7 +46,28 @@ class KnowledgePackValidator:
                     raise PackBoundaryError(
                         f"required dependency {dependency['pack_id']} is unavailable"
                     )
+        validate_pack_dependency_graph(by_id)
         return by_id
+
+    def build_packset_lock(
+        self,
+        manifests: Iterable[dict[str, Any]],
+        revisions: Mapping[str, str],
+    ) -> dict[str, Any]:
+        """Validate a mounted manifest set, then freeze its exact revisions."""
+
+        by_id = self.validate_set(manifests)
+        return build_validated_packset_lock(by_id, revisions)
+
+    def validate_packset_lock(
+        self,
+        lock: Mapping[str, Any],
+        manifests: Iterable[dict[str, Any]],
+    ) -> None:
+        """Validate replay lock content against schema-valid available manifests."""
+
+        by_id = self.validate_set(manifests)
+        validate_existing_packset_lock(lock, by_id)
 
     def load_and_validate(self, path: Path) -> dict[str, Any]:
         manifest = json.loads(Path(path).read_text(encoding="utf-8"))
