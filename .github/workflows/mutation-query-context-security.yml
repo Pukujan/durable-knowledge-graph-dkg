@@ -8,6 +8,7 @@ on:
       - "tests/test_context_security.py"
       - "tests/test_context_security_mutation_oracles.py"
       - "tests/test_context_security_mutation_oracles_edge.py"
+      - "tests/test_context_security_citation_copy_oracle.py"
       - "tests/test_context_security_application_compatibility.py"
       - "scripts/check_mutation_assurance.py"
       - ".github/workflows/mutation-query-context-security.yml"
@@ -20,6 +21,7 @@ on:
       - "tests/test_context_security.py"
       - "tests/test_context_security_mutation_oracles.py"
       - "tests/test_context_security_mutation_oracles_edge.py"
+      - "tests/test_context_security_citation_copy_oracle.py"
       - "tests/test_context_security_application_compatibility.py"
       - "scripts/check_mutation_assurance.py"
       - ".github/workflows/mutation-query-context-security.yml"
@@ -71,6 +73,7 @@ jobs:
             "tests/test_context_security.py",
             "tests/test_context_security_mutation_oracles.py",
             "tests/test_context_security_mutation_oracles_edge.py",
+            "tests/test_context_security_citation_copy_oracle.py",
             "tests/test_context_security_application_compatibility.py",
           ]
           '''
@@ -85,28 +88,20 @@ jobs:
           mkdir -p build/assurance
           mutmut results | tee build/assurance/mutation-query-context-security-survivors.txt
           mutmut export-cicd-stats
-      - name: Diagnose surviving mutants
-        shell: bash
-        run: |
-          sed -n 's/^[[:space:]]*\(.*\): survived$/\1/p' \
-            build/assurance/mutation-query-context-security-survivors.txt \
-            > build/assurance/mutation-query-context-security-survivor-names.txt
-          while IFS= read -r mutant; do
-            echo "===== ${mutant} ====="
-            mutmut show "${mutant}"
-          done < build/assurance/mutation-query-context-security-survivor-names.txt
-      - name: Characterize query/context-security mutation strength
+      - name: Enforce query/context-security mutation strength
         run: |
           python scripts/check_mutation_assurance.py \
             mutants/mutmut-cicd-stats.json \
             --scope query-context-security \
-            --minimum-score 0 \
+            --minimum-score 89 \
+            --maximum-survivors 54 \
+            --maximum-no-tests 0 \
             --receipt build/assurance/mutation-query-context-security.json
       - name: Emit compact mutation receipt
         shell: bash
         run: |
           {
-            echo "## Query/context-security mutation characterization"
+            echo "## Query/context-security mutation receipt"
             echo '```json'
             cat build/assurance/mutation-query-context-security.json
             echo '```'
@@ -118,6 +113,7 @@ jobs:
             echo "- coordination: #94"
             echo "- tool: mutmut source pinned at dc58270d5234752e22247f814431750eafcf6e5f"
             echo "- mutable source: src/fossil_core/application/query/security.py only"
-            echo "- mode: characterization; threshold will be set from survivor evidence"
+            echo "- gate: score >= 89%; survivors <= 54; no-test mutants = 0"
+            echo "- survivor review: remaining mutants are equivalent private-projection key/default/casing variants, unreachable/default-only branches under valid durable inputs, or behavior-preserving copy/default variants"
             echo "- security: secretless; contents:read"
           } >> "$GITHUB_STEP_SUMMARY"
