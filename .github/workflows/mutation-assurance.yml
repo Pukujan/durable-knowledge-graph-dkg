@@ -61,6 +61,11 @@ jobs:
           mutmut run
           mkdir -p build/assurance
           mutmut results | tee build/assurance/mutation-lifecycle-pack-survivors.txt
+          sed -n 's/^    \(.*\): survived$/\1/p' build/assurance/mutation-lifecycle-pack-survivors.txt | while IFS= read -r mutant; do
+            echo "::group::$mutant"
+            mutmut show "$mutant"
+            echo "::endgroup::"
+          done
           mutmut export-cicd-stats
       - name: Characterize mutation strength
         run: |
