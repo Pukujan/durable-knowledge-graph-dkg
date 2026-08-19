@@ -43,6 +43,25 @@ Current theorem surface:
 
 The theorem file intentionally does not define manifests, dependency resolution, pack locks, retrieval ranking, provider APIs, promotion semantics, or Python enforcement mechanics. Python conformance remains established by pack, authorization, and property tests.
 
+## Promotion
+
+`Fossil/Promotion.lean` formalizes the source-pinned cross-pack promotion kernel frozen and implemented by #111 and exercised by `src/fossil_core/domain/promotion.py`.
+
+Property traceability:
+
+- `FOSSIL-PROP-PROMOTION-001`
+
+Current theorem surface:
+
+- constructing a target promotion leaves the modeled source event unchanged;
+- the target promotion copies the exact source pack/revision/event pin;
+- the durable target identity remains the explicitly requested target pack;
+- a valid promotion requires distinct source and target packs;
+- a valid promotion pins exactly the modeled source event;
+- promoted subjects remain a subset of the pinned source event's subjects.
+
+The theorem file is a provider-free semantic kernel. Python/schema tests remain responsible for string/non-empty validation, resolver behavior, durable event-envelope conformance, and storage/authorization integration.
+
 ## Checking
 
 From the repository root with the pinned Lean toolchain active:
@@ -50,6 +69,7 @@ From the repository root with the pinned Lean toolchain active:
 ```sh
 lean formal/lean/Fossil/Lifecycle.lean
 lean formal/lean/Fossil/PackAccess.lean
+lean formal/lean/Fossil/Promotion.lean
 ```
 
 The spec-triggered CI lanes perform the corresponding checks on the exact pull-request head and reject `sorry`/`admit` placeholders in the bounded theorem files.
