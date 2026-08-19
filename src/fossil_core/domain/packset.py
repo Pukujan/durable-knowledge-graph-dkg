@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from collections.abc import Mapping
 from typing import Any
 
@@ -10,6 +11,11 @@ from .pack import PackBoundaryError
 
 PACKSET_LOCK_CONTRACT_VERSION = "dkg.packset-lock.v1"
 _STANDARD_LAYER_RANK = {"common": 0, "domain": 1, "project": 2}
+_PACK_ID_RE = re.compile(r"^pack_[A-Za-z0-9_-]{16,}$")
+_HEX64_RE = re.compile(r"^[0-9a-f]{64}$")
+_PACK_RECORD_FIELDS = {"pack_id", "revision", "manifest_digest", "dependencies"}
+_DIGEST_FIELDS = {"algorithm", "digest"}
+_DEPENDENCY_FIELDS = {"pack_id", "required"}
 
 
 class PackSetLockError(PackBoundaryError):
@@ -70,6 +76,10 @@ def validate_pack_dependency_graph(manifests: Mapping[str, Mapping[str, Any]]) -
 
     for pack_id in sorted(manifests):
         manifest = manifests[pack_id]
+        if manifest.get("pack_id") != pack_id:
+            raise PackBoundaryError(
+                f"manifest identity mismatch: catalog key {pack_id} != manifest pack_id {manifest.get('pack_id')}"
+            )
         dependencies = _dependencies_by_target(manifest)
         source_kind = str(manifest.get("kind", ""))
         resolved: list[str] = []
@@ -107,9 +117,7 @@ def validate_pack_dependency_graph(manifests: Mapping[str, Mapping[str, Any]]) -
             except ValueError:
                 index = 0
             cycle = [*stack[index:], pack_id]
-            raise PackBoundaryError(
-                "dependency cycle: " + " -> ".join(cycle)
-            )
+            raise PackBoundaryError("dependency cycle: " + " -> ".join(cycle))
         state[pack_id] = 1
         stack.append(pack_id)
         for target in adjacency[pack_id]:
@@ -131,7 +139,10 @@ def build_packset_lock(
     over this content with :func:`packset_lock_digest` to avoid self-reference.
     """
 
-    manifests = {str(pack_id): dict(manifest) for pack_id, manifest in validated_manifests.items()}
+    manifests = {
+        str(pack_id): dict(manifest)
+        for pack_id, manifest in validated_manifests.items()
+    }
     if not manifests:
         raise PackSetLockError("packset lock requires at least one mounted pack")
     validate_pack_dependency_graph(manifests)
@@ -140,14 +151,10 @@ def build_packset_lock(
     revision_ids = {str(pack_id) for pack_id in revisions}
     missing = sorted(mounted - revision_ids)
     if missing:
-        raise PackSetLockError(
-            f"missing exact revision for mounted pack(s): {missing}"
-        )
+        raise PackSetLockError(f"missing exact revision for mounted pack(s): {missing}")
     extra = sorted(revision_ids - mounted)
     if extra:
-        raise PackSetLockError(
-            f"unresolved revision pack(s) are not mounted: {extra}"
-        )
+        raise PackSetLockError(f"unresolved revision pack(s) are not mounted: {extra}")
 
     packs: list[dict[str, Any]] = []
     for pack_id in sorted(manifests):
@@ -193,21 +200,66 @@ def _lock_records(lock: Mapping[str, Any]) -> list[Mapping[str, Any]]:
     return list(packs)
 
 
+def _validate_lock_record_shape(record: Mapping[str, Any]) -> None:
+    if set(record) != _PACK_RECORD_FIELDS:
+        raise PackSetLockError(
+            "pack record fields must be exactly pack_id, revision, manifest_digest, dependencies"
+        )
+
+    pack_id = record.get("pack_id")
+    if not isinstance(pack_id, str) or _PACK_ID_RE.fullmatch(pack_id) is None:
+        raise PackSetLockError(f"invalid pack_id in packset lock: {pack_id!r}")
+    revision = record.get("revision")
+    if not isinstance(revision, str) or not revision.strip():
+        raise PackSetLockError(f"pack {pack_id} requires a non-empty exact revision")
+
+    digest = record.get("manifest_digest")
+    if not isinstance(digest, Mapping) or set(digest) != _DIGEST_FIELDS:
+        raise PackSetLockError(
+            f"pack {pack_id} manifest digest fields must be exactly algorithm and digest"
+        )
+    if digest.get("algorithm") != "sha256" or not isinstance(digest.get("digest"), str):
+        raise PackSetLockError(f"pack {pack_id} manifest digest must use sha256")
+    if _HEX64_RE.fullmatch(str(digest["digest"])) is None:
+        raise PackSetLockError(f"pack {pack_id} manifest digest must be 64 lowercase hex chars")
+
+    dependencies = record.get("dependencies")
+    if not isinstance(dependencies, list):
+        raise PackSetLockError(f"pack {pack_id} dependencies must be a list")
+    dependency_ids: list[str] = []
+    for dependency in dependencies:
+        if not isinstance(dependency, Mapping):
+            raise PackSetLockError(f"pack {pack_id} dependency records must be objects")
+        if set(dependency) != _DEPENDENCY_FIELDS:
+            raise PackSetLockError(
+                f"pack {pack_id} dependency fields must be exactly pack_id and required"
+            )
+        target = dependency.get("pack_id")
+        if not isinstance(target, str) or _PACK_ID_RE.fullmatch(target) is None:
+            raise PackSetLockError(
+                f"pack {pack_id} has invalid dependency pack_id: {target!r}"
+            )
+        if not isinstance(dependency.get("required"), bool):
+            raise PackSetLockError(
+                f"pack {pack_id} dependency {target} required flag must be boolean"
+            )
+        if target in dependency_ids:
+            raise PackSetLockError(f"duplicate dependency in lock for pack {pack_id}: {target}")
+        dependency_ids.append(target)
+    if dependency_ids != sorted(dependency_ids):
+        raise PackSetLockError(f"pack {pack_id} dependencies must be sorted by pack_id")
+
+
 def pack_revisions_from_lock(lock: Mapping[str, Any]) -> dict[str, str]:
     records = _lock_records(lock)
     by_pack: dict[str, str] = {}
     sequence: list[str] = []
     for record in records:
-        pack_id = str(record.get("pack_id", ""))
-        revision = record.get("revision")
-        if not pack_id:
-            raise PackSetLockError("packset lock requires non-empty pack_id")
+        _validate_lock_record_shape(record)
+        pack_id = str(record["pack_id"])
+        revision = str(record["revision"])
         if pack_id in by_pack:
             raise PackSetLockError(f"duplicate pack_id in packset lock: {pack_id}")
-        if not isinstance(revision, str) or not revision.strip():
-            raise PackSetLockError(
-                f"pack {pack_id} requires a non-empty exact revision"
-            )
         by_pack[pack_id] = revision
         sequence.append(pack_id)
     if sequence != sorted(sequence):
@@ -235,47 +287,26 @@ def validate_packset_lock(
             f"unresolved referenced pack manifest(s): {missing_manifests}"
         )
 
-    mounted_manifests = {
-        pack_id: dict(manifests[pack_id])
-        for pack_id in mounted
-    }
+    mounted_manifests = {pack_id: dict(manifests[pack_id]) for pack_id in mounted}
     validate_pack_dependency_graph(mounted_manifests)
 
     for record in records:
         pack_id = str(record["pack_id"])
         manifest = mounted_manifests[pack_id]
-        dependencies = record.get("dependencies")
-        if not isinstance(dependencies, list):
-            raise PackSetLockError(
-                f"pack {pack_id} dependencies must be a list"
-            )
+        dependencies = record["dependencies"]
 
-        dependency_ids: list[str] = []
         for dependency in dependencies:
-            if not isinstance(dependency, Mapping):
-                raise PackSetLockError(
-                    f"pack {pack_id} dependency records must be objects"
-                )
-            target = str(dependency.get("pack_id", ""))
+            target = str(dependency["pack_id"])
             if target not in mounted:
                 raise PackSetLockError(
                     f"unresolved referenced pack in lock dependency: {pack_id} -> {target}"
                 )
-            if target in dependency_ids:
-                raise PackSetLockError(
-                    f"duplicate dependency in lock for pack {pack_id}: {target}"
-                )
-            dependency_ids.append(target)
-        if dependency_ids != sorted(dependency_ids):
-            raise PackSetLockError(
-                f"pack {pack_id} dependencies must be sorted by pack_id"
-            )
 
         expected_dependencies = _resolved_dependencies(manifest, mounted)
         normalized_dependencies = [
             {
-                "pack_id": str(item.get("pack_id", "")),
-                "required": item.get("required"),
+                "pack_id": str(item["pack_id"]),
+                "required": item["required"],
             }
             for item in dependencies
         ]
@@ -284,22 +315,18 @@ def validate_packset_lock(
                 f"pack {pack_id} dependency metadata differs from validated manifest"
             )
 
-        manifest_digest = record.get("manifest_digest")
+        manifest_digest = record["manifest_digest"]
         expected_digest = canonical_manifest_digest(manifest)
-        if not isinstance(manifest_digest, Mapping) or manifest_digest.get("algorithm") != "sha256":
-            raise PackSetLockError(
-                f"pack {pack_id} manifest digest must use sha256"
-            )
-        if manifest_digest.get("digest") != expected_digest:
+        if manifest_digest["digest"] != expected_digest:
             raise PackSetLockError(
                 f"pack {pack_id} manifest digest differs from validated manifest"
             )
 
 
 def packset_lock_digest(lock: Mapping[str, Any]) -> str:
-    """Return the external SHA-256 digest of canonical lock content."""
+    """Return the external SHA-256 digest of canonical valid lock content."""
 
-    _lock_records(lock)
+    pack_revisions_from_lock(lock)
     return hashlib.sha256(_canonical_json_bytes(dict(lock))).hexdigest()
 
 
