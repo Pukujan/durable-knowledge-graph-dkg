@@ -334,6 +334,8 @@ class S3ArtifactStore:
                 f"redaction tombstone conflict for {artifact_id}"
             ) from exc
 
+        # Tombstone publication is the durable boundary. Sensitive bytes are
+        # removed only after it has succeeded or byte-identical replay is proven.
         self.backend.delete(self._blob_key(manifest["content_hash"]["digest"]))
         return record
 
