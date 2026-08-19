@@ -58,37 +58,9 @@ jobs:
         shell: bash
         run: |
           rm -rf mutants
-          status=0
-          mutmut run || status=$?
-          if [ "$status" -ne 0 ]; then
-            echo "::group::Mutation trampoline diagnostics"
-            echo "--- generated pack.py ---"
-            sed -n '1,220p' mutants/src/fossil_core/domain/pack.py || true
-            echo "--- generated lifecycle.py ---"
-            sed -n '1,320p' mutants/src/fossil_core/domain/lifecycle.py || true
-            PYTHONPATH="$PWD/mutants/src" MUTANT_UNDER_TEST=stats python - <<'PY'
-          from pathlib import Path
-          import inspect
-          import mutmut
-          from fossil_core.domain.pack import PackAccess
-
-          print("PackAccess module:", PackAccess.__module__)
-          print("PackAccess file:", inspect.getsourcefile(PackAccess))
-          access = PackAccess(
-              pack_id="pack_diagnostic_owner_0001",
-              read_mounts=frozenset({"pack_diagnostic_owner_0001"}),
-              write_targets=frozenset({"pack_diagnostic_owner_0001"}),
-          )
-          access.require_read("pack_diagnostic_owner_0001")
-          print("Recorded trampoline keys:", sorted(mutmut._stats))
-          print("Generated pack exists:", Path("mutants/src/fossil_core/domain/pack.py").exists())
-          PY
-            if [ -f mutants/mutmut-stats.json ]; then
-              cat mutants/mutmut-stats.json
-            fi
-            echo "::endgroup::"
-            exit "$status"
-          fi
+          mutmut run
+          mkdir -p build/assurance
+          mutmut results | tee build/assurance/mutation-lifecycle-pack-survivors.txt
           mutmut export-cicd-stats
       - name: Characterize mutation strength
         run: |
@@ -105,9 +77,13 @@ jobs:
             echo '```json'
             cat build/assurance/mutation-lifecycle-pack.json
             echo '```'
+            echo "### Surviving mutants"
+            echo '```text'
+            cat build/assurance/mutation-lifecycle-pack-survivors.txt
+            echo '```'
             echo "- issue: #176"
             echo "- coordination: #94"
-            echo "- tool: mutmut 3.7.0"
+            echo "- tool: mutmut 3.7.0 source pinned at dc58270d5234752e22247f814431750eafcf6e5f"
             echo "- mode: characterization; score threshold will be set from this baseline"
             echo "- security: secretless; contents:read"
           } >> "$GITHUB_STEP_SUMMARY"
