@@ -6,6 +6,7 @@ on:
       - "src/fossil_core/adapters/s3/storage.py"
       - "src/fossil_core/s3_storage.py"
       - "tests/test_s3_storage_adapter.py"
+      - "tests/test_s3_storage_mutation_oracles.py"
       - "scripts/check_mutation_assurance.py"
       - ".github/workflows/mutation-s3-storage.yml"
       - "pyproject.toml"
@@ -15,6 +16,7 @@ on:
       - "src/fossil_core/adapters/s3/storage.py"
       - "src/fossil_core/s3_storage.py"
       - "tests/test_s3_storage_adapter.py"
+      - "tests/test_s3_storage_mutation_oracles.py"
       - "scripts/check_mutation_assurance.py"
       - ".github/workflows/mutation-s3-storage.yml"
       - "pyproject.toml"
@@ -63,6 +65,7 @@ jobs:
           also_copy = ["schemas", "examples", "skills"]
           pytest_add_cli_args_test_selection = [
             "tests/test_s3_storage_adapter.py",
+            "tests/test_s3_storage_mutation_oracles.py",
           ]
           '''
           path.write_text(prefix + scoped, encoding="utf-8")
@@ -124,7 +127,7 @@ jobs:
             echo "- properties: FOSSIL-PROP-ARTIFACT-INTEGRITY-001, FOSSIL-PROP-IDEMPOTENCY-001, FOSSIL-PROP-REDACTION-NONRESURRECTION-001"
             echo "- tool: mutmut source pinned at dc58270d5234752e22247f814431750eafcf6e5f"
             echo "- mutable source: src/fossil_core/adapters/s3/storage.py only"
-            echo "- tests: deterministic in-memory FakeS3Client only; no credentials or live object-store calls"
+            echo "- tests: deterministic in-memory/fake S3 only; no credentials or live object-store calls"
             echo "- evidence: uploaded as s3-storage-mutation-evidence artifact; no job-log scraping required"
             echo "- mode: characterization; threshold will be set from survivor evidence"
             echo "- security: secretless; contents:read"
