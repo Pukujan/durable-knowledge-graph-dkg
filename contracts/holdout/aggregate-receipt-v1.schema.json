@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fossil.local/contracts/holdout/aggregate-receipt-v1.schema.json",
+  "title": "FOSSIL hidden-acceptance aggregate receipt v1",
+  "description": "Public, non-sensitive aggregate evidence emitted by a separately approved sealed holdout executor. This contract intentionally excludes sealed cases, private oracle details, credentials, and private placement/access information.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "suite_id",
+    "software_commit",
+    "property_ids",
+    "result",
+    "counts",
+    "failure_classes",
+    "sealed_material_disclosed",
+    "private_oracle_disclosed",
+    "credentials_disclosed"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "fossil.hidden-acceptance-aggregate.v1"
+    },
+    "suite_id": {
+      "type": "string",
+      "pattern": "^holdout_[a-z0-9][a-z0-9._-]{0,63}$",
+      "description": "Public logical suite identifier only. It must not encode a private storage location or access path."
+    },
+    "software_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "property_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^FOSSIL-PROP-[A-Z0-9-]+$"
+      }
+    },
+    "result": {
+      "enum": ["PASS", "FAIL", "BLOCKED"]
+    },
+    "counts": {
+      "type": "object",
+      "required": ["total", "passed", "failed"],
+      "properties": {
+        "total": {"type": "integer", "minimum": 0},
+        "passed": {"type": "integer", "minimum": 0},
+        "failed": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "failure_classes": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "required": ["class_id", "count"],
+        "properties": {
+          "class_id": {
+            "enum": [
+              "property_violation",
+              "invalid_output",
+              "missing_evidence",
+              "authority_violation",
+              "non_deterministic_result"
+            ]
+          },
+          "count": {"type": "integer", "minimum": 1}
+        },
+        "additionalProperties": false
+      }
+    },
+    "blocker_class": {
+      "enum": [
+        "private_suite_unavailable",
+        "execution_unavailable",
+        "dependency_unavailable",
+        "policy_not_approved"
+      ]
+    },
+    "sealed_material_disclosed": {"const": false},
+    "private_oracle_disclosed": {"const": false},
+    "credentials_disclosed": {"const": false}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"result": {"const": "BLOCKED"}}, "required": ["result"]},
+      "then": {"required": ["blocker_class"]},
+      "else": {"not": {"required": ["blocker_class"]}}
+    }
+  ],
+  "additionalProperties": false
+}
