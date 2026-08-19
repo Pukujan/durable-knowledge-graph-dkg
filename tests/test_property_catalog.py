@@ -48,10 +48,22 @@ def test_property_catalog_is_unique_sorted_and_grounded_in_public_oracles() -> N
             for ref in item[field]:
                 assert _repo_path(ref).exists(), f"{item['property_id']}: missing {field} ref {ref}"
 
-        # Formal references are intentionally allowed to point to future Phase 4/5
-        # artifacts. They are traceability targets, not claims that proofs exist now.
-        for ref in [*item["tla_refs"], *item["lean_refs"]]:
-            assert ref.startswith("formal/"), f"{item['property_id']}: invalid formal ref {ref}"
+        # Phase 4 TLA+ references are executable traceability links: every ref
+        # names both a checked spec file and a concrete model operator/invariant.
+        for ref in item["tla_refs"]:
+            assert ref.startswith("formal/tla/"), f"{item['property_id']}: invalid TLA+ ref {ref}"
+            path_ref, separator, symbol = ref.partition("::")
+            assert separator and symbol, f"{item['property_id']}: TLA+ ref must name a symbol: {ref}"
+            path = ROOT / path_ref
+            assert path.exists(), f"{item['property_id']}: missing TLA+ spec {path_ref}"
+            spec = path.read_text(encoding="utf-8")
+            assert f"{symbol} ==" in spec, f"{item['property_id']}: missing TLA+ symbol {symbol} in {path_ref}"
+
+        # Lean references may still point to later Phase 5 artifacts where the
+        # corresponding semantic law is intentionally deferred (for example
+        # Promotion while #111 remains unresolved).
+        for ref in item["lean_refs"]:
+            assert ref.startswith("formal/lean/"), f"{item['property_id']}: invalid Lean ref {ref}"
 
         # Hidden acceptance cases remain outside this public repository. The
         # catalog records only whether sealed acceptance is required.
