@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Mapping
 
 
 CORE_ONTOLOGY_REF = "dkg.core@1.0.0"
+EndpointTypeResolver = Callable[[str], str | None]
 
 ENTITY_TYPES = frozenset(
     {
@@ -93,7 +95,7 @@ def validate_relation_endpoints(
     target_type: str,
     ontology_ref: str,
 ) -> None:
-    """Fail closed unless one endpoint pair is legal in the pinned core ontology."""
+    """Fail closed unless one endpoint-kind pair is legal in the pinned ontology."""
 
     if ontology_ref != CORE_ONTOLOGY_REF:
         raise OntologyConstraintError(
@@ -117,11 +119,70 @@ def validate_relation_endpoints(
         )
 
 
+def _resolve_endpoint(
+    endpoint_ref: str,
+    *,
+    role: str,
+    resolver: EndpointTypeResolver | None,
+) -> str:
+    if resolver is None:
+        raise OntologyConstraintError(
+            "accepted relation endpoint identity cannot be resolved without an endpoint type resolver"
+        )
+    try:
+        endpoint_type = resolver(endpoint_ref)
+    except Exception as exc:
+        raise OntologyConstraintError(
+            f"{role} endpoint identity {endpoint_ref!r} could not be resolved"
+        ) from exc
+    if not endpoint_type:
+        raise OntologyConstraintError(
+            f"{role} endpoint identity {endpoint_ref!r} could not be resolved"
+        )
+    if endpoint_type not in ENTITY_TYPES:
+        raise OntologyConstraintError(
+            f"{role} endpoint identity {endpoint_ref!r} resolved to unknown entity type {endpoint_type!r}"
+        )
+    return endpoint_type
+
+
+def validate_resolved_relation_endpoints(
+    *,
+    relation_type: str,
+    source_ref: str,
+    source_type: str,
+    target_ref: str,
+    target_type: str,
+    ontology_ref: str,
+    resolver: EndpointTypeResolver | None,
+) -> None:
+    """Resolve endpoint identities independently, then enforce the ontology pair."""
+
+    resolved_source_type = _resolve_endpoint(source_ref, role="source", resolver=resolver)
+    resolved_target_type = _resolve_endpoint(target_ref, role="target", resolver=resolver)
+    if source_type != resolved_source_type:
+        raise OntologyConstraintError(
+            f"source_type {source_type!r} does not match resolved endpoint type {resolved_source_type!r}"
+        )
+    if target_type != resolved_target_type:
+        raise OntologyConstraintError(
+            f"target_type {target_type!r} does not match resolved endpoint type {resolved_target_type!r}"
+        )
+    validate_relation_endpoints(
+        relation_type=relation_type,
+        source_type=resolved_source_type,
+        target_type=resolved_target_type,
+        ontology_ref=ontology_ref,
+    )
+
+
 __all__ = [
     "CORE_ONTOLOGY_REF",
     "ENTITY_TYPES",
+    "EndpointTypeResolver",
     "RELATION_ENDPOINT_TYPES",
     "RELATION_TYPES",
     "OntologyConstraintError",
     "validate_relation_endpoints",
+    "validate_resolved_relation_endpoints",
 ]
