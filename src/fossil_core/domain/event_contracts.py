@@ -10,8 +10,10 @@ from .ontology import (
     CORE_ONTOLOGY_REF,
     ENTITY_TYPES,
     RELATION_TYPES,
+    EndpointTypeResolver,
     OntologyConstraintError,
     validate_relation_endpoints,
+    validate_resolved_relation_endpoints,
 )
 
 
@@ -378,7 +380,12 @@ def _require_nonempty_refs(event: Mapping[str, Any], field: str) -> None:
         )
 
 
-def _validate_relation_semantics(event_type: str, payload: Mapping[str, Any]) -> None:
+def _validate_relation_semantics(
+    event_type: str,
+    payload: Mapping[str, Any],
+    *,
+    endpoint_type_resolver: EndpointTypeResolver | None,
+) -> None:
     if event_type == "relation.proposed":
         if payload.get("state", "proposed") != "proposed":
             raise EventContractError(
@@ -394,24 +401,43 @@ def _validate_relation_semantics(event_type: str, payload: Mapping[str, Any]) ->
                 "relation.proposed ontology metadata must be complete when supplied: "
                 + ", ".join(missing)
             )
+        try:
+            validate_relation_endpoints(
+                relation_type=str(payload["relation_type"]),
+                source_type=str(payload["source_type"]),
+                target_type=str(payload["target_type"]),
+                ontology_ref=str(payload["ontology_ref"]),
+            )
+        except OntologyConstraintError as exc:
+            raise EventContractError(str(exc)) from exc
+        return
 
     try:
-        validate_relation_endpoints(
+        validate_resolved_relation_endpoints(
             relation_type=str(payload["relation_type"]),
+            source_ref=str(payload["source_ref"]),
             source_type=str(payload["source_type"]),
+            target_ref=str(payload["target_ref"]),
             target_type=str(payload["target_type"]),
             ontology_ref=str(payload["ontology_ref"]),
+            resolver=endpoint_type_resolver,
         )
     except OntologyConstraintError as exc:
         raise EventContractError(str(exc)) from exc
 
 
-def validate_event_for_commit(event: Mapping[str, Any]) -> EventTypeContract:
+def validate_event_for_commit(
+    event: Mapping[str, Any],
+    *,
+    endpoint_type_resolver: EndpointTypeResolver | None = None,
+) -> EventTypeContract:
     """Validate one prepared event against the versioned acceptance registry.
 
     The event envelope's optional ``payload_schema`` field is preserved as
     historical/external metadata. It cannot override this registry: payload
-    validation always uses the registered contract below.
+    validation always uses the registered contract below. Accepted relation
+    events additionally require an independently configured endpoint resolver;
+    self-declared endpoint kinds are never sufficient for acceptance.
     """
 
     contract = event_contract(str(event.get("event_type", "")))
@@ -422,7 +448,11 @@ def validate_event_for_commit(event: Mapping[str, Any]) -> EventTypeContract:
 
     payload = event.get("payload")
     if contract.ontology_constraints is not None and isinstance(payload, Mapping):
-        _validate_relation_semantics(contract.event_type, payload)
+        _validate_relation_semantics(
+            contract.event_type,
+            payload,
+            endpoint_type_resolver=endpoint_type_resolver,
+        )
 
     policy = contract.evidence_policy
     if policy.evidence_refs == "required":
