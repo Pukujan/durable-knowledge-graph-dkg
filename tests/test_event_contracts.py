@@ -83,7 +83,9 @@ def test_registry_is_versioned_and_covers_the_characterized_write_vocabulary():
         "ontology_ref": "dkg.core@1.0.0",
         "relation_type_field": "relation_type",
         "source_ref_field": "source_ref",
+        "source_type_field": "source_type",
         "target_ref_field": "target_ref",
+        "target_type_field": "target_type",
     }
 
 
