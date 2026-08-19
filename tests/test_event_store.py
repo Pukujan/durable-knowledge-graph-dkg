@@ -13,6 +13,8 @@ from fossil_core.ids import deterministic_event_id
 
 ROOT = Path(__file__).parents[1]
 SCHEMA = ROOT / "schemas/events/v1.schema.json"
+SOURCE = "clm_event_store_source_000001"
+TARGET = "clm_event_store_target_000001"
 
 
 def event():
@@ -30,6 +32,31 @@ def event():
     }
 
 
+def accepted_relation(*, source_type: str = "Claim") -> dict:
+    return {
+        "schema_version": "dkg.event.v1",
+        "event_type": "relation.state_changed",
+        "occurred_at": "2026-08-19T16:25:00Z",
+        "recorded_at": "2026-08-19T16:25:01Z",
+        "pack_id": "pack_269099f7b2ba43b7a99b9427d64092de",
+        "actor": {"actor_type": "system", "actor_id": "event-store-oracle"},
+        "subject_refs": ["rel_event_store_000001"],
+        "idempotency_key": "event-store:accepted-relation",
+        "payload": {
+            "relation_id": "rel_event_store_000001",
+            "from_state": "proposed",
+            "to_state": "active",
+            "ontology_ref": "dkg.core@1.0.0",
+            "relation_type": "DEPENDS_ON",
+            "source_ref": SOURCE,
+            "source_type": source_type,
+            "target_ref": TARGET,
+            "target_type": "Claim",
+        },
+        "provenance": {"method": "event-store-oracle"},
+    }
+
+
 def test_constructor_creates_nested_store_and_stable_redaction_namespace(tmp_path):
     root = tmp_path / "nested" / "durable" / "events"
     first = DurableEventStore(root, SCHEMA)
@@ -38,10 +65,22 @@ def test_constructor_creates_nested_store_and_stable_redaction_namespace(tmp_pat
     assert root.is_dir()
     assert first.redactions == root / "_redactions"
     assert first.redactions.is_dir()
+    assert first.endpoint_type_resolver is None
 
     reopened = DurableEventStore(root, SCHEMA)
     assert reopened.root == root
     assert reopened.redactions == root / "_redactions"
+
+
+def test_constructor_preserves_exact_endpoint_resolver_identity(tmp_path):
+    resolver = {SOURCE: "Claim", TARGET: "Claim"}.get
+    store = DurableEventStore(
+        tmp_path / "events",
+        SCHEMA,
+        endpoint_type_resolver=resolver,
+    )
+
+    assert store.endpoint_type_resolver is resolver
 
 
 def test_validate_is_non_mutating_and_assigns_deterministic_identity(tmp_path):
@@ -57,6 +96,34 @@ def test_validate_is_non_mutating_and_assigns_deterministic_identity(tmp_path):
     assert validated["event_id"] == deterministic_event_id(
         candidate["pack_id"], candidate["idempotency_key"]
     )
+    assert list(store.iter_events()) == []
+
+
+def test_validate_forwards_endpoint_resolver_to_acceptance_gate(tmp_path):
+    resolver = {SOURCE: "Claim", TARGET: "Claim"}.get
+    store = DurableEventStore(
+        tmp_path / "events",
+        SCHEMA,
+        endpoint_type_resolver=resolver,
+    )
+
+    validated = store.validate(accepted_relation())
+    assert validated["payload"]["source_type"] == "Claim"
+
+    with pytest.raises(EventContractError, match="source_type.*does not match resolved"):
+        store.validate(accepted_relation(source_type="Concept"))
+
+
+def test_commit_forwards_endpoint_resolver_before_write(tmp_path):
+    resolver = {SOURCE: "Claim", TARGET: "Claim"}.get
+    store = DurableEventStore(
+        tmp_path / "events",
+        SCHEMA,
+        endpoint_type_resolver=resolver,
+    )
+
+    with pytest.raises(EventContractError, match="source_type.*does not match resolved"):
+        store.commit(accepted_relation(source_type="Concept"))
     assert list(store.iter_events()) == []
 
 
