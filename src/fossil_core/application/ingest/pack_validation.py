@@ -32,7 +32,7 @@ class KnowledgePackValidator:
             if dependency["required"] and dependency["pack_id"] not in manifest["read_mounts"]:
                 raise PackBoundaryError("every required dependency must be in read_mounts")
 
-    def validate_set(self, manifests: Iterable[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    def _validate_catalog(self, manifests: Iterable[dict[str, Any]]) -> dict[str, dict[str, Any]]:
         by_id: dict[str, dict[str, Any]] = {}
         for manifest in manifests:
             self.validate(manifest)
@@ -40,6 +40,10 @@ class KnowledgePackValidator:
             if pack_id in by_id:
                 raise PackBoundaryError(f"duplicate pack_id: {pack_id}")
             by_id[pack_id] = manifest
+        return by_id
+
+    def validate_set(self, manifests: Iterable[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+        by_id = self._validate_catalog(manifests)
         for manifest in by_id.values():
             for dependency in manifest.get("dependencies", []):
                 if dependency["required"] and dependency["pack_id"] not in by_id:
@@ -64,9 +68,14 @@ class KnowledgePackValidator:
         lock: Mapping[str, Any],
         manifests: Iterable[dict[str, Any]],
     ) -> None:
-        """Validate replay lock content against schema-valid available manifests."""
+        """Validate replay lock content against an available manifest catalog.
 
-        by_id = self.validate_set(manifests)
+        The catalog may contain packs that are not mounted by this lock. Those
+        unrelated packs are schema/boundary checked but do not participate in
+        this lock's dependency graph.
+        """
+
+        by_id = self._validate_catalog(manifests)
         validate_existing_packset_lock(lock, by_id)
 
     def load_and_validate(self, path: Path) -> dict[str, Any]:
