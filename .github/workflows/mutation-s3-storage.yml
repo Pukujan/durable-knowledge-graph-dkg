@@ -81,7 +81,8 @@ jobs:
         run: |
           awk -F': ' '/: (survived|no tests)$/ {gsub(/^[[:space:]]+/, "", $1); print $1}' \
             build/assurance/mutation-s3-storage-survivors.txt \
-          | head -n 120 \
+            > build/assurance/mutation-s3-storage-survivor-names.txt
+          sed -n '1,120p' build/assurance/mutation-s3-storage-survivor-names.txt \
           | while IFS= read -r mutant; do
               echo "::group::${mutant}"
               mutmut show "${mutant}"
