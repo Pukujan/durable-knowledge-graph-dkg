@@ -90,18 +90,20 @@ jobs:
               mutmut show "${mutant}"
               echo "::endgroup::"
             done
-      - name: Characterize filesystem event-store mutation strength
+      - name: Enforce filesystem event-store mutation strength
         run: |
           python scripts/check_mutation_assurance.py \
             mutants/mutmut-cicd-stats.json \
             --scope filesystem-event-store \
-            --minimum-score 0 \
+            --minimum-score 87 \
+            --maximum-survivors 29 \
+            --maximum-no-tests 0 \
             --receipt build/assurance/mutation-filesystem-event-store.json
       - name: Emit compact mutation receipt
         shell: bash
         run: |
           {
-            echo "## Filesystem event-store mutation characterization"
+            echo "## Filesystem event-store mutation assurance"
             echo '```json'
             cat build/assurance/mutation-filesystem-event-store.json
             echo '```'
@@ -113,6 +115,7 @@ jobs:
             echo "- coordination: #94"
             echo "- tool: mutmut source pinned at dc58270d5234752e22247f814431750eafcf6e5f"
             echo "- mutable source: src/fossil_core/adapters/filesystem/event_store.py only"
-            echo "- mode: characterization; threshold will be set from survivor evidence"
+            echo "- gate: score >= 87%; survivors <= 29; no-test mutants = 0"
+            echo "- survivor review: remaining mutants are predominantly equivalent mkdir/UTF-8 spelling variants, platform-default UTF-8 read variants in this environment, and exception-message-only variants; core idempotency and redaction branch mutations are killed by direct behavioral oracles"
             echo "- security: secretless; contents:read"
           } >> "$GITHUB_STEP_SUMMARY"
