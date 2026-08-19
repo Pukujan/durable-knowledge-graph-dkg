@@ -10,6 +10,7 @@ from jsonschema import Draft202012Validator, FormatChecker
 
 from ...domain.event_contracts import validate_event_for_commit
 from ...domain.ontology import EndpointTypeResolver
+from ...domain.promotion import PromotionSourceResolver
 from ...ids import deterministic_event_id, new_id
 from .io import publish_immutable
 
@@ -41,6 +42,7 @@ class DurableEventStore:
         schema_path: Path,
         *,
         endpoint_type_resolver: EndpointTypeResolver | None = None,
+        promotion_source_resolver: PromotionSourceResolver | None = None,
     ):
         self.root = Path(root)
         self.root.mkdir(parents=True, exist_ok=True)
@@ -49,6 +51,7 @@ class DurableEventStore:
         schema = json.loads(Path(schema_path).read_text(encoding="utf-8"))
         self.validator = Draft202012Validator(schema, format_checker=FormatChecker())
         self.endpoint_type_resolver = endpoint_type_resolver
+        self.promotion_source_resolver = promotion_source_resolver
 
     def _event_path(self, event_id: str) -> Path:
         suffix = event_id.removeprefix("evt_")
@@ -93,6 +96,7 @@ class DurableEventStore:
         validate_event_for_commit(
             candidate,
             endpoint_type_resolver=self.endpoint_type_resolver,
+            promotion_source_resolver=self.promotion_source_resolver,
         )
         return candidate
 
@@ -114,6 +118,7 @@ class DurableEventStore:
         validate_event_for_commit(
             candidate,
             endpoint_type_resolver=self.endpoint_type_resolver,
+            promotion_source_resolver=self.promotion_source_resolver,
         )
         event_id = candidate["event_id"]
         if self.is_redacted(event_id):
