@@ -59,7 +59,7 @@
     },
     "proposal_count": {"type": "integer", "minimum": 0},
     "accepted_count": {"const": 0},
-    "requires_explicit_promotion": {"const": true},
+    "requires_explicit_promotion": {"type": "boolean"},
     "rejection_reason": {"type": ["string", "null"]}
   }
 }
