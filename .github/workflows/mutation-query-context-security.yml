@@ -7,6 +7,7 @@ on:
       - "src/fossil_core/context_security.py"
       - "tests/test_context_security.py"
       - "tests/test_context_security_mutation_oracles.py"
+      - "tests/test_context_security_mutation_oracles_edge.py"
       - "tests/test_context_security_application_compatibility.py"
       - "scripts/check_mutation_assurance.py"
       - ".github/workflows/mutation-query-context-security.yml"
@@ -18,6 +19,7 @@ on:
       - "src/fossil_core/context_security.py"
       - "tests/test_context_security.py"
       - "tests/test_context_security_mutation_oracles.py"
+      - "tests/test_context_security_mutation_oracles_edge.py"
       - "tests/test_context_security_application_compatibility.py"
       - "scripts/check_mutation_assurance.py"
       - ".github/workflows/mutation-query-context-security.yml"
@@ -68,6 +70,7 @@ jobs:
           pytest_add_cli_args_test_selection = [
             "tests/test_context_security.py",
             "tests/test_context_security_mutation_oracles.py",
+            "tests/test_context_security_mutation_oracles_edge.py",
             "tests/test_context_security_application_compatibility.py",
           ]
           '''
