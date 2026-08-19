@@ -33,14 +33,23 @@ jobs:
       - name: Verify exact target checkout
         shell: bash
         run: test "$(git rev-parse HEAD)" = "${FOSSIL_SOFTWARE_COMMIT}"
-      - name: Install pinned elan and Lean toolchain
+      - name: Restore pinned Lean toolchain cache
+        id: lean-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.elan
+          key: lean-${{ runner.os }}-${{ hashFiles('lean-toolchain') }}
+      - name: Install pinned elan and Lean toolchain on cache miss
+        if: steps.lean-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
           curl --fail --silent --show-error --location \
             https://raw.githubusercontent.com/leanprover/elan/464c9d28395000a2a0128e07081e4956d50eced2/elan-init.sh \
             --output /tmp/elan-init.sh
           sh /tmp/elan-init.sh -y --default-toolchain "$(cat lean-toolchain)"
-          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: Add elan to PATH
+        shell: bash
+        run: echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
       - name: Verify Lean toolchain identity
         shell: bash
         run: |
@@ -55,3 +64,16 @@ jobs:
           fi
       - name: Check lifecycle semantic kernel
         run: lean formal/lean/Fossil/Lifecycle.lean
+      - name: Emit compact Lean assurance receipt
+        shell: bash
+        run: |
+          {
+            echo "## Lifecycle Lean assurance receipt"
+            echo "- issue: #176"
+            echo "- theorem_file: formal/lean/Fossil/Lifecycle.lean"
+            echo "- commit_sha: ${FOSSIL_SOFTWARE_COMMIT}"
+            echo "- toolchain: $(cat lean-toolchain)"
+            echo "- checks: version PASS; no sorry/admit; theorem compile PASS"
+            echo "- evidence_scope: formal definitions/theorems only; not proof of Python implementation"
+            echo "- security: secretless; contents:read"
+          } >> "$GITHUB_STEP_SUMMARY"
