@@ -25,12 +25,31 @@ Current theorem surface:
 
 The theorem file intentionally does not model event schemas, providers, storage, projection behavior, pack authority, promotion, or arbitrary lifecycle transitions beyond this bounded stable kernel. Python conformance remains established by the existing lifecycle deterministic/property tests.
 
+## PackAccess
+
+`Fossil/PackAccess.lean` defines provider-free authority sets corresponding to the stable pack-access boundary in `src/fossil_core/domain/pack.py` and the composed scope laws tracked by #174.
+
+Property traceability:
+
+- `FOSSIL-PROP-PACK-ISOLATION-001`
+- `FOSSIL-PROP-PACK-MANIFEST-001`
+
+Current theorem surface:
+
+- every permitted write target is readable when the policy carries the `writeTargets ⊆ readMounts` invariant;
+- intersecting a requested scope with mounted authority cannot widen either the mounts or the original request;
+- returned scope constrained to that intersection preserves both caller request authority and mounted read authority;
+- authority containment is transitive.
+
+The theorem file intentionally does not define manifests, dependency resolution, pack locks, retrieval ranking, provider APIs, promotion semantics, or Python enforcement mechanics. Python conformance remains established by pack, authorization, and property tests.
+
 ## Checking
 
 From the repository root with the pinned Lean toolchain active:
 
 ```sh
 lean formal/lean/Fossil/Lifecycle.lean
+lean formal/lean/Fossil/PackAccess.lean
 ```
 
-The spec-triggered CI lane performs the same check on the exact pull-request head and rejects `sorry`/`admit` placeholders in the bounded theorem file.
+The spec-triggered CI lanes perform the corresponding checks on the exact pull-request head and reject `sorry`/`admit` placeholders in the bounded theorem files.
