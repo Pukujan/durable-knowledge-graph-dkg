@@ -55,8 +55,16 @@ def _payload_schema(
     *,
     required: tuple[str, ...],
     properties: Mapping[str, Any],
-    additional_properties: bool = False,
+    additional_properties: bool = True,
 ) -> dict[str, Any]:
+    """Return the registry-owned payload contract for one event type.
+
+    Step 1 intentionally preserves already-written dkg.event.v1 payload
+    extensions. Required semantic fields are explicit, while unknown fields in
+    a registered payload remain forward-compatible until a later payload
+    version intentionally closes them.
+    """
+
     return {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "$id": (
@@ -119,7 +127,9 @@ EVENT_TYPE_CONTRACTS: Mapping[str, EventTypeContract] = {
             "claim.proposed",
             required=("claim_text",),
             properties={
-                "claim_text": _string(),
+                # Empty text is historically valid at the storage-contract layer.
+                # Meaningfulness belongs to review/ingest policy, not identity storage.
+                "claim_text": _string(min_length=0),
                 "citation": {"type": "object"},
             },
         ),
@@ -134,6 +144,7 @@ EVENT_TYPE_CONTRACTS: Mapping[str, EventTypeContract] = {
             properties={
                 "from_state": _CLAIM_STATE,
                 "to_state": _CLAIM_STATE,
+                "citation": {"type": "object"},
             },
         ),
         property_ids=("FOSSIL-PROP-HISTORY-001",),
@@ -147,6 +158,7 @@ EVENT_TYPE_CONTRACTS: Mapping[str, EventTypeContract] = {
             properties={
                 "from_state": _CLAIM_STATE,
                 "superseded_by": _string(),
+                "citation": {"type": "object"},
             },
         ),
         property_ids=(
@@ -156,7 +168,7 @@ EVENT_TYPE_CONTRACTS: Mapping[str, EventTypeContract] = {
     ),
     "relation.proposed": _contract(
         "relation.proposed",
-        commit_eligibility="accepted",
+        commit_eligibility="proposal_only",
         payload_schema=_payload_schema(
             "relation.proposed",
             required=("relation_id", "relation_type", "source_ref", "target_ref"),
@@ -289,10 +301,26 @@ EVENT_TYPE_CONTRACTS: Mapping[str, EventTypeContract] = {
                 },
                 "source_artifact_ids": _string_array(min_items=1),
                 "message_ids": _string_array(min_items=1),
+                "lineage_id": _string(),
             },
         ),
         evidence_policy=EvidencePolicy(evidence_refs="required"),
         property_ids=("FOSSIL-PROP-PROVENANCE-001",),
+    ),
+    "review.completed": _contract(
+        "review.completed",
+        commit_eligibility="accepted",
+        payload_schema=_payload_schema(
+            "review.completed",
+            required=("decision",),
+            properties={"decision": _string()},
+        ),
+        evidence_policy=EvidencePolicy(required_provenance_fields=("method",)),
+        property_ids=("FOSSIL-PROP-PROVENANCE-001", "FOSSIL-PROP-HISTORY-001"),
+        oracle_ids=(
+            "tests/test_event_contracts.py",
+            "tests/test_cognitive_services_benchmark.py",
+        ),
     ),
 }
 
@@ -317,21 +345,12 @@ def _require_nonempty_refs(event: Mapping[str, Any], field: str) -> None:
 def validate_event_for_commit(event: Mapping[str, Any]) -> EventTypeContract:
     """Validate one prepared event against the versioned acceptance registry.
 
-    This function intentionally has no storage-provider, pack-session, agent,
-    projection, or network dependencies. Envelope validation and stable identity
-    assignment remain adapter responsibilities; pack/actor authority remains at
-    the application boundary. The registry adds the event-type semantic gate that
-    every durable adapter can share.
+    The event envelope's optional ``payload_schema`` field is preserved as
+    historical/external metadata. It cannot override this registry: payload
+    validation always uses the registered contract below.
     """
 
     contract = event_contract(str(event.get("event_type", "")))
-    supplied_payload_schema = event.get("payload_schema")
-    expected_payload_schema = str(contract.payload_schema["$id"])
-    if supplied_payload_schema is not None and supplied_payload_schema != expected_payload_schema:
-        raise EventContractError(
-            f"event type {contract.event_type} payload_schema does not match registered contract"
-        )
-
     Draft202012Validator(
         dict(contract.payload_schema),
         format_checker=FormatChecker(),
