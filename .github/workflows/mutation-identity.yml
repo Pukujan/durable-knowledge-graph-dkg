@@ -1,0 +1,114 @@
+name: Identity mutation assurance
+
+on:
+  pull_request:
+    paths:
+      - "src/fossil_core/domain/identity.py"
+      - "tests/test_identity_properties.py"
+      - "tests/test_identity_domain_compatibility.py"
+      - "tests/test_event_store.py"
+      - "tests/test_s3_storage_adapter.py"
+      - "scripts/check_mutation_assurance.py"
+      - ".github/workflows/mutation-identity.yml"
+      - "pyproject.toml"
+  push:
+    branches: [main]
+    paths:
+      - "src/fossil_core/domain/identity.py"
+      - "tests/test_identity_properties.py"
+      - "tests/test_identity_domain_compatibility.py"
+      - "tests/test_event_store.py"
+      - "tests/test_s3_storage_adapter.py"
+      - "scripts/check_mutation_assurance.py"
+      - ".github/workflows/mutation-identity.yml"
+      - "pyproject.toml"
+
+permissions:
+  contents: read
+
+jobs:
+  identity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      FOSSIL_SOFTWARE_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Verify exact target checkout
+        shell: bash
+        run: test "$(git rev-parse HEAD)" = "${FOSSIL_SOFTWARE_COMMIT}"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install mutation toolchain
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e '.[test,mutation,s3]'
+          python -m pip check
+          mutmut --version
+      - name: Configure isolated identity mutation scope
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("pyproject.toml")
+          text = path.read_text(encoding="utf-8")
+          marker = "[tool.mutmut]\n"
+          if marker not in text:
+              raise SystemExit("missing [tool.mutmut] block")
+          prefix, _old = text.split(marker, 1)
+          scoped = '''[tool.mutmut]
+          source_paths = ["src/fossil_core"]
+          only_mutate = ["src/fossil_core/domain/identity.py"]
+          also_copy = ["schemas", "examples", "skills"]
+          pytest_add_cli_args_test_selection = [
+            "tests/test_identity_properties.py",
+            "tests/test_identity_domain_compatibility.py",
+            "tests/test_event_store.py",
+            "tests/test_s3_storage_adapter.py",
+          ]
+          '''
+          path.write_text(prefix + scoped, encoding="utf-8")
+          print(path.read_text(encoding="utf-8"))
+          PY
+      - name: Run identity mutants
+        shell: bash
+        run: |
+          rm -rf mutants
+          mutmut run
+          mkdir -p build/assurance
+          mutmut results | tee build/assurance/mutation-identity-survivors.txt
+          mutmut export-cicd-stats
+      - name: Enforce identity mutation strength
+        run: |
+          python scripts/check_mutation_assurance.py \
+            mutants/mutmut-cicd-stats.json \
+            --scope identity \
+            --minimum-score 83.33 \
+            --maximum-survivors 1 \
+            --maximum-no-tests 0 \
+            --receipt build/assurance/mutation-identity.json
+      - name: Emit compact mutation receipt
+        shell: bash
+        run: |
+          {
+            echo "## Identity mutation receipt"
+            echo '```json'
+            cat build/assurance/mutation-identity.json
+            echo '```'
+            echo "### Surviving mutants"
+            echo '```text'
+            cat build/assurance/mutation-identity-survivors.txt
+            echo '```'
+            echo "- issue: #176"
+            echo "- coordination: #94"
+            echo "- tool: mutmut source pinned at dc58270d5234752e22247f814431750eafcf6e5f"
+            echo "- mutable source: src/fossil_core/domain/identity.py only"
+            echo "- gate: score >= 83.33%; survivors <= 1; no-test mutants = 0"
+            echo "- reviewed survivor: UTF-8 codec name casing only (utf-8 -> UTF-8), behaviorally equivalent"
+            echo "- security: secretless; contents:read"
+          } >> "$GITHUB_STEP_SUMMARY"
