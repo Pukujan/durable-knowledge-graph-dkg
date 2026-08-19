@@ -93,12 +93,14 @@ jobs:
               echo
             } >> build/assurance/mutation-s3-storage-survivor-diffs.txt
           done < build/assurance/mutation-s3-storage-survivor-names.txt
-      - name: Characterize S3 storage mutation strength
+      - name: Enforce S3 storage mutation strength
         run: |
           python scripts/check_mutation_assurance.py \
             mutants/mutmut-cicd-stats.json \
             --scope s3-storage \
-            --minimum-score 0 \
+            --minimum-score 91 \
+            --maximum-survivors 50 \
+            --maximum-no-tests 0 \
             --receipt build/assurance/mutation-s3-storage.json
       - name: Upload S3 mutation evidence
         uses: actions/upload-artifact@v4
@@ -114,7 +116,7 @@ jobs:
         shell: bash
         run: |
           {
-            echo "## S3 storage mutation characterization"
+            echo "## S3 storage mutation assurance"
             echo '```json'
             cat build/assurance/mutation-s3-storage.json
             echo '```'
@@ -128,7 +130,8 @@ jobs:
             echo "- tool: mutmut source pinned at dc58270d5234752e22247f814431750eafcf6e5f"
             echo "- mutable source: src/fossil_core/adapters/s3/storage.py only"
             echo "- tests: deterministic in-memory/fake S3 only; no credentials or live object-store calls"
+            echo "- gate: score >= 91%; survivors <= 50; no-test mutants = 0"
+            echo "- survivor review: remaining mutants are non-property-bearing exception/diagnostic text variants, UTF-8 codec spelling or platform-default UTF-8 variants, json ensure_ascii=None equivalent to false, and initial pagination token None-to-empty-string equivalence"
             echo "- evidence: uploaded as s3-storage-mutation-evidence artifact; no job-log scraping required"
-            echo "- mode: characterization; threshold will be set from survivor evidence"
             echo "- security: secretless; contents:read"
           } >> "$GITHUB_STEP_SUMMARY"
