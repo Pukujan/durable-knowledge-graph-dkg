@@ -103,8 +103,16 @@ def write_artifact_index(root: Path) -> None:
     (root / "artifacts" / "manifest.jsonl").write_text(content, encoding="utf-8")
 
 
-def event_store(root: Path) -> DurableEventStore:
-    return DurableEventStore(root / "events", schemas_root() / "events" / "v1.schema.json")
+def event_store(
+    root: Path,
+    *,
+    endpoint_types: dict[str, str] | None = None,
+) -> DurableEventStore:
+    return DurableEventStore(
+        root / "events",
+        schemas_root() / "events" / "v1.schema.json",
+        endpoint_type_resolver=endpoint_types.get if endpoint_types is not None else None,
+    )
 
 
 def claim_event(
@@ -208,7 +216,10 @@ def build_two_pack_fixture(tmp_path: Path):
     )
 
     ai_claim = "clm_ai_candidate_authority_000001"
-    ai_store = event_store(ai)
+    ai_store = event_store(
+        ai,
+        endpoint_types={ai_claim: "Claim", common_claim: "Claim"},
+    )
     proposed_ai = ai_store.commit(
         claim_event(
             pack_id=AI,
