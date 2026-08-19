@@ -62,8 +62,10 @@ jobs:
           mutmut run || status=$?
           if [ "$status" -ne 0 ]; then
             echo "::group::Mutation trampoline diagnostics"
-            grep -n -m 20 -E 'wrap_in_trampoline|__mutmut|_mutmut_orig' mutants/src/fossil_core/domain/pack.py || true
-            grep -n -m 20 -E 'wrap_in_trampoline|__mutmut|_mutmut_orig' mutants/src/fossil_core/domain/lifecycle.py || true
+            echo "--- generated pack.py ---"
+            sed -n '1,220p' mutants/src/fossil_core/domain/pack.py || true
+            echo "--- generated lifecycle.py ---"
+            sed -n '1,320p' mutants/src/fossil_core/domain/lifecycle.py || true
             PYTHONPATH="$PWD/mutants/src" MUTANT_UNDER_TEST=stats python - <<'PY'
           from pathlib import Path
           import inspect
