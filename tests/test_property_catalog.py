@@ -38,7 +38,13 @@ def test_property_catalog_is_unique_sorted_and_grounded_in_public_oracles() -> N
         if item["status"] == "active" and item["criticality"] in {"critical", "high"}:
             assert item["deterministic_oracles"], item["property_id"]
 
-        for field in ("modules", "deterministic_oracles", "mutation_scope", "source_refs"):
+        for field in (
+            "modules",
+            "deterministic_oracles",
+            "property_oracles",
+            "mutation_scope",
+            "source_refs",
+        ):
             for ref in item[field]:
                 assert _repo_path(ref).exists(), f"{item['property_id']}: missing {field} ref {ref}"
 
@@ -52,5 +58,5 @@ def test_property_catalog_is_unique_sorted_and_grounded_in_public_oracles() -> N
         if item["hidden_acceptance_required"]:
             assert not any(
                 "hidden" in ref.lower() or "holdout" in ref.lower()
-                for ref in item["deterministic_oracles"]
+                for ref in [*item["deterministic_oracles"], *item["property_oracles"]]
             )
