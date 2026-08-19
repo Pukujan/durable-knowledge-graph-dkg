@@ -30,7 +30,6 @@ def _pass_receipt() -> dict:
         "sealed_material_disclosed": False,
         "private_oracle_disclosed": False,
         "credentials_disclosed": False,
-        "public_run_ref": "github-run:example-public-ref",
     }
 
 
@@ -72,7 +71,7 @@ def test_blocked_receipt_exposes_only_public_blocker_class() -> None:
     assert evaluate(receipt, schema=schema, catalog=catalog) == []
 
 
-def test_unknown_or_non_hidden_property_ids_are_rejected() -> None:
+def test_unknown_non_hidden_or_inactive_property_ids_are_rejected() -> None:
     schema = _load(SCHEMA_PATH)
     catalog = _load(CATALOG_PATH)
 
@@ -83,6 +82,16 @@ def test_unknown_or_non_hidden_property_ids_are_rejected() -> None:
     public_only = _pass_receipt()
     public_only["property_ids"] = ["FOSSIL-PROP-IDEMPOTENCY-001"]
     assert any("not active hidden-acceptance" in item for item in evaluate(public_only, schema=schema, catalog=catalog))
+
+    inactive_catalog = deepcopy(catalog)
+    for item in inactive_catalog["properties"]:
+        if item["property_id"] == "FOSSIL-PROP-CITATION-INTEGRITY-001":
+            item["status"] = "retired"
+            break
+    assert any(
+        "not active hidden-acceptance" in item
+        for item in evaluate(_pass_receipt(), schema=schema, catalog=inactive_catalog)
+    )
 
 
 def test_count_and_result_consistency_fail_closed() -> None:
@@ -107,7 +116,7 @@ def test_count_and_result_consistency_fail_closed() -> None:
     )
 
 
-def test_private_case_oracle_credential_and_location_fields_are_rejected() -> None:
+def test_private_case_oracle_credential_location_and_freeform_refs_are_rejected() -> None:
     schema = _load(SCHEMA_PATH)
     catalog = _load(CATALOG_PATH)
 
@@ -117,6 +126,8 @@ def test_private_case_oracle_credential_and_location_fields_are_rejected() -> No
         "credential_ref": "secret://holdout-token",
         "storage_location": "private://sealed-suite/path",
         "case_failures": [{"input": "secret adversarial fixture"}],
+        "public_run_ref": "private://could-leak-placement",
+        "notes": "free-form receipt text is intentionally forbidden",
     }
 
     for field, value in forbidden_examples.items():
