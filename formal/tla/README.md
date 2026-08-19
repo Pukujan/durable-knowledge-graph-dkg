@@ -34,13 +34,46 @@ Checked invariants:
 - `DeletedRedactedIdentityAbsent`
 - `SuccessfulAttemptWasAvailable`
 
-### Local checking
+## ProjectionLifecycle
+
+`ProjectionLifecycle.tla` abstracts the replaceable projection/rebuild lifecycle around durable FOSSIL events:
+
+- projection state can contain only identities already present in durable canonical history;
+- worker failure or restart cannot delete durable truth;
+- rebuilds start in a fresh projection slot rather than destructively reusing the active build identity;
+- only a candidate whose replay exactly matches the currently live durable set may become active;
+- redaction first changes durable authority, after which a functioning worker fairly suppresses the redacted identity from replaceable projection state;
+- projection state never becomes canonical authority by itself.
+
+Property traceability:
+
+- `FOSSIL-PROP-PROJECTION-NONAUTHORITY-001`
+- `FOSSIL-PROP-REBUILD-001`
+- `FOSSIL-PROP-REDACTION-NONRESURRECTION-001`
+
+The model intentionally does **not** specify Graphiti/provider APIs, physical graph IDs, ranking behavior, multi-writer concurrency, event payload schemas, holdout cases, promotion semantics, or a new projection architecture.
+
+### Bounded configuration
+
+`ProjectionLifecycle.cfg` checks two abstract durable events and three abstract rebuild slots. The extra slot permits multiple fresh rebuild/activation cycles within one bounded run. It checks projection non-authority and fresh-candidate safety plus a fair redaction-suppression temporal property under worker recovery.
+
+Checked invariants/properties:
+
+- `TypeOK`
+- `ProjectionCannotManufactureAuthority`
+- `FreshCandidateIdentity`
+- `RedactionDoesNotRestoreAuthority`
+- `RedactionEventuallySuppressed`
+
+## Local checking
 
 CI pins the TLA+ tools jar and verifies its published checksum before parsing and running TLC. Equivalent local invocation from this directory is:
 
 ```sh
 java -cp /path/to/tla2tools.jar tla2sany.SANY DurableStore.tla
 java -jar /path/to/tla2tools.jar -config DurableStore.cfg DurableStore.tla
+java -cp /path/to/tla2tools.jar tla2sany.SANY ProjectionLifecycle.tla
+java -jar /path/to/tla2tools.jar -config ProjectionLifecycle.cfg ProjectionLifecycle.tla
 ```
 
-Implementation conformance remains established by the existing Python storage/redaction tests and live durability evidence, not by this model alone.
+Implementation conformance remains established by the existing Python projection, rebuild, redaction, and live durability evidence, not by these models alone.
