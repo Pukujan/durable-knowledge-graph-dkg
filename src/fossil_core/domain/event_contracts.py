@@ -73,7 +73,13 @@ def _payload_schema(
     additional_properties: bool = True,
     schema_version: int = 1,
 ) -> dict[str, Any]:
-    """Return the registry-owned payload contract for one event type."""
+    """Return the registry-owned payload contract for one event type.
+
+    Step 1 intentionally preserves already-written dkg.event.v1 payload
+    extensions. Required semantic fields are explicit, while unknown fields in
+    a registered payload remain forward-compatible until a later payload
+    version intentionally closes them.
+    """
 
     return {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -163,6 +169,8 @@ EVENT_TYPE_CONTRACTS: Mapping[str, EventTypeContract] = {
             "claim.proposed",
             required=("claim_text",),
             properties={
+                # Empty text is historically valid at the storage-contract layer.
+                # Meaningfulness belongs to review/ingest policy, not identity storage.
                 "claim_text": _string(min_length=0),
                 "citation": {"type": "object"},
             },
@@ -445,7 +453,15 @@ def validate_event_for_commit(
     endpoint_type_resolver: EndpointTypeResolver | None = None,
     promotion_source_resolver: PromotionSourceResolver | None = None,
 ) -> EventTypeContract:
-    """Validate one prepared event against the versioned acceptance registry."""
+    """Validate one prepared event against the versioned acceptance registry.
+
+    The event envelope's optional ``payload_schema`` field is preserved as
+    historical/external metadata. It cannot override this registry: payload
+    validation always uses the registered contract below. Accepted relation
+    events additionally require an independently configured endpoint resolver;
+    self-declared endpoint kinds are never sufficient for acceptance. Accepted
+    promotions likewise require an independently configured exact-source resolver.
+    """
 
     contract = event_contract(str(event.get("event_type", "")))
     Draft202012Validator(
