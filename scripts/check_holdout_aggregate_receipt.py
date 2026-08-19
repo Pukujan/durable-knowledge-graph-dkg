@@ -36,7 +36,8 @@ def evaluate(
     hidden_properties = {
         item["property_id"]
         for item in catalog["properties"]
-        if item.get("hidden_acceptance_required") is True
+        if item.get("status") == "active"
+        and item.get("hidden_acceptance_required") is True
     }
     unknown = sorted(set(receipt["property_ids"]) - hidden_properties)
     if unknown:
@@ -108,7 +109,6 @@ def main() -> int:
                 "counts": receipt["counts"],
                 "failure_classes": receipt["failure_classes"],
                 "blocker_class": receipt.get("blocker_class"),
-                "public_run_ref": receipt.get("public_run_ref"),
             },
             indent=2,
         )
