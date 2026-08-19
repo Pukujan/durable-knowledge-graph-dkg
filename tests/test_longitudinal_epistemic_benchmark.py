@@ -368,7 +368,9 @@ def test_longitudinal_benchmark_answers_epistemic_history_and_dependency_questio
     assert final["ontology_refs_observed"] == ["dkg.core@1.0.0", "dkg.core@2.0.0"]
 
     change = next(
-        item for item in disputed["position_changes"] if item["subject_id"] == ASSUMPTION
+        item
+        for item in disputed["position_changes"]
+        if item["event_id"] == events[9]["event_id"]
     )
     assert change == {
         "subject_id": ASSUMPTION,
