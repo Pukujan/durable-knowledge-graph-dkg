@@ -25,7 +25,7 @@
       "semantic_owner": "source/citation integrity",
       "modules": ["src/fossil_core/source.py"],
       "deterministic_oracles": ["tests/test_source_provenance.py"],
-      "property_oracles": [],
+      "property_oracles": ["tests/test_source_citation_properties.py"],
       "mutation_scope": ["src/fossil_core/source.py"],
       "tla_refs": [],
       "lean_refs": [],
@@ -152,13 +152,14 @@
       "semantic_owner": "evidence/provenance and commit boundary",
       "modules": ["src/fossil_core/domain/evidence.py", "src/fossil_core/domain/provenance.py", "src/fossil_core/source.py", "src/fossil_core/agent.py"],
       "deterministic_oracles": ["tests/test_source_provenance.py", "tests/test_agent_boundary.py"],
-      "property_oracles": [],
+      "property_oracles": ["tests/test_source_citation_properties.py"],
       "mutation_scope": ["src/fossil_core/source.py", "src/fossil_core/agent.py"],
       "tla_refs": [],
       "lean_refs": [],
       "hidden_acceptance_required": true,
       "status": "active",
-      "source_refs": ["ARCHITECTURE.md"]
+      "source_refs": ["ARCHITECTURE.md"],
+      "notes": "The Phase 1 source/citation property oracle covers resolvable source derivation; broader agent commit/provenance enforcement remains owned by deterministic oracles and #111."
     },
     {
       "property_id": "FOSSIL-PROP-REBUILD-001",
