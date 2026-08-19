@@ -1,0 +1,26 @@
+{
+  "manifest_version": "fossil.hidden-acceptance-manifest.v1",
+  "receipt_schema_version": "fossil.hidden-acceptance-aggregate.v1",
+  "suites": [
+    {
+      "suite_id": "holdout_pack-context-authority-v1",
+      "property_ids": [
+        "FOSSIL-PROP-PACK-ISOLATION-001",
+        "FOSSIL-PROP-UNTRUSTED-CONTEXT-001"
+      ],
+      "priority": "critical",
+      "status": "planned"
+    },
+    {
+      "suite_id": "holdout_redaction-nonresurrection-v1",
+      "property_ids": [
+        "FOSSIL-PROP-REDACTION-NONRESURRECTION-001"
+      ],
+      "priority": "critical",
+      "status": "planned"
+    }
+  ],
+  "sealed_material_in_public_repo": false,
+  "private_placement_disclosed": false,
+  "credentials_disclosed": false
+}
