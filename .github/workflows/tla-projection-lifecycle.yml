@@ -26,7 +26,6 @@ jobs:
     timeout-minutes: 10
     env:
       FOSSIL_SOFTWARE_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
-      TLA_TOOLS_JAR: ${{ runner.temp }}/tla2tools-v1.7.2.jar
     steps:
       - uses: actions/checkout@v4
         with:
@@ -39,11 +38,16 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
+      - name: Initialize TLA+ tools cache path
+        shell: bash
+        run: |
+          mkdir -p "$HOME/.cache/fossil-tla"
+          echo "TLA_TOOLS_JAR=$HOME/.cache/fossil-tla/tla2tools-v1.7.2.jar" >> "$GITHUB_ENV"
       - name: Restore pinned TLA+ tools cache
         id: tla-tools-cache
         uses: actions/cache@v4
         with:
-          path: ${{ runner.temp }}/tla2tools-v1.7.2.jar
+          path: ~/.cache/fossil-tla/tla2tools-v1.7.2.jar
           key: tla2tools-v1.7.2-sha1-7f21faa2cdae3189e7d5fadb4488f0dfcc658407
       - name: Download pinned TLA+ tools on cache miss
         if: steps.tla-tools-cache.outputs.cache-hit != 'true'
