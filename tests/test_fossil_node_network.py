@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
 from mcp import Client
 from mcp.server.transport_security import TransportSecuritySettings
 from starlette.testclient import TestClient
@@ -18,6 +19,7 @@ from fossil_core.runtime.network import NodeReadinessProbe, create_node_network_
 
 
 COMMON = "pack_269099f7b2ba43b7a99b9427d64092de"
+BEARER_TOKEN = "node-02-test-bearer-token"
 EXPECTED_TOOLS = (
     "fossil.search",
     "fossil.read",
@@ -126,6 +128,10 @@ def _tool_error_text(result) -> str:
     return "\n".join(getattr(block, "text", "") for block in result.content)
 
 
+def auth_headers() -> dict[str, str]:
+    return {"Authorization": f"Bearer {BEARER_TOKEN}"}
+
+
 def test_mcp_server_preserves_frozen_tools_and_corpus_semantics(tmp_path: Path):
     node = compose(tmp_path)
     node.corpus_service.lineages["conv_node_02"] = (COMMON, FakeLineage())
@@ -229,6 +235,7 @@ def test_streamable_http_transport_and_health_readiness_are_independent(tmp_path
     app = create_node_network_app(
         node,
         context=agent_context(),
+        bearer_token=BEARER_TOKEN,
         readiness_probe=NodeReadinessProbe(node, projection_check=projection_down),
         transport_security=TransportSecuritySettings(
             enable_dns_rebinding_protection=False
@@ -266,6 +273,7 @@ def test_streamable_http_transport_and_health_readiness_are_independent(tmp_path
         response = client.post(
             "/mcp",
             headers={
+                **auth_headers(),
                 "content-type": "application/json",
                 "accept": "application/json, text/event-stream",
                 "mcp-protocol-version": "2026-07-28",
@@ -283,6 +291,7 @@ def test_reviewed_http_ingest_is_durable_before_projection(tmp_path: Path):
     app = create_node_network_app(
         node,
         context=agent_context(),
+        bearer_token=BEARER_TOKEN,
         transport_security=TransportSecuritySettings(
             enable_dns_rebinding_protection=False
         ),
@@ -321,7 +330,7 @@ def test_reviewed_http_ingest_is_durable_before_projection(tmp_path: Path):
     }
 
     with TestClient(app, base_url="http://localhost") as client:
-        response = client.post("/ingest", json=payload)
+        response = client.post("/ingest", headers=auth_headers(), json=payload)
         assert response.status_code == 201
         receipt = response.json()
 
@@ -346,6 +355,7 @@ def test_reviewed_http_ingest_rejects_pack_spoofing_and_invalid_payload(tmp_path
     app = create_node_network_app(
         node,
         context=agent_context(),
+        bearer_token=BEARER_TOKEN,
         transport_security=TransportSecuritySettings(
             enable_dns_rebinding_protection=False
         ),
@@ -354,6 +364,7 @@ def test_reviewed_http_ingest_rejects_pack_spoofing_and_invalid_payload(tmp_path
     with TestClient(app, base_url="http://localhost") as client:
         denied = client.post(
             "/ingest",
+            headers=auth_headers(),
             json={
                 "pack_id": "pack_forbidden_node_02",
                 "source": {},
@@ -367,8 +378,73 @@ def test_reviewed_http_ingest_rejects_pack_spoofing_and_invalid_payload(tmp_path
         assert denied.status_code == 403
         assert denied.json()["error"]["code"] == "unauthorized_pack"
 
-        invalid = client.post("/ingest", content=b"not-json")
+        invalid = client.post("/ingest", headers=auth_headers(), content=b"not-json")
         assert invalid.status_code == 400
         assert invalid.json()["error"]["code"] == "invalid_json"
 
     assert list(node.event_store.iter_events()) == []
+
+
+def test_public_mcp_requires_exact_bearer_token_before_tool_execution(tmp_path: Path):
+    node = compose(tmp_path)
+    app = create_node_network_app(
+        node,
+        context=agent_context(),
+        bearer_token=BEARER_TOKEN,
+        transport_security=TransportSecuritySettings(
+            enable_dns_rebinding_protection=False
+        ),
+    )
+    envelope = {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "tools/list",
+        "params": {
+            "_meta": {
+                "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+                "io.modelcontextprotocol/clientInfo": {"name": "auth-test", "version": "1"},
+                "io.modelcontextprotocol/clientCapabilities": {},
+            }
+        },
+    }
+
+    with TestClient(app, base_url="http://localhost") as client:
+        for headers in ({}, {"Authorization": "Bearer wrong-token"}, {"Authorization": "Basic anything"}):
+            response = client.post(
+                "/mcp",
+                headers={
+                    **headers,
+                    "content-type": "application/json",
+                    "accept": "application/json, text/event-stream",
+                    "mcp-protocol-version": "2026-07-28",
+                },
+                json=envelope,
+            )
+            assert response.status_code == 401
+            assert response.headers["www-authenticate"] == "Bearer"
+            assert response.json() == {
+                "error": {
+                    "code": "authentication_required",
+                    "detail": "Bearer authentication required",
+                }
+            }
+
+        valid = client.post(
+            "/mcp",
+            headers={
+                **auth_headers(),
+                "content-type": "application/json",
+                "accept": "application/json, text/event-stream",
+                "mcp-protocol-version": "2026-07-28",
+                "mcp-method": "tools/list",
+            },
+            json=envelope,
+        )
+        assert valid.status_code == 200
+        assert tuple(tool["name"] for tool in valid.json()["result"]["tools"]) == EXPECTED_TOOLS
+
+
+def test_network_app_requires_token_configuration(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.delenv("FOSSIL_MCP_BEARER_TOKEN", raising=False)
+    with pytest.raises(ValueError, match="FOSSIL MCP bearer token is required"):
+        create_node_network_app(compose(tmp_path), context=agent_context())
