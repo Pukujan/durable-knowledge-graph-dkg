@@ -42,9 +42,17 @@ jobs:
             exit 1
           fi
 
-      - name: Prepare empty canonical fixture
+      - name: Prepare canonical fixture with redaction negative control
         run: |
-          mkdir -p "$RUNNER_TEMP/fossil-data/canonical/events"
+          mkdir -p \
+            "$RUNNER_TEMP/fossil-data/canonical/events/aa" \
+            "$RUNNER_TEMP/fossil-data/canonical/events/_redactions/aa"
+          cat > "$RUNNER_TEMP/fossil-data/canonical/events/aa/evt_aaaaaaaaaaaaaaaa.json" <<'JSON'
+          {"schema_version":"dkg.event.v1","event_id":"evt_aaaaaaaaaaaaaaaa","event_type":"claim.proposed","occurred_at":"2026-08-20T12:00:00Z","recorded_at":"2026-08-20T12:00:00Z","pack_id":"pack_269099f7b2ba43b7a99b9427d64092de","actor":{"actor_type":"human","actor_id":"ci"},"subject_refs":["clm_ci"],"caused_by_event_ids":[],"correlation_id":null,"idempotency_key":"ci-redacted-event","evidence_refs":[],"source_snapshot_refs":[],"payload":{"claim_text":"container-redacted-payload-marker"}}
+          JSON
+          cat > "$RUNNER_TEMP/fossil-data/canonical/events/_redactions/aa/evt_aaaaaaaaaaaaaaaa.json" <<'JSON'
+          {"event_id":"evt_aaaaaaaaaaaaaaaa","pack_id":"pack_269099f7b2ba43b7a99b9427d64092de","reason":"container-redaction-tombstone-marker","authority":"ci","redacted_at":"2026-08-20T12:30:00Z"}
+          JSON
           chmod -R a+rX "$RUNNER_TEMP/fossil-data"
 
       - name: Start loopback-only Action container
@@ -69,7 +77,7 @@ jobs:
           fi
           test ! -e "$RUNNER_TEMP/fossil-data/canonical/events/write-probe"
 
-      - name: Smoke read-only HTTP and OpenAPI boundary
+      - name: Smoke read-only HTTP OpenAPI and redaction boundary
         run: |
           for attempt in $(seq 1 30); do
             if curl --fail --silent http://127.0.0.1:8787/openapi.json >/tmp/openapi.json; then
@@ -87,15 +95,16 @@ jobs:
           assert set(schema['paths']) == {
               '/actions/search',
               '/actions/read',
-              '/actions/lineage',
               '/actions/capabilities',
           }
+          assert '/actions/lineage' not in schema['paths']
           assert all(not server['url'].startswith('http://') for server in schema['servers'])
           PY
 
           curl --fail --silent \
             -H 'x-forwarded-proto: https' \
             -H 'x-forwarded-host: attacker.invalid' \
+            -H 'host: attacker.invalid' \
             http://127.0.0.1:8787/openapi.json >/tmp/forged-openapi.json
           python - <<'PY'
           import json
@@ -116,8 +125,35 @@ jobs:
             http://127.0.0.1:8787/actions/search)" = "200"
           test "$(cat /tmp/search.json)" = "[]"
 
+          test "$(curl --silent --output /tmp/redacted-search.json --write-out '%{http_code}' \
+            -X POST \
+            -H 'authorization: Bearer ci-only-not-a-secret-0123456789abcdef' \
+            -H 'content-type: application/json' \
+            --data '{"query":"container-redacted-payload-marker"}' \
+            http://127.0.0.1:8787/actions/search)" = "200"
+          test "$(cat /tmp/redacted-search.json)" = "[]"
+
+          test "$(curl --silent --output /tmp/tombstone-search.json --write-out '%{http_code}' \
+            -X POST \
+            -H 'authorization: Bearer ci-only-not-a-secret-0123456789abcdef' \
+            -H 'content-type: application/json' \
+            --data '{"query":"container-redaction-tombstone-marker"}' \
+            http://127.0.0.1:8787/actions/search)" = "200"
+          test "$(cat /tmp/tombstone-search.json)" = "[]"
+
+          test "$(curl --silent --output /tmp/redacted-read.json --write-out '%{http_code}' \
+            -X POST \
+            -H 'authorization: Bearer ci-only-not-a-secret-0123456789abcdef' \
+            -H 'content-type: application/json' \
+            --data '{"event_id":"evt_aaaaaaaaaaaaaaaa"}' \
+            http://127.0.0.1:8787/actions/read)" = "404"
+          if grep -qi 'redact\|container-redaction' /tmp/redacted-read.json; then
+            echo 'redaction metadata leaked through read error' >&2
+            exit 1
+          fi
+
           for path in \
-            /mcp /ingest /actions/propose /actions/validate /actions/commit \
+            /mcp /ingest /actions/lineage /actions/propose /actions/validate /actions/commit \
             /actions/redact /actions/write /neo4j /graph /filesystem /admin; do
             test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
               -H 'authorization: Bearer ci-only-not-a-secret-0123456789abcdef' \
