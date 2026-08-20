@@ -1,19 +1,50 @@
 from __future__ import annotations
 
+import json
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Mapping
+from typing import Any, Iterator, Mapping
 
 from starlette.applications import Starlette
 
-from fossil_core.adapters.filesystem.event_store import DurableEventStore
 from fossil_core.adapters.mcp import ThinMCPAdapter
 from fossil_core.agent import AgentContext, CorpusService, SkillRegistry
 from fossil_core.application.ingest.pack_validation import KnowledgePackValidator
 from fossil_core.domain.pack import PackAccess
+from fossil_core.event_store import EventRedactedError
 
 from .chatgpt_action import add_chatgpt_action_api
+
+
+class _ReadOnlyEventStore:
+    """Filesystem view that implements only the event reads used by this edge."""
+
+    def __init__(self, root: Path):
+        self.root = Path(root)
+        if not self.root.is_dir():
+            raise FileNotFoundError(f"canonical event store does not exist: {self.root}")
+        self.redactions = self.root / "_redactions"
+
+    def _event_path(self, event_id: str) -> Path:
+        suffix = event_id.removeprefix("evt_")
+        return self.root / suffix[:2] / f"{event_id}.json"
+
+    def _redaction_path(self, event_id: str) -> Path:
+        suffix = event_id.removeprefix("evt_")
+        return self.redactions / suffix[:2] / f"{event_id}.json"
+
+    def is_redacted(self, event_id: str) -> bool:
+        return self._redaction_path(event_id).exists()
+
+    def get(self, event_id: str) -> dict[str, Any]:
+        if self.is_redacted(event_id):
+            raise EventRedactedError(f"event {event_id} has been redacted")
+        return json.loads(self._event_path(event_id).read_text(encoding="utf-8"))
+
+    def iter_events(self) -> Iterator[dict[str, Any]]:
+        for path in sorted(self.root.glob("*/*.json")):
+            yield json.loads(path.read_text(encoding="utf-8"))
 
 
 @dataclass(frozen=True)
@@ -89,10 +120,7 @@ def build_chatgpt_action_adapter(
     manifest = pack_validator.load_and_validate(manifest_path)
     access = PackAccess.from_manifest(manifest)
 
-    event_store = DurableEventStore(
-        settings.data_root / "canonical" / "events",
-        _schema(repository_root, "events", "v1.schema.json"),
-    )
+    event_store = _ReadOnlyEventStore(settings.data_root / "canonical" / "events")
     skills = SkillRegistry(
         repository_root / "skills",
         _schema(repository_root, "agent-skill", "v1.schema.json"),
