@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ipaddress
 import json
 import os
 import re
@@ -72,6 +73,7 @@ class ChatGPTActionServerSettings:
     port: int = 8787
     max_request_body_size: int = 64 * 1024
     public_base_url: str | None = None
+    trusted_proxy_cidrs: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "repository_root", Path(self.repository_root))
@@ -86,14 +88,34 @@ class ChatGPTActionServerSettings:
         if self.port < 1 or self.port > 65535:
             raise ValueError("FOSSIL_ACTION_PORT must be between 1 and 65535")
         if self.max_request_body_size < 1 or self.max_request_body_size > 1024 * 1024:
-            raise ValueError("FOSSIL_ACTION_MAX_REQUEST_BYTES must be between 1 and 1048576")
+            raise ValueError(
+                "FOSSIL_ACTION_MAX_REQUEST_BYTES must be between 1 and 1048576"
+            )
         if self.public_base_url is not None:
             parsed = urlparse(self.public_base_url)
-            if parsed.scheme != "https" or not parsed.netloc or parsed.path not in {"", "/"}:
+            if (
+                parsed.scheme != "https"
+                or not parsed.netloc
+                or parsed.path not in {"", "/"}
+                or parsed.params
+                or parsed.query
+                or parsed.fragment
+                or parsed.username is not None
+                or parsed.password is not None
+            ):
                 raise ValueError(
                     "FOSSIL_ACTION_PUBLIC_BASE_URL must be an origin-only https:// URL"
                 )
-            object.__setattr__(self, "public_base_url", self.public_base_url.rstrip("/"))
+            object.__setattr__(
+                self, "public_base_url", self.public_base_url.rstrip("/")
+            )
+        for cidr in self.trusted_proxy_cidrs:
+            try:
+                ipaddress.ip_network(cidr, strict=False)
+            except ValueError as exc:
+                raise ValueError(
+                    f"invalid FOSSIL_ACTION_TRUSTED_PROXY_CIDRS entry: {cidr!r}"
+                ) from exc
 
     @classmethod
     def from_environment(
@@ -103,6 +125,7 @@ class ChatGPTActionServerSettings:
         repository_root = Path(env.get("FOSSIL_REPOSITORY_ROOT", Path.cwd()))
         raw_port = env.get("FOSSIL_ACTION_PORT", "8787")
         raw_max = env.get("FOSSIL_ACTION_MAX_REQUEST_BYTES", str(64 * 1024))
+        raw_proxy_cidrs = env.get("FOSSIL_ACTION_TRUSTED_PROXY_CIDRS", "")
         try:
             port = int(raw_port)
         except ValueError as exc:
@@ -111,6 +134,9 @@ class ChatGPTActionServerSettings:
             max_request_body_size = int(raw_max)
         except ValueError as exc:
             raise ValueError("FOSSIL_ACTION_MAX_REQUEST_BYTES must be an integer") from exc
+        proxy_cidrs = tuple(
+            item.strip() for item in raw_proxy_cidrs.split(",") if item.strip()
+        )
         return cls(
             repository_root=repository_root,
             data_root=Path(env.get("FOSSIL_DATA_ROOT", repository_root / "data")),
@@ -122,6 +148,7 @@ class ChatGPTActionServerSettings:
             port=port,
             max_request_body_size=max_request_body_size,
             public_base_url=env.get("FOSSIL_ACTION_PUBLIC_BASE_URL") or None,
+            trusted_proxy_cidrs=proxy_cidrs,
         )
 
 
@@ -171,6 +198,7 @@ def create_chatgpt_action_app_from_settings(
         bearer_token=settings.bearer_token,
         max_request_body_size=settings.max_request_body_size,
         public_base_url=settings.public_base_url,
+        trusted_proxy_cidrs=settings.trusted_proxy_cidrs,
     )
 
 
@@ -183,7 +211,7 @@ def create_chatgpt_action_app_from_environment(
 
 
 def main() -> None:
-    """Run the Action edge; TLS is intentionally terminated upstream."""
+    """Run the Action edge; TLS and proxy routing are intentionally external."""
 
     try:
         import uvicorn
@@ -200,6 +228,8 @@ def main() -> None:
         port=settings.port,
         access_log=False,
         server_header=False,
+        # Forwarded headers are interpreted only by ChatGPTActionMiddleware after
+        # explicit source-CIDR validation. Do not let Uvicorn trust them globally.
         proxy_headers=False,
     )
 
