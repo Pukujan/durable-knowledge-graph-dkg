@@ -288,6 +288,27 @@ def test_holdout_oversized_and_malformed_payloads_fail_before_service(tmp_path: 
     assert non_object.status_code == 400
 
 
+def test_holdout_search_limit_type_and_boundary_are_strict(tmp_path: Path) -> None:
+    app = create_chatgpt_action_app_from_settings(make_settings(tmp_path))
+    with TestClient(app, base_url="http://internal:8787") as client:
+        for invalid_limit in (True, False, "10", 0, -1, 101, 1000, 1.5):
+            response = client.post(
+                "/actions/search",
+                headers=auth(),
+                json={"query": "x", "limit": invalid_limit},
+            )
+            assert response.status_code == 400, repr(invalid_limit)
+
+        for valid_limit in (1, 100):
+            response = client.post(
+                "/actions/search",
+                headers=auth(),
+                json={"query": "x", "limit": valid_limit},
+            )
+            assert response.status_code == 200, valid_limit
+            assert response.json() == []
+
+
 def test_holdout_unknown_and_mutation_like_paths_are_not_routable(tmp_path: Path) -> None:
     app = create_chatgpt_action_app_from_settings(make_settings(tmp_path))
     prohibited = [
