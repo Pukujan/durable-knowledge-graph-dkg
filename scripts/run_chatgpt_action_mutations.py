@@ -27,19 +27,24 @@ MUTANTS = (
         "bypass_bearer_check",
         ACTION,
         (("if not self._authorized(request):", "if False:"),),
-        "Unauthenticated Action requests must never succeed.",
+        "Missing/incorrect bearer authentication must fail closed.",
     ),
     Mutant(
         "widen_route_allowlist",
         ACTION,
         (("if path not in _ACTION_ROUTE_ALLOWLIST:", "if False:"),),
-        "Unknown/prohibited paths must remain 404 and never enter Action dispatch.",
+        "Unknown and prohibited paths must remain 404.",
     ),
     Mutant(
         "enable_commit_route",
         ACTION,
-        (("\"/actions/lineage\": \"fossil.lineage\",", "\"/actions/lineage\": \"fossil.lineage\",\n    \"/actions/commit\": \"fossil.commit\","),),
-        "Authenticated callers must not gain a durable write route.",
+        (
+            (
+                '    "/actions/lineage": "fossil.lineage",',
+                '    "/actions/lineage": "fossil.lineage",\n    "/actions/commit": "fossil.commit",',
+            ),
+        ),
+        "Authenticated callers must never gain a durable commit route.",
     ),
     Mutant(
         "remove_body_size_guards",
@@ -54,34 +59,56 @@ MUTANTS = (
         "weaken_search_limit_validation",
         ACTION,
         (("or limit > 100", "or limit > 1000"),),
-        "Ambiguous/out-of-range search limits must fail closed.",
+        "Out-of-range search limits must fail closed.",
     ),
     Mutant(
-        "trust_request_origin_for_openapi",
+        "allow_extra_capability_fields",
         ACTION,
-        (("server_url = self._schema_origin(request)", "server_url = str(request.base_url).rstrip(\"/\")"),),
-        "Configured/trusted HTTPS origin must not become caller-controlled.",
+        (("return set(payload).issubset(allowed)", "return True"),),
+        "Extra fields must not smuggle graph/write/filesystem capabilities.",
     ),
     Mutant(
-        "trust_all_proxy_sources",
+        "trust_forwarded_headers_from_any_peer",
         ACTION,
-        (("if not self.trusted_proxy_networks or request.client is None:", "if request.client is None:"),),
-        "Forwarded HTTPS headers must be accepted only from explicitly trusted proxy networks.",
+        (
+            (
+                "if not any(peer in network for network in self.trusted_proxy_networks):\n            return None",
+                "if False:\n            return None",
+            ),
+        ),
+        "Forwarded origin metadata must be trusted only from configured proxy CIDRs.",
+    ),
+    Mutant(
+        "remove_trusted_proxy_origin_support",
+        ACTION,
+        (("return self._trusted_proxy_origin(request)", "return None"),),
+        "A correctly configured trusted proxy must produce the HTTPS schema origin.",
+    ),
+    Mutant(
+        "publish_http_schema_origin",
+        ACTION,
+        (("return self.public_base_url", 'return "http://internal.invalid:8787"'),),
+        "The generated public server URL must never regress to HTTP.",
     ),
     Mutant(
         "remove_components_schemas",
         ACTION,
         (("\"schemas\": schemas,", "\"x-disabled-schemas\": schemas,"),),
-        "Custom GPT import requires a valid components.schemas object.",
+        "Custom GPT/OpenAPI compatibility requires components.schemas.",
     ),
     Mutant(
-        "erase_search_response_property",
+        "erase_search_response_properties",
         ACTION,
-        (("\"event_id\": {\"type\": \"string\"},", "\"event_id_removed\": {\"type\": \"string\"},"),),
-        "Response objects must retain explicit event identifiers/properties.",
+        (
+            (
+                '"SearchResult": {\n            "type": "object",\n            "additionalProperties": True,\n            "required": ["event_id", "event_type", "pack_id", "recorded_at"],\n            "properties": {',
+                '"SearchResult": {\n            "type": "object",\n            "additionalProperties": True,\n            "required": ["event_id", "event_type", "pack_id", "recorded_at"],\n            "properties": {},\n            "x-original-properties": {',
+            ),
+        ),
+        "Successful response objects must retain declared properties.",
     ),
     Mutant(
-        "enable_proxy_headers",
+        "enable_uvicorn_global_proxy_headers",
         SERVER,
         (("proxy_headers=False,", "proxy_headers=True,"),),
         "Uvicorn must not globally trust caller-controlled forwarded headers.",
@@ -89,8 +116,13 @@ MUTANTS = (
     Mutant(
         "add_write_method_to_read_store",
         SERVER,
-        (("    def iter_events(self) -> Iterator[dict[str, Any]]:", "    def commit(self, event: dict[str, Any]) -> dict[str, Any]:\n        return event\n\n    def iter_events(self) -> Iterator[dict[str, Any]]:"),),
-        "The standalone event-store view must expose no mutation API.",
+        (
+            (
+                "    def iter_events(self) -> Iterator[dict[str, Any]]:",
+                "    def commit(self, event: dict[str, Any]) -> dict[str, Any]:\n        return event\n\n    def iter_events(self) -> Iterator[dict[str, Any]]:",
+            ),
+        ),
+        "The Action event-store view must expose no mutation API.",
     ),
     Mutant(
         "run_container_as_root",
@@ -102,7 +134,13 @@ MUTANTS = (
         "make_canonical_mount_writable",
         WORKFLOW,
         ((":/var/lib/fossil:ro", ":/var/lib/fossil:rw"),),
-        "The deployment/container contract must preserve a read-only canonical mount.",
+        "The container/deployment contract must preserve a read-only canonical mount.",
+    ),
+    Mutant(
+        "remove_loopback_host_binding",
+        WORKFLOW,
+        (("-p 127.0.0.1:8787:8787", "-p 8787:8787"),),
+        "Docker Desktop must publish the Action port only on Windows loopback.",
     ),
 )
 
