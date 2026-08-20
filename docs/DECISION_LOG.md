@@ -214,6 +214,19 @@ The queue may select a local `verifier_action`, but cannot provide an executable
 
 **Evidence/contract:** Issue #94 `INFRA-09`; `docs/architecture/2026-08-12-trusted-local-broker-supervisor-boundary.md`; `docs/decisions/2026-08-12-D027-broker-host-supervisor.md`.
 
+## D022 — Closeouts are not FOSSIL ingest; skip is fail-closed receipts
+
+**State:** provisional  
+**Decision:** Agent closeouts, session handoffs, and journal recaps are Cortex execution packaging. They expire with V5’s 24-hour journal and must not be committed as FOSSIL evidence, retrieved as policy, or used as the “already done” signal. A later agent may skip work only when a structured receipt’s hashes still match live inputs/outputs (or declared tests), the linked issue is closed, and no tombstone exists. Missing any clause fails closed (treat as open). Model agreement, LLM-as-judge, and closeout confidence cannot promote a claim or close work.
+
+**Why:** summaries launder origin (TMA-NM); length/recency rot makes the latest recap dominate (Context Rot, Lost in the Middle); retrieval over notes is poisonable (AgentPoison); signed prose is still not truth (MutMem); semantic “done” is not a state change (SafeClawBench).
+
+**Does not change:** D007, D016 ownership split, snapshot/propose/commit gates, or journal TTL.
+
+**Reconsider when:** a measured Cortex loop shows the receipt predicate causes more wasted redo than poisoned skips, or FOSSIL local serve + issue gating is proven and a tighter predicate is justified.
+
+**Evidence:** `docs/research/2026-08-15-agent-closeout-memory-poison.md`, `docs/research/2026-08-15-agent-closeout-memory-poison-trace.json`. Claims remain proposed until source snapshots are hashed.
+
 ## How to add a decision
 
 When implementation or evidence changes an architectural conclusion:

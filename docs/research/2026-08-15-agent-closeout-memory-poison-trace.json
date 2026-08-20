@@ -1,0 +1,95 @@
+{
+  "research_run_id": "rr_closeout_memory_poison_2026_08_15",
+  "schema_version": "1.0",
+  "started_at": "2026-08-15T00:00:00Z",
+  "ended_at": "2026-08-15T18:00:00Z",
+  "question": "How should Cortex V5 and FOSSIL stop later agents from looping on finished work without ingesting agent closeout prose as durable truth?",
+  "scope": "Agent memory / closeout epistemics. Does not reopen Gate 1/2 retrieval policy.",
+  "initiated_by_refs": [
+    "github:repo:Pukujan/cortex-v5",
+    "doc:architecture:2026-08-10-cortex-fossil-ownership-boundary"
+  ],
+  "actors": [
+    {
+      "actor_id": "actor:user:Pukujan",
+      "actor_type": "human"
+    },
+    {
+      "actor_id": "actor:assistant:opencode-grok",
+      "actor_type": "agent",
+      "provider": "xAI",
+      "model": "grok-4.6",
+      "harness_version": "opencode"
+    }
+  ],
+  "search_queries": [
+    {
+      "query": "context rot LLM long context closeout handoff memory poison",
+      "purpose": "find why agent recaps go stale or false",
+      "executed_at": "2026-08-15T16:00:00Z"
+    },
+    {
+      "query": "AgentPoison memory RAG LLM agents arxiv",
+      "purpose": "retrieval-as-memory attack surface",
+      "executed_at": "2026-08-15T16:10:00Z"
+    },
+    {
+      "query": "origin-bound memory summarization laundering TMA-NM",
+      "purpose": "whether summaries can upgrade untrusted writes",
+      "executed_at": "2026-08-15T16:20:00Z"
+    }
+  ],
+  "source_refs": [
+    "https://research.trychroma.com/context-rot",
+    "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents",
+    "https://arxiv.org/abs/2307.03172",
+    "https://arxiv.org/abs/2407.12784",
+    "https://arxiv.org/abs/2606.24322",
+    "https://arxiv.org/abs/2608.02843",
+    "https://arxiv.org/abs/2606.22030",
+    "https://arxiv.org/abs/2606.18356",
+    "https://arxiv.org/abs/2410.10813",
+    "https://blog.langchain.dev/memory-for-agents/",
+    "https://docs.langchain.com/oss/python/langgraph/memory",
+    "https://docs.devin.ai/desktop/cascade/memories",
+    "doc:research:2026-08-15-agent-closeout-memory-poison"
+  ],
+  "claim_refs": [
+    "claim:closeout-prose-is-not-skip-authority",
+    "claim:fail-closed-hash-receipt-prevents-false-done",
+    "claim:journal-ttl-must-not-be-bypassed-by-jsonl",
+    "claim:fossil-must-not-ingest-closeouts-as-evidence"
+  ],
+  "alternative_refs": [
+    "alternative:better-closeout-prose",
+    "alternative:rag-over-closeouts",
+    "alternative:immortal-sqlite-closeouts",
+    "alternative:no-memory-at-all",
+    "alternative:receipt-issue-hash-skip"
+  ],
+  "critique_refs": [
+    "critique:summary-as-truth-is-origin-laundering",
+    "critique:llm-as-judge-is-not-done",
+    "critique:model-agreement-is-not-evidence"
+  ],
+  "unresolved_question_refs": [
+    "question:receipt-home-before-fossil-serve",
+    "question:who-may-close-the-github-issue",
+    "question:v5-checker-vs-hosted-ci-as-output-hash"
+  ],
+  "decision_refs": [
+    "decision:D007-model-agreement-is-not-evidence",
+    "decision:D022-closeouts-are-not-fossil-ingest"
+  ],
+  "implementation_refs": [
+    "github:repo:Pukujan/fossil-core",
+    "github:repo:Pukujan/cortex-v5",
+    "doc:research:2026-08-15-agent-closeout-memory-poison"
+  ],
+  "decision_state": "provisional",
+  "trace_refs": [],
+  "code_commit": "",
+  "ontology_version": "core/v1",
+  "research_policy_version": "source-quality-v1",
+  "notes": "Sources are URL pointers, not hashed FOSSIL snapshots. Claims stay proposed until snapshots exist. This trace records the 2026-08-15 research pass; it does not promote closeout prose into the corpus."
+}

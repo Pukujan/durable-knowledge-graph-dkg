@@ -93,6 +93,12 @@ The architecture research freeze should be reopened only when at least one is tr
 
 Interesting new papers alone are not enough to restart the architecture. They should first be evaluated as potential adapters/projections behind the existing contracts.
 
+### Agent closeouts / skip authority (2026-08-15)
+
+`2026-08-15-agent-closeout-memory-poison.md` and `2026-08-15-agent-closeout-memory-poison-trace.json`.
+
+Provisional: closeout prose is not FOSSIL ingest and not a skip signal. “Don’t redo this” is a fail-closed receipt + live issue + hash match. Journal TTL scratch stays blank on purpose.
+
 ## How to add new research
 
 For a meaningful new research pass:
