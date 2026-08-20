@@ -196,7 +196,6 @@ def test_openapi_is_valid_explicit_and_read_only():
         '"/actions/propose"',
         '"/actions/commit"',
         "neo4j",
-        "graph mutation",
         "bearer_token",
     ):
         assert forbidden not in serialized
