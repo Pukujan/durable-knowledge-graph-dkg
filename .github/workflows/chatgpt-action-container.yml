@@ -10,6 +10,8 @@ on:
       - "src/fossil_core/runtime/chatgpt_action.py"
       - "src/fossil_core/runtime/chatgpt_action_server.py"
       - "tests/test_chatgpt_action*.py"
+      - "tests/holdout/**"
+      - "docs/operations/CHATGPT-ACTION*.md"
   workflow_dispatch:
 
 permissions:
@@ -38,14 +40,29 @@ jobs:
           docker run -d \
             --name fossil-chatgpt-action \
             -e FOSSIL_ACTION_BEARER_TOKEN=ci-only-not-a-secret-0123456789abcdef \
+            -e FOSSIL_ACTION_PUBLIC_BASE_URL=https://fossil-action.ci.invalid \
+            -e FOSSIL_ACTION_MAX_REQUEST_BYTES=65536 \
             -p 127.0.0.1:8787:8787 \
             -v "$RUNNER_TEMP/fossil-data:/var/lib/fossil:ro" \
             fossil-chatgpt-action:ci
 
+      - name: Verify non-root and read-only mount
+        run: |
+          test "$(docker exec fossil-chatgpt-action id -u)" = "10001"
+          test "$(docker exec fossil-chatgpt-action id -g)" = "10001"
+          docker exec fossil-chatgpt-action sh -c 'test ! -w /var/lib/fossil/canonical/events'
+          if docker exec fossil-chatgpt-action sh -c 'touch /var/lib/fossil/canonical/events/should-not-exist'; then
+            echo "canonical mount unexpectedly writable" >&2
+            exit 1
+          fi
+
       - name: Smoke read-only HTTP boundary
         run: |
           for attempt in $(seq 1 20); do
-            if curl --fail --silent http://127.0.0.1:8787/openapi.json >/tmp/openapi.json; then
+            if curl --fail --silent \
+              -H 'X-Forwarded-Proto: http' \
+              -H 'X-Forwarded-Host: attacker.invalid' \
+              http://127.0.0.1:8787/openapi.json >/tmp/openapi.json; then
               break
             fi
             sleep 1
@@ -53,12 +70,16 @@ jobs:
           python - <<'PY'
           import json
           schema = json.load(open('/tmp/openapi.json', encoding='utf-8'))
+          assert schema['openapi'].startswith('3.1.')
+          assert schema['servers'] == [{'url': 'https://fossil-action.ci.invalid'}]
+          assert isinstance(schema['components']['schemas'], dict)
           assert set(schema['paths']) == {
               '/actions/search',
               '/actions/read',
               '/actions/lineage',
               '/actions/capabilities',
           }
+          assert schema['components']['schemas']['CapabilitiesResponse']['properties']['durable_writes_exposed']['const'] is False
           PY
 
           test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
@@ -74,11 +95,24 @@ jobs:
             http://127.0.0.1:8787/actions/search)" = "200"
           test "$(cat /tmp/search.json)" = "[]"
 
+          for path in \
+            /mcp \
+            /ingest \
+            /actions/propose \
+            /actions/validate \
+            /actions/commit \
+            /actions/redact \
+            /neo4j \
+            /graph \
+            /filesystem; do
+            test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
+              -H 'authorization: Bearer ci-only-not-a-secret-0123456789abcdef' \
+              "http://127.0.0.1:8787${path}")" = "404"
+          done
+
           test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
-            http://127.0.0.1:8787/mcp)" = "404"
-          test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
-            -X POST -H 'content-type: application/json' --data '{}' \
-            http://127.0.0.1:8787/ingest)" = "404"
+            -X GET -H 'authorization: Bearer ci-only-not-a-secret-0123456789abcdef' \
+            http://127.0.0.1:8787/actions/search)" = "405"
 
       - name: Show container logs on failure
         if: failure()
