@@ -103,24 +103,26 @@ def build_mcp_server(adapter: ThinMCPAdapter) -> MCPServer:
     ) -> dict[str, Any]:
         """Prepare a pack-authorized durable knowledge proposal."""
 
-        return _invoke(
-            adapter,
-            "fossil.propose",
-            {
-                "event_type": event_type,
-                "pack_id": pack_id,
-                "subject_refs": subject_refs,
-                "payload": payload,
-                "occurred_at": occurred_at,
-                "recorded_at": recorded_at,
-                "idempotency_key": idempotency_key,
-                "evidence_refs": evidence_refs,
-                "source_snapshot_refs": source_snapshot_refs,
-                "caused_by_event_ids": caused_by_event_ids,
-                "correlation_id": correlation_id,
-                "provenance": provenance,
-            },
+        arguments: dict[str, Any] = {
+            "event_type": event_type,
+            "pack_id": pack_id,
+            "subject_refs": subject_refs,
+            "payload": payload,
+            "occurred_at": occurred_at,
+            "recorded_at": recorded_at,
+            "idempotency_key": idempotency_key,
+        }
+        optional_arguments = {
+            "evidence_refs": evidence_refs,
+            "source_snapshot_refs": source_snapshot_refs,
+            "caused_by_event_ids": caused_by_event_ids,
+            "correlation_id": correlation_id,
+            "provenance": provenance,
+        }
+        arguments.update(
+            {key: value for key, value in optional_arguments.items() if value is not None}
         )
+        return _invoke(adapter, "fossil.propose", arguments)
 
     @server.tool(name="fossil.validate")
     def fossil_validate(event: dict[str, Any]) -> dict[str, Any]:
