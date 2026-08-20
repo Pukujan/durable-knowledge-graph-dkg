@@ -57,13 +57,17 @@ class _ReadOnlyEventStore:
         return json.loads(self._event_path(event_id).read_text(encoding="utf-8"))
 
     def iter_events(self) -> Iterator[dict[str, Any]]:
-        """Iterate canonical event objects only; redaction tombstones are metadata."""
+        """Iterate unredacted canonical events only; tombstones are metadata."""
 
         for bucket in sorted(self.root.iterdir()):
             if not bucket.is_dir() or bucket.name == "_redactions":
                 continue
             for path in sorted(bucket.glob("*.json")):
-                yield json.loads(path.read_text(encoding="utf-8"))
+                event = json.loads(path.read_text(encoding="utf-8"))
+                event_id = event.get("event_id")
+                if isinstance(event_id, str) and self.is_redacted(event_id):
+                    continue
+                yield event
 
 
 @dataclass(frozen=True)
