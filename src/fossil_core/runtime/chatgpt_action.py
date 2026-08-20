@@ -15,7 +15,6 @@ from fossil_core.agent import AgentContext, AgentProvenanceError
 from fossil_core.domain.pack import PackBoundaryError
 from fossil_core.ports.capability import CapabilityError
 
-from .network import create_node_network_app
 from .node import FilesystemFossilNode
 
 
@@ -59,7 +58,7 @@ def _object_schema(*, required: list[str], properties: dict[str, Any]) -> dict[s
 
 
 def chatgpt_action_openapi_schema(*, server_url: str | None = None) -> dict[str, Any]:
-    """Return the read-only OpenAPI contract intended for a ChatGPT GPT Action."""
+    """Return the bounded read-only OpenAPI contract for a ChatGPT GPT Action."""
 
     error_schema = {
         "type": "object",
@@ -76,11 +75,30 @@ def chatgpt_action_openapi_schema(*, server_url: str | None = None) -> dict[str,
         },
     }
     common_responses = {
-        "400": {"description": "Invalid request", "content": {"application/json": {"schema": error_schema}}},
-        "401": {"description": "Missing or invalid bearer token", "content": {"application/json": {"schema": error_schema}}},
-        "403": {"description": "Pack or capability denied", "content": {"application/json": {"schema": error_schema}}},
-        "404": {"description": "Resource not found", "content": {"application/json": {"schema": error_schema}}},
-        "503": {"description": "Canonical store unavailable", "content": {"application/json": {"schema": error_schema}}},
+        "400": {
+            "description": "Invalid request",
+            "content": {"application/json": {"schema": error_schema}},
+        },
+        "401": {
+            "description": "Missing or invalid bearer token",
+            "content": {"application/json": {"schema": error_schema}},
+        },
+        "403": {
+            "description": "Pack or capability denied",
+            "content": {"application/json": {"schema": error_schema}},
+        },
+        "404": {
+            "description": "Resource not found",
+            "content": {"application/json": {"schema": error_schema}},
+        },
+        "413": {
+            "description": "Request body too large",
+            "content": {"application/json": {"schema": error_schema}},
+        },
+        "503": {
+            "description": "Canonical store unavailable",
+            "content": {"application/json": {"schema": error_schema}},
+        },
     }
 
     schema: dict[str, Any] = {
@@ -90,8 +108,9 @@ def chatgpt_action_openapi_schema(*, server_url: str | None = None) -> dict[str,
             "version": "1.0.0",
             "description": (
                 "Read-only compatibility surface over the canonical FOSSIL corpus. "
-                "It exposes search, durable-event read, lineage, and adapter capability metadata; "
-                "durable proposal/validation/commit are intentionally not exposed."
+                "It exposes search, durable-event read, lineage, and Action capability "
+                "metadata. Durable proposal, validation, commit, ingestion, MCP, and "
+                "arbitrary graph mutation are intentionally not exposed."
             ),
         },
         "components": {
@@ -109,7 +128,10 @@ def chatgpt_action_openapi_schema(*, server_url: str | None = None) -> dict[str,
                 "post": {
                     "operationId": "fossilSearch",
                     "summary": "Search readable FOSSIL knowledge",
-                    "description": "Search only the packs mounted as readable for the configured node context.",
+                    "description": (
+                        "Search only packs mounted as readable for the configured "
+                        "FOSSIL Action context."
+                    ),
                     "requestBody": {
                         "required": True,
                         "content": {
@@ -136,7 +158,10 @@ def chatgpt_action_openapi_schema(*, server_url: str | None = None) -> dict[str,
                                 "application/json": {
                                     "schema": {
                                         "type": "array",
-                                        "items": {"type": "object", "additionalProperties": True},
+                                        "items": {
+                                            "type": "object",
+                                            "additionalProperties": True,
+                                        },
                                     }
                                 }
                             },
@@ -155,7 +180,9 @@ def chatgpt_action_openapi_schema(*, server_url: str | None = None) -> dict[str,
                             "application/json": {
                                 "schema": _object_schema(
                                     required=["event_id"],
-                                    properties={"event_id": {"type": "string", "minLength": 1}},
+                                    properties={
+                                        "event_id": {"type": "string", "minLength": 1}
+                                    },
                                 )
                             }
                         },
@@ -165,7 +192,10 @@ def chatgpt_action_openapi_schema(*, server_url: str | None = None) -> dict[str,
                             "description": "Authorized durable event",
                             "content": {
                                 "application/json": {
-                                    "schema": {"type": "object", "additionalProperties": True}
+                                    "schema": {
+                                        "type": "object",
+                                        "additionalProperties": True,
+                                    }
                                 }
                             },
                         },
@@ -184,7 +214,10 @@ def chatgpt_action_openapi_schema(*, server_url: str | None = None) -> dict[str,
                                 "schema": _object_schema(
                                     required=["conversation_id"],
                                     properties={
-                                        "conversation_id": {"type": "string", "minLength": 1},
+                                        "conversation_id": {
+                                            "type": "string",
+                                            "minLength": 1,
+                                        },
                                         "node_id": {"type": "string", "minLength": 1},
                                     },
                                 )
@@ -196,7 +229,10 @@ def chatgpt_action_openapi_schema(*, server_url: str | None = None) -> dict[str,
                             "description": "Authorized lineage view",
                             "content": {
                                 "application/json": {
-                                    "schema": {"type": "object", "additionalProperties": True}
+                                    "schema": {
+                                        "type": "object",
+                                        "additionalProperties": True,
+                                    }
                                 }
                             },
                         },
@@ -213,7 +249,10 @@ def chatgpt_action_openapi_schema(*, server_url: str | None = None) -> dict[str,
                             "description": "Read-only Action capabilities",
                             "content": {
                                 "application/json": {
-                                    "schema": {"type": "object", "additionalProperties": True}
+                                    "schema": {
+                                        "type": "object",
+                                        "additionalProperties": True,
+                                    }
                                 }
                             },
                         },
@@ -229,7 +268,7 @@ def chatgpt_action_openapi_schema(*, server_url: str | None = None) -> dict[str,
 
 
 class ChatGPTActionMiddleware(BaseHTTPMiddleware):
-    """Intercept a small authenticated REST surface before the node's MCP mount."""
+    """Serve only the bounded authenticated REST compatibility surface."""
 
     def __init__(
         self,
@@ -305,6 +344,8 @@ class ChatGPTActionMiddleware(BaseHTTPMiddleware):
                     "service_version": getattr(service, "service_version", "unknown"),
                     "action_capabilities": ["search", "read", "lineage"],
                     "durable_writes_exposed": False,
+                    "ingestion_exposed": False,
+                    "mcp_exposed": False,
                     "arbitrary_graph_mutation": False,
                 }
             )
@@ -317,35 +358,35 @@ class ChatGPTActionMiddleware(BaseHTTPMiddleware):
         if isinstance(parsed, JSONResponse):
             return parsed
 
-        arguments = dict(parsed)
         if tool_name == "fossil.search":
-            query = arguments.get("query")
+            query = parsed.get("query")
             if not isinstance(query, str) or not query.strip():
                 return _error("invalid_request", "query must be a non-empty string", 400)
-            arguments["query"] = query
-            if "limit" in arguments:
+            arguments: dict[str, Any] = {"query": query}
+            if "limit" in parsed:
                 try:
-                    arguments["limit"] = int(arguments["limit"])
+                    arguments["limit"] = int(parsed["limit"])
                 except (TypeError, ValueError):
                     return _error("invalid_request", "limit must be an integer", 400)
         elif tool_name == "fossil.read":
-            event_id = arguments.get("event_id")
+            event_id = parsed.get("event_id")
             if not isinstance(event_id, str) or not event_id:
                 return _error("invalid_request", "event_id must be a non-empty string", 400)
             arguments = {"event_id": event_id}
-        elif tool_name == "fossil.lineage":
-            conversation_id = arguments.get("conversation_id")
+        else:
+            conversation_id = parsed.get("conversation_id")
             if not isinstance(conversation_id, str) or not conversation_id:
                 return _error(
                     "invalid_request", "conversation_id must be a non-empty string", 400
                 )
-            clean_arguments: dict[str, Any] = {"conversation_id": conversation_id}
-            if arguments.get("node_id") is not None:
-                node_id = arguments["node_id"]
+            arguments = {"conversation_id": conversation_id}
+            if parsed.get("node_id") is not None:
+                node_id = parsed["node_id"]
                 if not isinstance(node_id, str) or not node_id:
-                    return _error("invalid_request", "node_id must be a non-empty string", 400)
-                clean_arguments["node_id"] = node_id
-            arguments = clean_arguments
+                    return _error(
+                        "invalid_request", "node_id must be a non-empty string", 400
+                    )
+                arguments["node_id"] = node_id
 
         try:
             result = self.adapter.invoke(tool_name, arguments)
@@ -361,7 +402,7 @@ def add_chatgpt_action_api(
     bearer_token: str,
     max_request_body_size: int = 64 * 1024,
 ) -> Starlette:
-    """Attach the read-only GPT Action compatibility surface to a Starlette node app."""
+    """Attach the Action compatibility surface to a Starlette app."""
 
     app.add_middleware(
         ChatGPTActionMiddleware,
@@ -373,32 +414,32 @@ def add_chatgpt_action_api(
     return app
 
 
-def create_chatgpt_action_network_app(
+def create_chatgpt_action_app(
     node: FilesystemFossilNode,
     *,
     context: AgentContext,
     bearer_token: str,
-    max_action_request_body_size: int = 64 * 1024,
-    **network_kwargs: Any,
+    max_request_body_size: int = 64 * 1024,
 ) -> Starlette:
-    """Compose the existing FOSSIL node network app plus read-only GPT Actions.
+    """Create the public-facing read-only GPT Action ASGI app.
 
-    The same ``ThinMCPAdapter``/``CorpusService`` boundary is used by MCP and the
-    Action surface. The Action API deliberately exposes no proposal, validation,
-    commit, ingestion, or arbitrary graph mutation operation.
+    This app deliberately does not mount the node's MCP, ingestion, health, or
+    readiness routes. Deploy it as a distinct public HTTPS edge while the normal
+    FOSSIL node remains private. Both surfaces share the same canonical
+    ``CorpusService`` and pack authorization semantics.
     """
 
-    app = create_node_network_app(node, context=context, **network_kwargs)
     adapter = ThinMCPAdapter(
         service=node.corpus_service,
         access=node.pack_access,
         context=context,
     )
+    app = Starlette()
     return add_chatgpt_action_api(
         app,
         adapter=adapter,
         bearer_token=bearer_token,
-        max_request_body_size=max_action_request_body_size,
+        max_request_body_size=max_request_body_size,
     )
 
 
@@ -406,5 +447,5 @@ __all__ = [
     "ChatGPTActionMiddleware",
     "add_chatgpt_action_api",
     "chatgpt_action_openapi_schema",
-    "create_chatgpt_action_network_app",
+    "create_chatgpt_action_app",
 ]
