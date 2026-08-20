@@ -1,12 +1,42 @@
-# PDD — Read-only ChatGPT Action edge
+# PDD — FOSSIL read-only ChatGPT Action
 
-## User-visible problem
+## Problem statement and intended users
 
-A private ChatGPT Custom GPT needs a narrow, auditable way to retrieve knowledge from FOSSIL without gaining any durable write, ingestion, MCP, database, graph-mutation, or filesystem capability. The integration must be deployable by a local integrator while preserving FOSSIL as the canonical authority and keeping all credentials host-local.
+A private ChatGPT Custom GPT needs a narrow, auditable retrieval interface to FOSSIL without receiving any durable-write, ingestion, MCP, graph-mutation, shell, or arbitrary-filesystem capability. The intended operator is a local integrator running `Pukujan/fossil-core` on one Windows PC and exposing only this bounded Action service through an independently managed HTTPS reverse proxy or tunnel.
 
-## Scope
+The visible user experience is limited to asking the private GPT to search readable FOSSIL knowledge, read a known durable event, inspect conversation lineage, or describe the Action's read-only capabilities.
 
-The Action edge provides exactly five user-visible capabilities:
+## Target environment
+
+The supported target for PR #235 is specific:
+
+- host OS: Windows;
+- Linux container runtime: Docker Desktop with the WSL 2 backend;
+- installed WSL distributions include Ubuntu and Ubuntu-22.04 on `D:`;
+- Docker Desktop WSL storage is on `D:\DockerDesktopWSL`;
+- Docker integration inside the Ubuntu distribution is **not required** and must not be assumed;
+- Podman is not installed and is not a dependency;
+- Linux-native systemd/Quadlet and cloud-VM deployment are non-goals;
+- Docker lifecycle commands are expected to run from Windows/PowerShell against Docker Desktop's Linux engine;
+- source, canonical data, and local runtime secret material remain under `D:\FossilBrokerWorker\chatgpt-action\`.
+
+Required host layout:
+
+```text
+D:\FossilBrokerWorker\chatgpt-action\
+  fossil-core\
+  data\
+    canonical\
+      events\
+  secrets\
+    chatgpt-action.env
+```
+
+The populated `secrets\chatgpt-action.env` is local-only and must never be committed.
+
+## Scope: normative read-only boundary
+
+The Action edge provides exactly five externally visible paths:
 
 1. unauthenticated OpenAPI discovery at `GET /openapi.json`;
 2. bearer-authenticated search at `POST /actions/search`;
@@ -14,63 +44,99 @@ The Action edge provides exactly five user-visible capabilities:
 4. bearer-authenticated lineage read at `POST /actions/lineage`;
 5. bearer-authenticated capability metadata at `GET /actions/capabilities`.
 
-The edge reuses FOSSIL pack authorization and corpus read semantics. It does not introduce a second semantic authority and does not require Neo4j or Graphiti.
+The OpenAPI document contains only the four authenticated Action operations. `/openapi.json` is discovery, not an Action operation.
 
-## Non-goals
+The service reuses FOSSIL pack and skill authorization and reads canonical event files through an Action-specific read-only event-store view. It does not require Neo4j or Graphiti.
+
+## Non-goals and explicit prohibitions
 
 The Action edge MUST NOT expose or implement:
 
-- MCP transport or `/mcp`;
+- MCP transport, `/mcp`, MCP discovery, or MCP tool execution;
 - reviewed ingestion or `/ingest`;
-- proposal, validation, commit, redaction, or other durable mutation;
-- Graphiti or Neo4j query/mutation APIs;
-- arbitrary graph traversal outside the canonical lineage/search contracts;
-- arbitrary filesystem paths, file reads, file writes, shell execution, or process control;
-- credential creation, storage, display, logging, or transport beyond the bearer header supplied by the caller;
-- tunnel, DNS, TLS certificate, reverse-proxy, Custom GPT, or account provisioning;
-- public deployment from CI.
+- proposal, validation, commit, redaction, deletion, or any durable mutation;
+- write, admin, management, shell, process-control, or arbitrary command endpoints;
+- Graphiti or Neo4j query/mutation/admin APIs;
+- arbitrary graph mutation or unrestricted graph-query strings;
+- caller-selected filesystem paths, arbitrary file reads/writes, directory listing, or path traversal;
+- runtime configuration, environment-variable, bearer-token, tunnel credential, account credential, or Custom GPT credential disclosure;
+- creation or operation of a public tunnel, DNS name, TLS certificate, reverse proxy, or Custom GPT;
+- public deployment from CI;
+- Podman, systemd, Quadlet, Kubernetes, or a cloud VM.
+
+These prohibitions remain in force for authenticated callers.
 
 ## Threat model
 
-### Adversaries and failure modes
+The public HTTPS origin is assumed to receive hostile traffic. Relevant threats include:
 
-The boundary assumes an internet-reachable HTTPS origin may receive hostile requests. Relevant threats include:
+- missing, malformed, duplicated, smuggled, or incorrect bearer authorization;
+- unsupported HTTP methods and unknown/prohibited route probing;
+- oversized bodies, invalid UTF-8, malformed JSON, type/range confusion, and extra-field capability smuggling;
+- path traversal through event/conversation/node identifiers;
+- attempts to smuggle graph queries or write instructions through otherwise valid JSON;
+- forged `Forwarded`/`X-Forwarded-*` headers intended to make `/openapi.json` advertise an attacker-controlled or plain-HTTP origin;
+- accidental root execution;
+- accidental writable canonical-data mounts;
+- accidental public binding of the container port to all host interfaces;
+- exception/error leakage of local Windows/Linux paths, environment data, secrets, or stack traces;
+- OpenAPI regressions that make GPT Action import ambiguous or silently widen capabilities;
+- image-layer, CI-log, documentation, or fixture leakage of a real secret;
+- implementation drift that enables MCP, ingest, proposal, validation, commit, redaction, graph mutation, or filesystem access.
 
-- unauthenticated callers attempting corpus reads;
-- malformed or ambiguous bearer headers;
-- oversized bodies intended to consume memory;
-- requests to hidden/private FOSSIL routes;
-- method confusion such as `GET /actions/search` or `POST /openapi.json`;
-- payload fields attempting to smuggle filesystem paths, graph queries, write commands, or MCP instructions;
-- forged `X-Forwarded-*` headers intended to alter the OpenAPI origin;
-- accidental execution as root or with a writable canonical-data mount;
-- error messages leaking secrets, local paths, or internal exception details;
-- OpenAPI regressions that make the schema unsuitable for Custom GPT Action import;
-- implementation drift that silently widens the route or capability allowlist.
-
-### Out of scope threats
-
-Host compromise, compromise of the reverse proxy/tunnel provider, theft of a real bearer token, or compromise of the ChatGPT account are deployment/operator concerns. The package documents mitigations but does not provision or operate those systems.
+Host compromise, reverse-proxy/tunnel-provider compromise, theft of a real bearer token, and compromise of the ChatGPT account remain operator/security-operations concerns. This PR reduces blast radius but cannot solve a compromised trusted host or credential.
 
 ## Trust boundaries
 
-1. **Public HTTPS boundary** — an operator-managed reverse proxy or tunnel terminates TLS. It MUST forward only to the Action process.
-2. **Action process boundary** — the process accepts only the five scoped capabilities above. It MUST ignore untrusted forwarded headers for schema generation.
-3. **Authentication boundary** — every `/actions/*` operation requires one configured bearer token. `/openapi.json` is deliberately public and contains no secret.
-4. **Authorization boundary** — authorized requests still pass through FOSSIL pack and skill authorization.
-5. **Canonical-data boundary** — the container/process receives the canonical event tree read-only. The Action-specific event-store adapter exposes only `get`, `iter_events`, and redaction-state reads; no commit/redact API exists on that adapter.
-6. **Projection boundary** — Neo4j/Graphiti are not dependencies of the Action edge and are never exposed through it.
-7. **Operator boundary** — real secrets, public endpoint provisioning, DNS/TLS, and Custom GPT credentials remain outside Git and outside this package.
+1. **Public HTTPS boundary.** An operator-managed tunnel/reverse proxy terminates TLS and forwards only to the Windows loopback listener for this Action service.
+2. **Windows loopback boundary.** Docker publishes container port 8787 only as `127.0.0.1:8787`; it must not be bound to `0.0.0.0`, `::`, or a LAN address on the Windows host.
+3. **Proxy-origin boundary.** The OpenAPI origin is either a fixed operator-configured `https://` origin or is derived from `X-Forwarded-Proto` + `X-Forwarded-Host` only when the request peer is inside an explicit trusted proxy CIDR. Uvicorn's global proxy-header trust remains disabled.
+4. **Authentication boundary.** Every `/actions/*` request requires exactly one valid bearer header. `/openapi.json` is public and contains no secret.
+5. **Authorization boundary.** Authenticated requests still pass through FOSSIL skill and pack-read authorization.
+6. **Canonical-data boundary.** `D:\...\data` is bind-mounted at `/var/lib/fossil` read-only. The Action event-store view provides read operations only and has no commit/redact API.
+7. **Projection boundary.** Neo4j/Graphiti are not initialized and are not reachable through this service.
+8. **Operator-secret boundary.** Real bearer/tunnel/Custom-GPT credentials exist only in operator-controlled local systems and are outside Git, CI, docs, tests, issues, and this implementation package.
+
+## Secret handling
+
+The repository contains only variable names and clearly non-secret example placeholders. The real bearer token is generated and stored by the local integrator after code review in:
+
+```text
+D:\FossilBrokerWorker\chatgpt-action\secrets\chatgpt-action.env
+```
+
+The application does not return the token, log request authorization headers, add token examples to OpenAPI, or embed a token in the image. CI may use a clearly synthetic test-only string that is not a credential.
+
+## HTTPS/reverse-proxy assumptions
+
+The Action process itself listens on HTTP inside the Docker/host-local boundary. The public endpoint MUST be HTTPS.
+
+Schema-origin precedence is fail-closed:
+
+1. a configured `FOSSIL_ACTION_PUBLIC_BASE_URL` (must be origin-only HTTPS) is authoritative and forwarded headers cannot override it;
+2. otherwise a direct HTTPS request may define the origin;
+3. otherwise `X-Forwarded-Proto: https` plus one `X-Forwarded-Host` may define the origin only when the request peer matches `FOSSIL_ACTION_TRUSTED_PROXY_CIDRS`;
+4. otherwise `GET /openapi.json` returns `503` rather than advertising an internal HTTP URL.
+
+Never configure a wildcard trusted proxy CIDR merely to make schema generation work.
+
+## Data availability and empty-corpus behavior
+
+The current target canonical event directory is empty. That is valid. If `data\canonical\events` exists and is readable but contains no events, authenticated `POST /actions/search` returns HTTP `200` with `[]`. The service must not fabricate corpus content, seed fake events, query Neo4j as a fallback, or convert an empty corpus into an error.
+
+If the canonical event directory itself is missing or inaccessible, startup/reads fail rather than silently creating or mutating canonical state.
 
 ## Deployment assumptions
 
-- A local integrator may clone the PR from Windows/WSL with the repository and canonical data located on `D:` and bind-mounted into Linux/Podman/Docker paths.
-- The Action container runs as a non-root UID.
-- Canonical data is mounted read-only.
-- TLS is terminated upstream; the Action service itself can listen on a private/loopback or container-network HTTP socket.
-- `FOSSIL_ACTION_PUBLIC_BASE_URL` is set to the externally reachable `https://` origin. The service does not trust caller-supplied `X-Forwarded-Proto` or `X-Forwarded-Host` when generating OpenAPI.
-- The operator supplies the bearer token at runtime from a host-local secret mechanism; no real value belongs in Git, CI, issue comments, docs, or chat transcripts.
+The local integrator will:
 
-## Read-only boundary
+- clone/check out PR #235 under the required `D:` layout;
+- run the verification suite;
+- build the Linux image using Docker Desktop from Windows;
+- create the real local env file and secret outside source control;
+- mount `D:\...\data` read-only;
+- publish the container port only to Windows `127.0.0.1:8787`;
+- establish the public HTTPS reverse-proxy/tunnel separately;
+- import `/openapi.json` into a private Custom GPT and configure authentication there.
 
-The boundary is normative: only OpenAPI discovery, search, durable-event read, lineage, and capability metadata are permitted. MCP, ingest, proposal, validation, commit, graph mutation, arbitrary filesystem access, and secret exposure are prohibited even for authenticated callers.
+This PR performs none of those deployment/account/credential actions.
