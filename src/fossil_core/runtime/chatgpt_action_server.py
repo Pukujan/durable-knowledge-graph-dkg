@@ -5,13 +5,15 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Mapping
 
+from starlette.applications import Starlette
+
 from fossil_core.adapters.filesystem.event_store import DurableEventStore
 from fossil_core.adapters.mcp import ThinMCPAdapter
 from fossil_core.agent import AgentContext, CorpusService, SkillRegistry
 from fossil_core.application.ingest.pack_validation import KnowledgePackValidator
 from fossil_core.domain.pack import PackAccess
 
-from .chatgpt_action import create_chatgpt_action_app
+from .chatgpt_action import add_chatgpt_action_api
 
 
 @dataclass(frozen=True)
@@ -106,9 +108,12 @@ def build_chatgpt_action_adapter(
     return ThinMCPAdapter(service=service, access=access, context=context)
 
 
-def create_chatgpt_action_app_from_settings(settings: ChatGPTActionServerSettings):
+def create_chatgpt_action_app_from_settings(
+    settings: ChatGPTActionServerSettings,
+) -> Starlette:
     adapter = build_chatgpt_action_adapter(settings)
-    return create_chatgpt_action_app(
+    return add_chatgpt_action_api(
+        Starlette(),
         adapter=adapter,
         bearer_token=settings.bearer_token,
     )
@@ -116,7 +121,7 @@ def create_chatgpt_action_app_from_settings(settings: ChatGPTActionServerSetting
 
 def create_chatgpt_action_app_from_environment(
     environment: Mapping[str, str] | None = None,
-):
+) -> Starlette:
     return create_chatgpt_action_app_from_settings(
         ChatGPTActionServerSettings.from_environment(environment)
     )
