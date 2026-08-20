@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -109,6 +110,16 @@ def _schema(repository_root: Path, *parts: str) -> Path:
     return repository_root / "schemas" / Path(*parts)
 
 
+def _graphiti_from_environment() -> tuple[Any, Any]:
+    from graphiti_core import Graphiti
+    from graphiti_core.nodes import EpisodeType
+
+    uri = os.environ.get("NEO4J_URI", "bolt://localhost:7687")
+    user = os.environ.get("NEO4J_USER", "neo4j")
+    password = os.environ["NEO4J_PASSWORD"]
+    return Graphiti(uri, user, password), EpisodeType.json
+
+
 def compose_filesystem_node(
     config: FilesystemNodeConfig,
     *,
@@ -118,7 +129,7 @@ def compose_filesystem_node(
 ) -> FilesystemFossilNode:
     """Compose one filesystem-backed FOSSIL node around existing contracts.
 
-    With no injected Graphiti client, the projection adapter is constructed from
+    With no injected Graphiti client, the projection client is constructed from
     the existing Neo4j environment contract. Tests may inject a client without
     importing the optional Graphiti dependency.
     """
@@ -162,30 +173,24 @@ def compose_filesystem_node(
             raise ValueError(
                 "episode_type_json is only valid when graphiti_client is injected"
             )
-        projection = GraphitiProjectionAdapter.from_environment(
-            ledger_root=paths.projection_ledger_root,
-            build_manifest=dict(config.projection_build_manifest),
-            visibility_policy=visibility_policy,
-            build_id=config.projection_build_id,
-        )
-    else:
-        if episode_type_json is None:
-            raise ValueError(
-                "episode_type_json is required when graphiti_client is injected"
-            )
-        ledger = ProjectionLedger(
-            paths.projection_ledger_root,
-            GraphitiProjectionAdapter.name,
-            build_id=config.projection_build_id,
-        )
-        projection = GraphitiProjectionAdapter(
-            client=graphiti_client,
-            ledger=ledger,
-            build_manifest=dict(config.projection_build_manifest),
-            episode_type_json=episode_type_json,
-            visibility_policy=visibility_policy,
+        graphiti_client, episode_type_json = _graphiti_from_environment()
+    elif episode_type_json is None:
+        raise ValueError(
+            "episode_type_json is required when graphiti_client is injected"
         )
 
+    ledger = ProjectionLedger(
+        paths.projection_ledger_root,
+        GraphitiProjectionAdapter.name,
+        build_id=config.projection_build_id,
+    )
+    projection = GraphitiProjectionAdapter(
+        client=graphiti_client,
+        ledger=ledger,
+        build_manifest=dict(config.projection_build_manifest),
+        episode_type_json=episode_type_json,
+        visibility_policy=visibility_policy,
+    )
     projector = ProjectorWorker(
         event_store=event_store,
         projection=projection,
