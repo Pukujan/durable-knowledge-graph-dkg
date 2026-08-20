@@ -28,23 +28,27 @@ def imported_modules(path: Path) -> set[str]:
     return modules
 
 
-def test_action_route_allowlist_is_exact_and_write_tools_are_not_mapped() -> None:
+def test_action_route_allowlist_is_exact_and_write_or_lineage_tools_are_not_mapped() -> None:
     assert chatgpt_action._ACTION_ROUTE_ALLOWLIST == frozenset(
         {
             "/openapi.json",
             "/actions/search",
             "/actions/read",
-            "/actions/lineage",
             "/actions/capabilities",
         }
     )
     assert chatgpt_action._ACTION_PATHS == {
         "/actions/search": "fossil.search",
         "/actions/read": "fossil.read",
-        "/actions/lineage": "fossil.lineage",
     }
     assert set(chatgpt_action._ACTION_PATHS.values()).isdisjoint(
-        {"fossil.propose", "fossil.validate", "fossil.commit", "fossil.manage"}
+        {
+            "fossil.lineage",
+            "fossil.propose",
+            "fossil.validate",
+            "fossil.commit",
+            "fossil.manage",
+        }
     )
 
 
@@ -61,9 +65,11 @@ def test_standalone_server_does_not_import_projection_or_mutable_event_store() -
     source = server_path.read_text(encoding="utf-8")
     assert "DurableEventStore(" not in source
     assert "proxy_headers=False" in source
+    assert 'bucket.name == "_redactions"' in source
+    assert "self.is_redacted(event_id)" in source
 
 
-def test_read_only_adapter_exposes_no_mutation_methods(tmp_path: Path) -> None:
+def test_read_only_adapter_exposes_no_mutation_methods_or_lineage_provider(tmp_path: Path) -> None:
     data_root = tmp_path / "data"
     (data_root / "canonical" / "events").mkdir(parents=True)
     settings = ChatGPTActionServerSettings(
@@ -75,6 +81,7 @@ def test_read_only_adapter_exposes_no_mutation_methods(tmp_path: Path) -> None:
     adapter = build_chatgpt_action_adapter(settings)
     store = adapter.service.event_store
 
+    assert adapter.service.lineages == {}
     assert {name for name in ("get", "iter_events", "is_redacted") if hasattr(store, name)} == {
         "get",
         "iter_events",
@@ -91,6 +98,17 @@ def test_read_only_adapter_exposes_no_mutation_methods(tmp_path: Path) -> None:
         "publish",
     ):
         assert not hasattr(store, forbidden)
+
+
+def test_origin_and_streaming_guards_are_encoded_in_public_middleware() -> None:
+    source = (
+        root() / "src" / "fossil_core" / "runtime" / "chatgpt_action.py"
+    ).read_text(encoding="utf-8")
+    assert "request.url.scheme == \"https\"" not in source
+    assert "return self._trusted_proxy_origin(request)" in source
+    assert "async for chunk in request.stream():" in source
+    assert "total > self.max_request_body_size" in source
+    assert "await request.body()" not in source
 
 
 def test_container_and_ci_encode_non_root_loopback_read_only_contract() -> None:
