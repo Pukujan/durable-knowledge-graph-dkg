@@ -5,6 +5,7 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterator, Mapping
+from urllib.parse import urlparse
 
 from starlette.applications import Starlette
 
@@ -57,6 +58,8 @@ class ChatGPTActionServerSettings:
     bearer_token: str
     host: str = "127.0.0.1"
     port: int = 8787
+    max_request_body_size: int = 64 * 1024
+    public_base_url: str | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "repository_root", Path(self.repository_root))
@@ -70,33 +73,43 @@ class ChatGPTActionServerSettings:
             raise ValueError("FOSSIL_ACTION_HOST must be a non-empty trimmed host")
         if self.port < 1 or self.port > 65535:
             raise ValueError("FOSSIL_ACTION_PORT must be between 1 and 65535")
+        if self.max_request_body_size < 1 or self.max_request_body_size > 1024 * 1024:
+            raise ValueError("FOSSIL_ACTION_MAX_REQUEST_BYTES must be between 1 and 1048576")
+        if self.public_base_url is not None:
+            parsed = urlparse(self.public_base_url)
+            if parsed.scheme != "https" or not parsed.netloc or parsed.path not in {"", "/"}:
+                raise ValueError(
+                    "FOSSIL_ACTION_PUBLIC_BASE_URL must be an origin-only https:// URL"
+                )
+            object.__setattr__(self, "public_base_url", self.public_base_url.rstrip("/"))
 
     @classmethod
     def from_environment(
         cls, environment: Mapping[str, str] | None = None
     ) -> "ChatGPTActionServerSettings":
         env = os.environ if environment is None else environment
-        token = env.get("FOSSIL_ACTION_BEARER_TOKEN", "")
         repository_root = Path(env.get("FOSSIL_REPOSITORY_ROOT", Path.cwd()))
-        data_root = Path(env.get("FOSSIL_DATA_ROOT", repository_root / "data"))
-        pack_manifest = Path(
-            env.get(
-                "FOSSIL_PACK_MANIFEST",
-                "examples/packs/common/manifest.json",
-            )
-        )
         raw_port = env.get("FOSSIL_ACTION_PORT", "8787")
+        raw_max = env.get("FOSSIL_ACTION_MAX_REQUEST_BYTES", str(64 * 1024))
         try:
             port = int(raw_port)
         except ValueError as exc:
             raise ValueError("FOSSIL_ACTION_PORT must be an integer") from exc
+        try:
+            max_request_body_size = int(raw_max)
+        except ValueError as exc:
+            raise ValueError("FOSSIL_ACTION_MAX_REQUEST_BYTES must be an integer") from exc
         return cls(
             repository_root=repository_root,
-            data_root=data_root,
-            pack_manifest_path=pack_manifest,
-            bearer_token=token,
+            data_root=Path(env.get("FOSSIL_DATA_ROOT", repository_root / "data")),
+            pack_manifest_path=Path(
+                env.get("FOSSIL_PACK_MANIFEST", "examples/packs/common/manifest.json")
+            ),
+            bearer_token=env.get("FOSSIL_ACTION_BEARER_TOKEN", ""),
             host=env.get("FOSSIL_ACTION_HOST", "127.0.0.1"),
             port=port,
+            max_request_body_size=max_request_body_size,
+            public_base_url=env.get("FOSSIL_ACTION_PUBLIC_BASE_URL") or None,
         )
 
 
@@ -144,6 +157,8 @@ def create_chatgpt_action_app_from_settings(
         Starlette(),
         adapter=adapter,
         bearer_token=settings.bearer_token,
+        max_request_body_size=settings.max_request_body_size,
+        public_base_url=settings.public_base_url,
     )
 
 
@@ -173,6 +188,7 @@ def main() -> None:
         port=settings.port,
         access_log=False,
         server_header=False,
+        proxy_headers=False,
     )
 
 
