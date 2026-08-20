@@ -85,7 +85,7 @@ Current required mutants:
 | `widen_route_allowlist` | prohibited/unknown route reaches dispatcher |
 | `enable_commit_route` | durable write route becomes addressable |
 | `remove_body_size_guards` | oversized bodies accepted |
-| `weaken_search_limit_validation` | >100 limit accepted |
+| `weaken_search_limit_validation` | boolean/ambiguous limit accepted as an integer |
 | `allow_extra_capability_fields` | extra JSON fields smuggle new capability |
 | `trust_forwarded_headers_from_any_peer` | forged proxy origin accepted from untrusted peer |
 | `remove_trusted_proxy_origin_support` | correctly configured proxy cannot produce HTTPS schema origin |
@@ -95,7 +95,7 @@ Current required mutants:
 | `enable_uvicorn_global_proxy_headers` | Uvicorn globally trusts forwarded headers |
 | `add_write_method_to_read_store` | read-only event store gains mutation API |
 | `run_container_as_root` | image executes as root |
-| `make_canonical_mount_writable` | canonical Docker mount becomes writable |
+| `make_canonical_mount_writable` | canonical Docker mounts become writable |
 | `remove_loopback_host_binding` | container port becomes publicly/all-interface bound |
 
 The final PR description records the exact killed/surviving/harness-error result from the final workflow. A build-ready result requires no unjustified survivor and no harness error.
