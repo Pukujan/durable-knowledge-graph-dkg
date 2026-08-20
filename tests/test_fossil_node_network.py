@@ -104,11 +104,21 @@ def agent_context() -> AgentContext:
     )
 
 
-def adapter(node) -> ThinMCPAdapter:
+def read_context() -> AgentContext:
+    return AgentContext(
+        actor_id="node-02-reader",
+        model_id="fixture-model-v2",
+        harness_version="fixture-harness-v2",
+        skill_id="skill_corpus-search",
+        skill_version="1.0.0",
+    )
+
+
+def adapter(node, *, context: AgentContext | None = None) -> ThinMCPAdapter:
     return ThinMCPAdapter(
         service=node.corpus_service,
         access=node.pack_access,
-        context=agent_context(),
+        context=context or agent_context(),
     )
 
 
@@ -119,10 +129,11 @@ def _tool_error_text(result) -> str:
 def test_mcp_server_preserves_frozen_tools_and_corpus_semantics(tmp_path: Path):
     node = compose(tmp_path)
     node.corpus_service.lineages["conv_node_02"] = (COMMON, FakeLineage())
-    server = build_mcp_server(adapter(node))
+    write_server = build_mcp_server(adapter(node, context=agent_context()))
+    read_server = build_mcp_server(adapter(node, context=read_context()))
 
     async def scenario() -> None:
-        async with Client(server) as client:
+        async with Client(write_server) as client:
             listing = await client.list_tools()
             assert tuple(tool.name for tool in listing.tools) == EXPECTED_TOOLS
 
@@ -151,6 +162,10 @@ def test_mcp_server_preserves_frozen_tools_and_corpus_semantics(tmp_path: Path):
             assert committed.is_error is False
             committed_event = committed.structured_content
             assert committed_event is not None
+
+        async with Client(read_server) as client:
+            listing = await client.list_tools()
+            assert tuple(tool.name for tool in listing.tools) == EXPECTED_TOOLS
 
             searched = await client.call_tool(
                 "fossil.search", {"query": "NODE-02 MCP", "limit": 10}
