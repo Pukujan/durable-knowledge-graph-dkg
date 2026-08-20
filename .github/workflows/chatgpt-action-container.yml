@@ -1,0 +1,89 @@
+name: ChatGPT Action container
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/chatgpt-action-container.yml"
+      - "docker/chatgpt-action/**"
+      - "config/chatgpt-action.env.example"
+      - "pyproject.toml"
+      - "src/fossil_core/runtime/chatgpt_action.py"
+      - "src/fossil_core/runtime/chatgpt_action_server.py"
+      - "tests/test_chatgpt_action*.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  container-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build read-only Action image
+        run: |
+          docker build \
+            -f docker/chatgpt-action/Dockerfile \
+            -t fossil-chatgpt-action:ci \
+            .
+
+      - name: Prepare read-only canonical fixture
+        run: |
+          mkdir -p "$RUNNER_TEMP/fossil-data/canonical/events"
+          chmod -R a+rX "$RUNNER_TEMP/fossil-data"
+
+      - name: Start Action container
+        run: |
+          docker run -d \
+            --name fossil-chatgpt-action \
+            -e FOSSIL_ACTION_BEARER_TOKEN=ci-only-not-a-secret-0123456789abcdef \
+            -p 127.0.0.1:8787:8787 \
+            -v "$RUNNER_TEMP/fossil-data:/var/lib/fossil:ro" \
+            fossil-chatgpt-action:ci
+
+      - name: Smoke read-only HTTP boundary
+        run: |
+          for attempt in $(seq 1 20); do
+            if curl --fail --silent http://127.0.0.1:8787/openapi.json >/tmp/openapi.json; then
+              break
+            fi
+            sleep 1
+          done
+          python - <<'PY'
+          import json
+          schema = json.load(open('/tmp/openapi.json', encoding='utf-8'))
+          assert set(schema['paths']) == {
+              '/actions/search',
+              '/actions/read',
+              '/actions/lineage',
+              '/actions/capabilities',
+          }
+          PY
+
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            -X POST -H 'content-type: application/json' \
+            --data '{"query":"FOSSIL"}' \
+            http://127.0.0.1:8787/actions/search)" = "401"
+
+          test "$(curl --silent --output /tmp/search.json --write-out '%{http_code}' \
+            -X POST \
+            -H 'authorization: Bearer ci-only-not-a-secret-0123456789abcdef' \
+            -H 'content-type: application/json' \
+            --data '{"query":"FOSSIL"}' \
+            http://127.0.0.1:8787/actions/search)" = "200"
+          test "$(cat /tmp/search.json)" = "[]"
+
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            http://127.0.0.1:8787/mcp)" = "404"
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            -X POST -H 'content-type: application/json' --data '{}' \
+            http://127.0.0.1:8787/ingest)" = "404"
+
+      - name: Show container logs on failure
+        if: failure()
+        run: docker logs fossil-chatgpt-action || true
+
+      - name: Stop Action container
+        if: always()
+        run: docker rm -f fossil-chatgpt-action || true
