@@ -36,24 +36,38 @@ MUTANTS = (
         "Unknown and prohibited paths must remain 404.",
     ),
     Mutant(
+        "reintroduce_lineage_route",
+        ACTION,
+        (
+            (
+                '    "/actions/read": "fossil.read",',
+                '    "/actions/read": "fossil.read",\n    "/actions/lineage": "fossil.lineage",',
+            ),
+        ),
+        "The standalone Action must not expose lineage until a real lineage provider exists.",
+    ),
+    Mutant(
         "enable_commit_route",
         ACTION,
         (
             (
-                '    "/actions/lineage": "fossil.lineage",',
-                '    "/actions/lineage": "fossil.lineage",\n    "/actions/commit": "fossil.commit",',
+                '    "/actions/read": "fossil.read",',
+                '    "/actions/read": "fossil.read",\n    "/actions/commit": "fossil.commit",',
             ),
         ),
         "Authenticated callers must never gain a durable commit route.",
     ),
     Mutant(
-        "remove_body_size_guards",
+        "remove_declared_body_size_guard",
         ACTION,
-        (
-            ("if declared > self.max_request_body_size:", "if False:"),
-            ("if len(raw) > self.max_request_body_size:", "if False:"),
-        ),
-        "Oversized bodies must be rejected before adapter invocation.",
+        (("if declared > self.max_request_body_size:", "if False:"),),
+        "An explicitly oversized Content-Length must be rejected before adapter invocation.",
+    ),
+    Mutant(
+        "remove_streaming_body_size_guard",
+        ACTION,
+        (("if total > self.max_request_body_size:", "if False:"),),
+        "Chunked, absent, or understated Content-Length bodies must be bounded while streaming.",
     ),
     Mutant(
         "weaken_search_limit_validation",
@@ -85,6 +99,17 @@ MUTANTS = (
         "A correctly configured trusted proxy must produce the HTTPS schema origin.",
     ),
     Mutant(
+        "trust_direct_https_host",
+        ACTION,
+        (
+            (
+                "        return self._trusted_proxy_origin(request)",
+                "        if request.url.scheme == \"https\":\n            return str(request.base_url).rstrip(\"/\")\n        return self._trusted_proxy_origin(request)",
+            ),
+        ),
+        "Direct HTTPS Host is caller-controlled and must not define the public OpenAPI origin.",
+    ),
+    Mutant(
         "publish_http_schema_origin",
         ACTION,
         (("return self.public_base_url", 'return "http://internal.invalid:8787"'),),
@@ -106,6 +131,21 @@ MUTANTS = (
             ),
         ),
         "Successful response objects must retain declared properties.",
+    ),
+    Mutant(
+        "search_redacted_event_bytes",
+        SERVER,
+        (("if isinstance(event_id, str) and self.is_redacted(event_id):", "if False:"),),
+        "An event with a redaction tombstone must not be searchable even if bytes remain.",
+    ),
+    Mutant(
+        "reinclude_redaction_paths",
+        SERVER,
+        (
+            ("for bucket in sorted(self.root.iterdir()):", "for bucket in sorted(self.root.rglob(\"*\")):") ,
+            ("if isinstance(event_id, str) and self.is_redacted(event_id):", "if False:"),
+        ),
+        "_redactions tombstone paths must never be iterated as normal search events.",
     ),
     Mutant(
         "enable_uvicorn_global_proxy_headers",
