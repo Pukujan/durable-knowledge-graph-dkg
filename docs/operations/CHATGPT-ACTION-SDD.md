@@ -1,179 +1,332 @@
-# SDD — Read-only ChatGPT Action edge
+# SDD — FOSSIL read-only ChatGPT Action
 
-## Architecture
+## 1. Architecture
 
 ```text
 Private Custom GPT
-      |
-      | HTTPS + Bearer
-      v
-operator-managed TLS proxy/tunnel
-      |
-      | HTTP on loopback/private container network
-      v
-fossil-chatgpt-action (non-root)
-      |
-      | ThinMCPAdapter used only as an internal protocol adapter
-      v
-CorpusService + PackAccess + SkillRegistry
-      |
-      v
-_ReadOnlyEventStore
-      |
-      | read-only mount
-      v
-canonical/events
+        |
+        | HTTPS + bearer token
+        v
+Operator-managed HTTPS reverse proxy / tunnel
+        |
+        | forwards only to Windows loopback
+        v
+127.0.0.1:8787 on Windows
+        |
+        | Docker Desktop WSL2 Linux engine
+        v
+fossil-chatgpt-action container (UID/GID 10001)
+        |
+        +-- /opt/fossil-core       immutable image content
+        +-- /var/lib/fossil        host D:\...\data, read-only bind mount
+                 |
+                 +-- canonical/events
 ```
 
-The Action process is independent of the private FOSSIL Node transport. It does not publish MCP and does not initialize Graphiti/Neo4j. The use of `ThinMCPAdapter` is internal code reuse only; no MCP endpoint or MCP wire protocol is reachable.
+The Action service is a protocol adapter over existing FOSSIL read semantics. It is not the FOSSIL Node network service and does not mount MCP, ingest, projector, Graphiti, Neo4j, or write/admin routes.
 
-## Public API contract
+### Module boundaries
 
-### `GET /openapi.json`
+- `src/fossil_core/runtime/chatgpt_action.py`
+  - exact HTTP route allowlist;
+  - bearer authentication;
+  - bounded request parsing and identifier validation;
+  - trusted HTTPS public-origin derivation;
+  - OpenAPI 3.1 generation;
+  - dispatch only to `fossil.search`, `fossil.read`, and `fossil.lineage`.
+- `src/fossil_core/runtime/chatgpt_action_server.py`
+  - runtime environment parsing;
+  - trusted proxy CIDR validation;
+  - canonical read-only event-store composition;
+  - `CorpusService` + read-only skill context;
+  - Uvicorn startup with global proxy-header trust disabled.
+- `docker/chatgpt-action/Dockerfile`
+  - non-root Linux image;
+  - no secret baked into image;
+  - Action-only entrypoint;
+  - TCP liveness without a new HTTP route.
+- `config/chatgpt-action.env.example`
+  - field-name and non-secret placeholder template only.
 
-- unauthenticated by design;
+## 2. Public API contract
+
+### Public discovery — `GET /openapi.json`
+
+- unauthenticated;
+- succeeds only when a trusted public HTTPS origin can be derived;
 - returns OpenAPI 3.1 JSON;
-- advertises only the authenticated Action operations;
-- contains no bearer value or host-local secret;
-- when `FOSSIL_ACTION_PUBLIC_BASE_URL` is configured, `servers[0].url` equals that exact HTTPS origin;
+- never contains a real bearer token/runtime secret;
+- `paths` describes only the four authenticated Action operations;
 - unsupported methods return `405`.
 
-### `POST /actions/search`
+### Authenticated operations
 
-Bearer required. Body:
-
-```json
-{"query":"text", "limit":20}
-```
-
-`query` is a non-empty string. `limit` is an integer 1..100. Returns an array of authorized FOSSIL records.
-
-### `POST /actions/read`
-
-Bearer required. Body:
-
-```json
-{"event_id":"evt_..."}
-```
-
-Returns one pack-authorized durable event or `404`.
-
-### `POST /actions/lineage`
-
-Bearer required. Body:
-
-```json
-{"conversation_id":"conv_...", "node_id":"optional"}
-```
-
-Returns the canonical lineage view authorized by the existing FOSSIL service.
-
-### `GET /actions/capabilities`
-
-Bearer required. Returns explicit metadata showing only `search`, `read`, and `lineage` capabilities and Boolean false values for durable writes, ingestion, MCP exposure, and arbitrary graph mutation.
-
-## Prohibited network surface
-
-The Action ASGI app has no routes for `/mcp`, `/ingest`, proposal, validation, commit, redaction, graph mutation, Neo4j, filesystem access, admin operations, shell execution, or arbitrary query languages. Unknown paths are `404`.
-
-## OpenAPI design
-
-The schema is produced by `chatgpt_action_openapi_schema` and uses OpenAPI 3.1. It contains:
-
-- `components.schemas.ErrorDetail`;
-- `components.schemas.ErrorEnvelope`;
-- `components.schemas.FossilRecord` with explicit common event properties;
-- `components.schemas.LineageResponse` with explicit lineage properties;
-- `components.schemas.CapabilitiesResponse` with explicit read-only flags;
-- `components.securitySchemes.BearerAuth` using HTTP bearer;
-- stable unique operation IDs.
-
-The `paths` object contains only the four authenticated Action paths. OpenAPI discovery itself is intentionally outside `paths` so importing the document does not cause ChatGPT to treat schema discovery as a callable Action.
-
-## Environment variables
-
-| Variable | Required | Default | Purpose |
-| --- | --- | --- | --- |
-| `FOSSIL_ACTION_BEARER_TOKEN` | yes | none | runtime-only bearer secret, minimum 32 chars |
-| `FOSSIL_ACTION_HOST` | no | `127.0.0.1` | listen host inside local/container deployment |
-| `FOSSIL_ACTION_PORT` | no | `8787` | listen port |
-| `FOSSIL_ACTION_MAX_REQUEST_BYTES` | no | `65536` | body-size limit; bounded to 1..1048576 |
-| `FOSSIL_ACTION_PUBLIC_BASE_URL` | production | none | origin-only `https://` URL emitted in OpenAPI |
-| `FOSSIL_REPOSITORY_ROOT` | no | current directory | schemas/skills/package root |
-| `FOSSIL_DATA_ROOT` | no | `<repo>/data` | root containing `canonical/events` |
-| `FOSSIL_PACK_MANIFEST` | no | common example manifest | pack authorization manifest |
-
-No variable is populated with a real value in Git. `config/chatgpt-action.env.example` contains placeholders only.
-
-## Container behavior
-
-The Dockerfile:
-
-- builds the package with the node runtime dependency set;
-- creates UID/GID 10001;
-- runs as user `fossil`, not root;
-- uses `fossil-chatgpt-action` as entrypoint;
-- contains no credential;
-- expects `/var/lib/fossil` to be supplied at runtime;
-- is verified with a read-only canonical-data mount in CI.
-
-The Action-specific `_ReadOnlyEventStore` never creates directories and exposes no mutation methods. This is deliberate: the process must boot with canonical data mounted read-only.
-
-## Reverse proxy / tunnel assumptions
-
-The repository does not choose or provision a reverse proxy, tunnel, hostname, DNS record, TLS certificate, or external provider credential.
-
-The external component has one responsibility: terminate HTTPS and forward only the Action origin to the internal Action listener. The application does not trust `Forwarded`/`X-Forwarded-*` to determine its public URL. Instead, the operator sets:
+Every `/actions/*` request requires exactly one:
 
 ```text
-FOSSIL_ACTION_PUBLIC_BASE_URL=https://<public-action-origin>
+Authorization: Bearer <opaque runtime token>
 ```
 
-Uvicorn is launched with `proxy_headers=False`. Therefore forged forwarded headers cannot rewrite the generated schema. This also makes deployments behind Cloudflare Tunnel, Caddy, nginx, a managed reverse proxy, or another HTTPS edge deterministic: the externally visible origin comes from explicit local configuration, not from caller-controlled headers.
+The scheme is case-insensitive; token bytes are exact and compared with `hmac.compare_digest`.
 
-## Windows / WSL `D:` deployment handoff
+#### `POST /actions/search`
 
-This repository prepares but does not execute deployment. A local integrator can use a layout such as:
+```json
+{
+  "query": "authentication decision",
+  "limit": 20
+}
+```
+
+- `query`: required non-empty string, max 8,192 characters;
+- `limit`: optional integer 1..100;
+- additional properties are rejected;
+- success: array of explicit `SearchResult` objects;
+- existing-but-empty canonical event directory: `200 []`.
+
+#### `POST /actions/read`
+
+```json
+{
+  "event_id": "evt_exampleopaqueidentifier"
+}
+```
+
+- event ID is a bounded opaque identifier with no path separators/whitespace/URL syntax;
+- the filesystem adapter independently validates FOSSIL event-ID format before path construction;
+- success: explicit `FossilEvent`;
+- missing/redacted resource: generic `404`.
+
+#### `POST /actions/lineage`
+
+```json
+{
+  "conversation_id": "conv_example",
+  "node_id": "ln_example"
+}
+```
+
+- `conversation_id` required;
+- `node_id` optional;
+- both bounded opaque identifiers;
+- success: explicit `LineageResponse` with typed nodes and citations.
+
+#### `GET /actions/capabilities`
+
+Structurally fixed success body:
+
+```json
+{
+  "service_version": "1",
+  "action_capabilities": ["search", "read", "lineage"],
+  "durable_writes_exposed": false,
+  "ingestion_exposed": false,
+  "mcp_exposed": false,
+  "arbitrary_graph_mutation": false
+}
+```
+
+### Prohibited network surface
+
+`/mcp`, `/ingest`, proposal, validation, commit, redaction, write/admin, Neo4j/graph, filesystem/shell, and unknown paths return JSON `404` and never delegate to the corpus adapter.
+
+## 3. Error contract
+
+```json
+{
+  "error": {
+    "code": "machine_code",
+    "detail": "sanitized message"
+  }
+}
+```
+
+Status mapping:
+
+- `400`: malformed/invalid request;
+- `401`: missing/invalid bearer credential;
+- `403`: FOSSIL pack/capability denial;
+- `404`: missing resource or prohibited/unknown route;
+- `405`: unsupported method on an allowed route;
+- `413`: body over configured limit;
+- `500`: unexpected internal failure, generic text only;
+- `503`: canonical storage unavailable or no trusted HTTPS schema origin.
+
+No response includes stack traces, local Windows/Linux paths, environment data, token values, or provider credentials.
+
+## 4. OpenAPI / private Custom GPT compatibility
+
+The document is OpenAPI `3.1.0` and is validated with `openapi-spec-validator`.
+
+Compatibility contract:
+
+- `components.schemas` is a non-empty object;
+- request schemas are named: `SearchRequest`, `ReadRequest`, `LineageRequest`;
+- success response schemas have declared object properties: `SearchResult`, `FossilEvent`, `LineageNode`, `Citation`, `LineageResponse`, `CapabilitiesResponse`;
+- errors use `ErrorEnvelope`;
+- operation IDs are stable/unique: `fossilSearch`, `fossilRead`, `fossilLineage`, `fossilActionCapabilities`;
+- security is HTTP bearer;
+- no private or mutation route appears in `paths`;
+- `servers[0].url` is HTTPS only.
+
+Event-type-specific `payload` and `provenance` remain explicitly declared object properties whose inner keys vary by durable event type. The Action response itself is never an anonymous property-less object.
+
+## 5. HTTPS and reverse-proxy behavior
+
+Uvicorn runs with:
 
 ```text
-Windows: D:\fossil\fossil-core
-Windows: D:\fossil\data
-WSL:     /mnt/d/fossil/fossil-core
-WSL:     /mnt/d/fossil/data
+proxy_headers=False
 ```
 
-Example verification from WSL after cloning/checking out the PR:
+The application performs all proxy-origin trust decisions.
+
+### Mode A — fixed public origin (preferred when known)
+
+```text
+FOSSIL_ACTION_PUBLIC_BASE_URL=https://<public-origin>
+```
+
+Requirements:
+
+- HTTPS;
+- origin only: no path/query/fragment/userinfo;
+- authoritative;
+- forwarded headers cannot override it.
+
+### Mode B — explicit trusted proxy CIDRs
+
+Leave the fixed origin unset and configure:
+
+```text
+FOSSIL_ACTION_TRUSTED_PROXY_CIDRS=<comma-separated peer CIDRs>
+```
+
+Only a request whose actual peer IP is in one configured network may supply:
+
+```text
+X-Forwarded-Proto: https
+X-Forwarded-Host: <single valid host>
+```
+
+Comma-separated/chained values, `http`, missing host/proto, whitespace, path/userinfo syntax, malformed ports, or headers from untrusted peers do not define the public origin.
+
+Origin precedence:
+
+1. fixed `FOSSIL_ACTION_PUBLIC_BASE_URL`;
+2. direct HTTPS request origin;
+3. validated trusted-proxy HTTPS origin;
+4. otherwise `/openapi.json` returns `503` rather than emitting internal HTTP.
+
+Never use `0.0.0.0/0` or `::/0` merely to accept forwarded headers.
+
+## 6. Environment variables
+
+| Variable | Required | Default | Contract |
+|---|---|---|---|
+| `FOSSIL_ACTION_BEARER_TOKEN` | yes | none | trimmed, >=32 chars, runtime-only |
+| `FOSSIL_ACTION_HOST` | no | `127.0.0.1` | image sets `0.0.0.0`; Windows publish remains loopback-only |
+| `FOSSIL_ACTION_PORT` | no | `8787` | 1..65535 |
+| `FOSSIL_ACTION_MAX_REQUEST_BYTES` | no | `65536` | 1..1048576 |
+| `FOSSIL_ACTION_PUBLIC_BASE_URL` | conditional | none | fixed origin-only HTTPS URL |
+| `FOSSIL_ACTION_TRUSTED_PROXY_CIDRS` | conditional | empty | exact proxy peer networks; used only when fixed origin absent |
+| `FOSSIL_REPOSITORY_ROOT` | no | cwd | image: `/opt/fossil-core` |
+| `FOSSIL_DATA_ROOT` | no | `<repo>/data` | image: `/var/lib/fossil` |
+| `FOSSIL_PACK_MANIFEST` | no | common example manifest | read-pack authorization |
+
+A deployment needs a fixed origin, direct HTTPS, or a valid trusted-proxy origin before `/openapi.json` is importable.
+
+## 7. Container behavior
+
+PowerShell build from the required host layout:
+
+```powershell
+Set-Location 'D:\FossilBrokerWorker\chatgpt-action\fossil-core'
+docker build --file docker/chatgpt-action/Dockerfile --tag fossil-chatgpt-action:pr235 .
+```
+
+Image invariants:
+
+- Docker Desktop Linux image;
+- runtime UID/GID 10001;
+- entrypoint `fossil-chatgpt-action`;
+- no real token/provider credential in image config/layers;
+- no unauthenticated health route;
+- canonical data supplied only at runtime.
+
+Deployment shape (documentation only; real env file is created by the local integrator):
+
+```powershell
+docker run --detach `
+  --name fossil-chatgpt-action `
+  --restart unless-stopped `
+  --env-file 'D:\FossilBrokerWorker\chatgpt-action\secrets\chatgpt-action.env' `
+  --publish 127.0.0.1:8787:8787 `
+  --mount 'type=bind,source=D:\FossilBrokerWorker\chatgpt-action\data,target=/var/lib/fossil,readonly' `
+  fossil-chatgpt-action:pr235
+```
+
+The host publication must remain `127.0.0.1`; the external HTTPS component is the only public exposure.
+
+## 8. Windows / Docker Desktop / WSL 2 runbook
+
+Required layout:
+
+```text
+D:\FossilBrokerWorker\chatgpt-action\
+  fossil-core\
+  data\canonical\events\
+  secrets\chatgpt-action.env
+```
+
+Create non-secret directories in PowerShell:
+
+```powershell
+New-Item -ItemType Directory -Force 'D:\FossilBrokerWorker\chatgpt-action\data\canonical\events' | Out-Null
+New-Item -ItemType Directory -Force 'D:\FossilBrokerWorker\chatgpt-action\secrets' | Out-Null
+```
+
+Docker commands run from Windows against Docker Desktop's WSL2 engine. Docker integration inside Ubuntu/Ubuntu-22.04 is not required.
+
+Optional Python verification from WSL (no Docker command required there):
 
 ```bash
-cd /mnt/d/fossil/fossil-core
-python -m venv .venv
-. .venv/bin/activate
+cd /mnt/d/FossilBrokerWorker/chatgpt-action/fossil-core
+python3 -m venv .venv-linux
+. .venv-linux/bin/activate
 pip install -e '.[test,node]'
-pytest -q tests/test_chatgpt_action.py tests/test_chatgpt_action_server.py tests/holdout/test_chatgpt_action_holdout.py
+pytest -q tests/test_chatgpt_action.py tests/test_chatgpt_action_server.py tests/test_chatgpt_action_architecture.py tests/holdout/test_chatgpt_action_holdout.py
+python scripts/run_chatgpt_action_mutations.py
 ```
 
-Container build only:
+## 9. Startup/operational checks
 
-```bash
-docker build -f docker/chatgpt-action/Dockerfile -t fossil-chatgpt-action:local .
-```
+Before connecting a private Custom GPT, verify:
 
-A real deployment must use a host-local env/secret source, a read-only canonical mount, and a local port binding. Real values are intentionally omitted here.
+1. effective container UID is 10001;
+2. Docker host binding is exactly `127.0.0.1:8787`;
+3. `/var/lib/fossil` has `RW=false`;
+4. an in-container write attempt under `/var/lib/fossil` fails;
+5. no Neo4j credential/connectivity is required;
+6. unauthenticated Action request is `401`;
+7. authenticated search against the current empty corpus is `200 []`;
+8. prohibited routes are `404`;
+9. `/openapi.json` validates and advertises only the intended HTTPS origin;
+10. forged forwarded headers cannot alter a fixed origin, and trusted-proxy mode rejects untrusted peers;
+11. image history/application logs contain no real credential.
 
-## Operational runbook
+## 10. Rollback
 
-1. Clone/check out the exact PR SHA.
-2. Run the focused and holdout verification commands.
-3. Build the container.
-4. Inspect image user and entrypoint.
-5. Prepare a host-local environment file outside Git; never paste the real bearer value into source, issues, CI, or chat.
-6. Mount only the canonical FOSSIL data required by the Action, read-only.
-7. Bind the Action listener to loopback/private container networking where practical.
-8. Configure the external HTTPS edge to forward only to the Action listener.
-9. Set the explicit HTTPS public base URL locally.
-10. Verify `/openapi.json`, unauthenticated `401`, authenticated search/read/lineage/capabilities, `404` prohibited routes, and forged forwarded-header resistance.
-11. Only after those checks should a private Custom GPT import the schema and use the same locally managed bearer credential.
+1. disable the external HTTPS route if configured;
+2. stop/remove `fossil-chatgpt-action`;
+3. restore the previous image/tag or checkout the prior commit;
+4. leave `D:\...\data` unchanged;
+5. remove/rotate the local secret separately if desired.
 
-## Rollback
+No database migration, projection rebuild, or reverse data migration is required.
 
-There is no schema migration and no Action-side durable write. Rollback is: stop/remove the Action process/container, remove the external route, and revert/checkout the previous repository SHA. Canonical events and projections require no rollback because this feature never mutates them.
+## 11. Known limitations
+
+- This package does not provision/test a real tunnel provider, DNS name, TLS certificate, or Custom GPT account configuration.
+- Trusted-proxy mode requires the integrator to configure the actual proxy peer CIDR observed by the container; Docker Desktop network addressing can vary.
+- The target canonical event directory is currently empty, so deployment smoke proves empty read behavior but not semantic retrieval quality until real canonical events exist.
