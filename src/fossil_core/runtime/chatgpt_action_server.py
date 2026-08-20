@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterator, Mapping
@@ -18,6 +19,9 @@ from fossil_core.event_store import EventRedactedError
 from .chatgpt_action import add_chatgpt_action_api
 
 
+_EVENT_ID = re.compile(r"^evt_[A-Za-z0-9_-]{16,128}$")
+
+
 class _ReadOnlyEventStore:
     """Filesystem view that implements only the event reads used by this edge."""
 
@@ -27,11 +31,19 @@ class _ReadOnlyEventStore:
             raise FileNotFoundError(f"canonical event store does not exist: {self.root}")
         self.redactions = self.root / "_redactions"
 
+    @staticmethod
+    def _validate_event_id(event_id: str) -> str:
+        if not _EVENT_ID.fullmatch(event_id):
+            raise ValueError("event_id is not a valid FOSSIL event identifier")
+        return event_id
+
     def _event_path(self, event_id: str) -> Path:
+        event_id = self._validate_event_id(event_id)
         suffix = event_id.removeprefix("evt_")
         return self.root / suffix[:2] / f"{event_id}.json"
 
     def _redaction_path(self, event_id: str) -> Path:
+        event_id = self._validate_event_id(event_id)
         suffix = event_id.removeprefix("evt_")
         return self.redactions / suffix[:2] / f"{event_id}.json"
 
