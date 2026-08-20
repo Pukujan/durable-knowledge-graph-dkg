@@ -18,10 +18,10 @@ from fossil_core.runtime.chatgpt_action import (
 
 COMMON = "pack_269099f7b2ba43b7a99b9427d64092de"
 TOKEN = "test-chatgpt-action-token"
+PUBLIC_ORIGIN = "https://fossil.example.test"
 ACTION_PATHS = {
     "/actions/search",
     "/actions/read",
-    "/actions/lineage",
     "/actions/capabilities",
 }
 
@@ -43,32 +43,6 @@ class FakeGraphiti:
 
     async def close(self) -> None:
         return None
-
-
-class FakeLineage:
-    def current_conclusions(self):
-        return [{"node_id": "ln_action_current", "kind": "conclusion"}]
-
-    def historical_nodes(self):
-        return [{"node_id": "ln_action_history", "kind": "claim"}]
-
-    def node(self, node_id: str):
-        return {"node_id": node_id, "kind": "conclusion"}
-
-    def citations(self, node_id: str):
-        return [
-            {
-                "span_id": "span_action",
-                "artifact_id": "art_action",
-                "evidence_status": "verbatim",
-                "byte_start": 0,
-                "byte_end": 16,
-                "text": "fixture evidence",
-            }
-        ]
-
-    def opposing_positions(self, node_id: str):
-        return []
 
 
 def config(tmp_path: Path) -> FilesystemNodeConfig:
@@ -125,6 +99,7 @@ def action_app(tmp_path: Path, **kwargs):
         compose(tmp_path),
         context=read_context(),
         bearer_token=TOKEN,
+        public_base_url=PUBLIC_ORIGIN,
         **kwargs,
     )
 
@@ -147,11 +122,11 @@ def commit_fixture_event(node) -> dict:
 
 
 def test_openapi_is_valid_explicit_and_read_only():
-    schema = chatgpt_action_openapi_schema(server_url="https://fossil.example.test/")
+    schema = chatgpt_action_openapi_schema(server_url=f"{PUBLIC_ORIGIN}/")
     validate_spec(schema)
 
     assert schema["openapi"].startswith("3.1.")
-    assert schema["servers"] == [{"url": "https://fossil.example.test"}]
+    assert schema["servers"] == [{"url": PUBLIC_ORIGIN}]
     assert schema["security"] == [{"BearerAuth": []}]
     assert schema["components"]["securitySchemes"]["BearerAuth"]["scheme"] == "bearer"
     assert set(schema["paths"]) == ACTION_PATHS
@@ -162,17 +137,15 @@ def test_openapi_is_valid_explicit_and_read_only():
         "ErrorEnvelope",
         "SearchRequest",
         "ReadRequest",
-        "LineageRequest",
         "SearchResult",
         "FossilEvent",
-        "LineageNode",
-        "Citation",
-        "LineageResponse",
         "CapabilitiesResponse",
     ):
         assert name in component_schemas
         assert component_schemas[name]["type"] == "object"
         assert component_schemas[name].get("properties")
+    for forbidden_schema in ("LineageRequest", "LineageResponse", "LineageNode", "Citation"):
+        assert forbidden_schema not in component_schemas
 
     operation_ids = {
         operation["operationId"]
@@ -182,7 +155,6 @@ def test_openapi_is_valid_explicit_and_read_only():
     assert operation_ids == {
         "fossilSearch",
         "fossilRead",
-        "fossilLineage",
         "fossilActionCapabilities",
     }
 
@@ -193,6 +165,7 @@ def test_openapi_is_valid_explicit_and_read_only():
         "fossil.commit",
         '"/ingest"',
         '"/mcp"',
+        '"/actions/lineage"',
         '"/actions/propose"',
         '"/actions/commit"',
         "neo4j",
@@ -202,7 +175,7 @@ def test_openapi_is_valid_explicit_and_read_only():
 
 
 def test_openapi_success_response_objects_resolve_to_declared_properties():
-    schema = chatgpt_action_openapi_schema(server_url="https://fossil.example.test")
+    schema = chatgpt_action_openapi_schema(server_url=PUBLIC_ORIGIN)
     components = schema["components"]["schemas"]
 
     for path_item in schema["paths"].values():
@@ -218,25 +191,20 @@ def test_openapi_success_response_objects_resolve_to_declared_properties():
 def test_action_app_authenticates_and_exposes_only_allowlisted_routes(tmp_path: Path):
     app = action_app(tmp_path)
 
-    with TestClient(app, base_url="https://fossil.example.test") as client:
+    with TestClient(app, base_url="http://internal:8787") as client:
         schema = client.get("/openapi.json")
         assert schema.status_code == 200
-        assert schema.json()["servers"] == [{"url": "https://fossil.example.test"}]
+        assert schema.json()["servers"] == [{"url": PUBLIC_ORIGIN}]
 
         denied = client.get("/actions/capabilities")
         assert denied.status_code == 401
         assert denied.headers["www-authenticate"] == "Bearer"
 
-        wrong = client.get(
-            "/actions/capabilities", headers={"authorization": "Bearer wrong-token"}
-        )
-        assert wrong.status_code == 401
-
         allowed = client.get("/actions/capabilities", headers=auth_headers())
         assert allowed.status_code == 200
         assert allowed.json() == {
             "service_version": "1",
-            "action_capabilities": ["search", "read", "lineage"],
+            "action_capabilities": ["search", "read"],
             "durable_writes_exposed": False,
             "ingestion_exposed": False,
             "mcp_exposed": False,
@@ -246,6 +214,7 @@ def test_action_app_authenticates_and_exposes_only_allowlisted_routes(tmp_path: 
         for path in (
             "/mcp",
             "/ingest",
+            "/actions/lineage",
             "/actions/propose",
             "/actions/validate",
             "/actions/commit",
@@ -277,7 +246,7 @@ def test_auth_header_is_unambiguous_and_token_exact(tmp_path: Path):
         f"Bearer {TOKEN} extra",
         "Bearer wrong",
     )
-    with TestClient(app, base_url="https://fossil.example.test") as client:
+    with TestClient(app, base_url="http://internal:8787") as client:
         for value in cases:
             headers = {} if value is None else {"authorization": value}
             response = client.get("/actions/capabilities", headers=headers)
@@ -299,17 +268,17 @@ def test_auth_header_is_unambiguous_and_token_exact(tmp_path: Path):
         assert duplicated.status_code == 401
 
 
-def test_action_search_read_and_lineage_delegate_to_canonical_service(tmp_path: Path):
+def test_action_search_and_read_delegate_to_canonical_service(tmp_path: Path):
     node = compose(tmp_path)
     committed = commit_fixture_event(node)
-    node.corpus_service.lineages["conv_chatgpt_action"] = (COMMON, FakeLineage())
     app = create_chatgpt_action_app(
         node,
         context=read_context(),
         bearer_token=TOKEN,
+        public_base_url=PUBLIC_ORIGIN,
     )
 
-    with TestClient(app, base_url="https://fossil.example.test") as client:
+    with TestClient(app, base_url="http://internal:8787") as client:
         searched = client.post(
             "/actions/search",
             headers=auth_headers(),
@@ -327,15 +296,6 @@ def test_action_search_read_and_lineage_delegate_to_canonical_service(tmp_path: 
         assert read.json()["event_id"] == committed["event_id"]
         assert read.json()["pack_id"] == COMMON
 
-        lineage = client.post(
-            "/actions/lineage",
-            headers=auth_headers(),
-            json={"conversation_id": "conv_chatgpt_action", "node_id": "ln_action_current"},
-        )
-        assert lineage.status_code == 200
-        assert lineage.json()["conversation_id"] == "conv_chatgpt_action"
-        assert lineage.json()["node"]["node_id"] == "ln_action_current"
-
         missing = client.post(
             "/actions/read",
             headers=auth_headers(),
@@ -347,14 +307,11 @@ def test_action_search_read_and_lineage_delegate_to_canonical_service(tmp_path: 
 
 def test_request_validation_rejects_mutation_smuggling_and_traversal(tmp_path: Path):
     app = action_app(tmp_path)
-    with TestClient(app, base_url="https://fossil.example.test") as client:
+    with TestClient(app, base_url="http://internal:8787") as client:
         extra = client.post(
             "/actions/search",
             headers=auth_headers(),
-            json={
-                "query": "FOSSIL",
-                "graph_query": "MATCH (n) DETACH DELETE n",
-            },
+            json={"query": "FOSSIL", "graph_query": "MATCH (n) DETACH DELETE n"},
         )
         assert extra.status_code == 400
 
@@ -364,13 +321,6 @@ def test_request_validation_rejects_mutation_smuggling_and_traversal(tmp_path: P
             json={"event_id": "../../etc/passwd"},
         )
         assert traversal.status_code == 400
-
-        lineage_traversal = client.post(
-            "/actions/lineage",
-            headers=auth_headers(),
-            json={"conversation_id": "../secret"},
-        )
-        assert lineage_traversal.status_code == 400
 
         for bad_limit in (True, "10", 0, -1, 101):
             response = client.post(
@@ -391,7 +341,7 @@ def test_request_validation_rejects_mutation_smuggling_and_traversal(tmp_path: P
 def test_request_size_json_and_method_validation_fail_closed(tmp_path: Path):
     app = action_app(tmp_path, max_request_body_size=64)
 
-    with TestClient(app, base_url="https://fossil.example.test") as client:
+    with TestClient(app, base_url="http://internal:8787") as client:
         invalid = client.post(
             "/actions/search", headers=auth_headers(), content=b"not-json"
         )
@@ -417,9 +367,24 @@ def test_request_size_json_and_method_validation_fail_closed(tmp_path: Path):
         ).status_code == 405
 
 
+def test_fixed_public_origin_ignores_forged_forwarded_and_host_headers(tmp_path: Path):
+    app = action_app(tmp_path)
+    with TestClient(app, base_url="https://attacker.invalid") as client:
+        response = client.get(
+            "/openapi.json",
+            headers={
+                "host": "attacker.invalid",
+                "x-forwarded-proto": "https",
+                "x-forwarded-host": "evil.invalid",
+            },
+        )
+    assert response.status_code == 200
+    assert response.json()["servers"] == [{"url": PUBLIC_ORIGIN}]
+
+
 def test_errors_do_not_echo_internal_paths_or_secret(tmp_path: Path):
     app = action_app(tmp_path)
-    with TestClient(app, base_url="https://fossil.example.test") as client:
+    with TestClient(app, base_url="http://internal:8787") as client:
         response = client.post(
             "/actions/read",
             headers=auth_headers(),
@@ -437,7 +402,7 @@ def test_errors_do_not_echo_internal_paths_or_secret(tmp_path: Path):
 )
 def test_openapi_contains_no_runtime_secret_values(forbidden_fragment: str):
     schema = json.dumps(
-        chatgpt_action_openapi_schema(server_url="https://fossil.example.test")
+        chatgpt_action_openapi_schema(server_url=PUBLIC_ORIGIN)
     ).lower()
     assert TOKEN.lower() not in schema
     assert f"replace-with-a-{forbidden_fragment}" not in schema
