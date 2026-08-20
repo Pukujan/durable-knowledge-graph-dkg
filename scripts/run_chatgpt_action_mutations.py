@@ -58,8 +58,8 @@ MUTANTS = (
     Mutant(
         "weaken_search_limit_validation",
         ACTION,
-        (("or limit > 100", "or limit > 1000"),),
-        "Out-of-range search limits must fail closed.",
+        (("isinstance(limit, bool)", "False"),),
+        "Boolean/ambiguous search limits must fail closed.",
     ),
     Mutant(
         "allow_extra_capability_fields",
@@ -133,8 +133,11 @@ MUTANTS = (
     Mutant(
         "make_canonical_mount_writable",
         WORKFLOW,
-        ((":/var/lib/fossil:ro", ":/var/lib/fossil:rw"),),
-        "The container/deployment contract must preserve a read-only canonical mount.",
+        (
+            (":/var/lib/fossil:ro", ":/var/lib/fossil:rw"),
+            (":/var/lib/fossil:ro", ":/var/lib/fossil:rw"),
+        ),
+        "All container/deployment fixtures must preserve a read-only canonical mount.",
     ),
     Mutant(
         "remove_loopback_host_binding",
