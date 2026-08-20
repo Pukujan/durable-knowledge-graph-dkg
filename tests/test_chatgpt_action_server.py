@@ -20,9 +20,11 @@ def root() -> Path:
 
 
 def settings(tmp_path: Path) -> ChatGPTActionServerSettings:
+    data_root = tmp_path / "fossil-data"
+    (data_root / "canonical" / "events").mkdir(parents=True, exist_ok=True)
     return ChatGPTActionServerSettings(
         repository_root=root(),
-        data_root=tmp_path / "fossil-data",
+        data_root=data_root,
         pack_manifest_path=Path("examples/packs/common/manifest.json"),
         bearer_token=TOKEN,
     )
@@ -80,7 +82,23 @@ def test_standalone_adapter_bootstraps_without_neo4j(
     assert adapter.context.skill_id == "skill_corpus-search"
     assert adapter.context.skill_version == "1.0.0"
     assert adapter.invoke("fossil.search", {"query": "nothing-yet"}) == []
-    assert (tmp_path / "fossil-data" / "canonical" / "events").is_dir()
+    assert adapter.service.event_store.root == (
+        tmp_path / "fossil-data" / "canonical" / "events"
+    )
+    assert not hasattr(adapter.service.event_store, "commit")
+    assert not hasattr(adapter.service.event_store, "redact")
+
+
+def test_standalone_adapter_requires_existing_canonical_store(tmp_path: Path) -> None:
+    configured = ChatGPTActionServerSettings(
+        repository_root=root(),
+        data_root=tmp_path / "missing-data",
+        pack_manifest_path=Path("examples/packs/common/manifest.json"),
+        bearer_token=TOKEN,
+    )
+
+    with pytest.raises(FileNotFoundError, match="canonical event store does not exist"):
+        build_chatgpt_action_adapter(configured)
 
 
 def test_deployed_action_app_exposes_only_read_edge(tmp_path: Path) -> None:
