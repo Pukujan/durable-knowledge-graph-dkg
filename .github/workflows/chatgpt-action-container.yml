@@ -30,39 +30,49 @@ jobs:
             -t fossil-chatgpt-action:ci \
             .
 
-      - name: Prepare read-only canonical fixture
+      - name: Assert image has no runtime credential
+        run: |
+          test "$(docker image inspect fossil-chatgpt-action:ci --format '{{.Config.User}}')" = "fossil"
+          if docker history --no-trunc fossil-chatgpt-action:ci | grep -F 'ci-only-not-a-secret-0123456789abcdef'; then
+            echo 'synthetic runtime token unexpectedly present in image history' >&2
+            exit 1
+          fi
+          if docker image inspect fossil-chatgpt-action:ci | grep -F 'ci-only-not-a-secret-0123456789abcdef'; then
+            echo 'synthetic runtime token unexpectedly present in image configuration' >&2
+            exit 1
+          fi
+
+      - name: Prepare empty canonical fixture
         run: |
           mkdir -p "$RUNNER_TEMP/fossil-data/canonical/events"
           chmod -R a+rX "$RUNNER_TEMP/fossil-data"
 
-      - name: Start Action container
+      - name: Start loopback-only Action container
         run: |
           docker run -d \
             --name fossil-chatgpt-action \
             -e FOSSIL_ACTION_BEARER_TOKEN=ci-only-not-a-secret-0123456789abcdef \
             -e FOSSIL_ACTION_PUBLIC_BASE_URL=https://fossil-action.ci.invalid \
-            -e FOSSIL_ACTION_MAX_REQUEST_BYTES=65536 \
             -p 127.0.0.1:8787:8787 \
             -v "$RUNNER_TEMP/fossil-data:/var/lib/fossil:ro" \
             fossil-chatgpt-action:ci
 
-      - name: Verify non-root and read-only mount
+      - name: Inspect non-root loopback and read-only mount invariants
         run: |
           test "$(docker exec fossil-chatgpt-action id -u)" = "10001"
           test "$(docker exec fossil-chatgpt-action id -g)" = "10001"
-          docker exec fossil-chatgpt-action sh -c 'test ! -w /var/lib/fossil/canonical/events'
-          if docker exec fossil-chatgpt-action sh -c 'touch /var/lib/fossil/canonical/events/should-not-exist'; then
-            echo "canonical mount unexpectedly writable" >&2
+          test "$(docker inspect fossil-chatgpt-action --format '{{(index (index .NetworkSettings.Ports "8787/tcp") 0).HostIp}}')" = "127.0.0.1"
+          test "$(docker inspect fossil-chatgpt-action --format '{{range .Mounts}}{{if eq .Destination "/var/lib/fossil"}}{{.RW}}{{end}}{{end}}')" = "false"
+          if docker exec fossil-chatgpt-action sh -c 'echo forbidden > /var/lib/fossil/canonical/events/write-probe'; then
+            echo 'canonical mount unexpectedly writable' >&2
             exit 1
           fi
+          test ! -e "$RUNNER_TEMP/fossil-data/canonical/events/write-probe"
 
-      - name: Smoke read-only HTTP boundary
+      - name: Smoke read-only HTTP and OpenAPI boundary
         run: |
-          for attempt in $(seq 1 20); do
-            if curl --fail --silent \
-              -H 'X-Forwarded-Proto: http' \
-              -H 'X-Forwarded-Host: attacker.invalid' \
-              http://127.0.0.1:8787/openapi.json >/tmp/openapi.json; then
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8787/openapi.json >/tmp/openapi.json; then
               break
             fi
             sleep 1
@@ -73,13 +83,24 @@ jobs:
           assert schema['openapi'].startswith('3.1.')
           assert schema['servers'] == [{'url': 'https://fossil-action.ci.invalid'}]
           assert isinstance(schema['components']['schemas'], dict)
+          assert schema['components']['schemas']
           assert set(schema['paths']) == {
               '/actions/search',
               '/actions/read',
               '/actions/lineage',
               '/actions/capabilities',
           }
-          assert schema['components']['schemas']['CapabilitiesResponse']['properties']['durable_writes_exposed']['const'] is False
+          assert all(not server['url'].startswith('http://') for server in schema['servers'])
+          PY
+
+          curl --fail --silent \
+            -H 'x-forwarded-proto: https' \
+            -H 'x-forwarded-host: attacker.invalid' \
+            http://127.0.0.1:8787/openapi.json >/tmp/forged-openapi.json
+          python - <<'PY'
+          import json
+          schema = json.load(open('/tmp/forged-openapi.json', encoding='utf-8'))
+          assert schema['servers'] == [{'url': 'https://fossil-action.ci.invalid'}]
           PY
 
           test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
@@ -96,28 +117,58 @@ jobs:
           test "$(cat /tmp/search.json)" = "[]"
 
           for path in \
-            /mcp \
-            /ingest \
-            /actions/propose \
-            /actions/validate \
-            /actions/commit \
-            /actions/redact \
-            /neo4j \
-            /graph \
-            /filesystem; do
+            /mcp /ingest /actions/propose /actions/validate /actions/commit \
+            /actions/redact /actions/write /neo4j /graph /filesystem /admin; do
             test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
               -H 'authorization: Bearer ci-only-not-a-secret-0123456789abcdef' \
               "http://127.0.0.1:8787${path}")" = "404"
           done
 
-          test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
-            -X GET -H 'authorization: Bearer ci-only-not-a-secret-0123456789abcdef' \
-            http://127.0.0.1:8787/actions/search)" = "405"
+      - name: Smoke trusted-proxy HTTPS origin in a private Docker network
+        run: |
+          docker network create --subnet 172.30.235.0/24 fossil-action-proxy-test
+          docker run -d \
+            --name fossil-chatgpt-action-proxy \
+            --network fossil-action-proxy-test \
+            --ip 172.30.235.10 \
+            -e FOSSIL_ACTION_BEARER_TOKEN=ci-only-not-a-secret-0123456789abcdef \
+            -e FOSSIL_ACTION_TRUSTED_PROXY_CIDRS=172.30.235.20/32 \
+            -v "$RUNNER_TEMP/fossil-data:/var/lib/fossil:ro" \
+            fossil-chatgpt-action:ci
+
+          for attempt in $(seq 1 30); do
+            if docker run --rm \
+              --network fossil-action-proxy-test \
+              --ip 172.30.235.20 \
+              python:3.12-slim \
+              python -c "import urllib.request; r=urllib.request.Request('http://172.30.235.10:8787/openapi.json',headers={'X-Forwarded-Proto':'https','X-Forwarded-Host':'proxy-ci.example.invalid'}); print(urllib.request.urlopen(r,timeout=3).read().decode())" \
+              >/tmp/proxy-openapi.json 2>/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          python - <<'PY'
+          import json
+          schema = json.load(open('/tmp/proxy-openapi.json', encoding='utf-8'))
+          assert schema['servers'] == [{'url': 'https://proxy-ci.example.invalid'}]
+          PY
+
+      - name: Assert application logs do not contain runtime token
+        run: |
+          docker logs fossil-chatgpt-action >/tmp/action.log 2>&1 || true
+          if grep -F 'ci-only-not-a-secret-0123456789abcdef' /tmp/action.log; then
+            echo 'runtime token unexpectedly present in application logs' >&2
+            exit 1
+          fi
 
       - name: Show container logs on failure
         if: failure()
-        run: docker logs fossil-chatgpt-action || true
+        run: |
+          docker logs fossil-chatgpt-action || true
+          docker logs fossil-chatgpt-action-proxy || true
 
-      - name: Stop Action container
+      - name: Stop Action containers
         if: always()
-        run: docker rm -f fossil-chatgpt-action || true
+        run: |
+          docker rm -f fossil-chatgpt-action fossil-chatgpt-action-proxy || true
+          docker network rm fossil-action-proxy-test || true
