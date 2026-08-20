@@ -57,8 +57,13 @@ class _ReadOnlyEventStore:
         return json.loads(self._event_path(event_id).read_text(encoding="utf-8"))
 
     def iter_events(self) -> Iterator[dict[str, Any]]:
-        for path in sorted(self.root.glob("*/*.json")):
-            yield json.loads(path.read_text(encoding="utf-8"))
+        """Iterate canonical event objects only; redaction tombstones are metadata."""
+
+        for bucket in sorted(self.root.iterdir()):
+            if not bucket.is_dir() or bucket.name == "_redactions":
+                continue
+            for path in sorted(bucket.glob("*.json")):
+                yield json.loads(path.read_text(encoding="utf-8"))
 
 
 @dataclass(frozen=True)
@@ -159,7 +164,7 @@ def _schema(repository_root: Path, *parts: str) -> Path:
 def build_chatgpt_action_adapter(
     settings: ChatGPTActionServerSettings,
 ) -> ThinMCPAdapter:
-    """Build only the canonical read boundary; do not construct Graphiti/Neo4j."""
+    """Build canonical search/read only; do not construct Graphiti/Neo4j/lineage."""
 
     repository_root = settings.repository_root
     manifest_path = settings.pack_manifest_path
