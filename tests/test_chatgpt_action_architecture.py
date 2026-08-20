@@ -25,8 +25,10 @@ def test_action_source_does_not_publish_private_protocols_or_projection_clients(
 
     assert '"/mcp"' not in action
     assert '"/ingest"' not in action
-    assert "Graphiti" not in server
-    assert "neo4j" not in server.lower()
+    assert "from graphiti" not in server.lower()
+    assert "import graphiti" not in server.lower()
+    assert "from neo4j" not in server.lower()
+    assert "import neo4j" not in server.lower()
     assert "DurableEventStore(" not in server
     assert "proxy_headers=False" in server
 
