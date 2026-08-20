@@ -20,6 +20,7 @@ from neo4j import AsyncGraphDatabase
 from fossil_core.event_store import DurableEventStore
 from fossil_core.projection.graphiti import GraphitiProjectionAdapter
 from fossil_core.projection.ledger import ProjectionLedger
+from fossil_core.runtime import ProjectorWorker
 
 
 PACK_ID = "pack_269099f7b2ba43b7a99b9427d64092de"
@@ -278,15 +279,35 @@ async def main() -> None:
             ledger=ProjectionLedger(
                 root / "projection-ledger",
                 GraphitiProjectionAdapter.name,
+                build_id="node-01-live-smoke-v1",
             ),
             build_manifest=build_manifest,
             episode_type_json=EpisodeType.json,
+        )
+        projector = ProjectorWorker(
+            event_store=event_store,
+            projection=projection,
+            ledger=projection.ledger,
+            poll_interval_seconds=1.0,
         )
 
         await projection.initialize_async()
         proof["status"] = "graphiti_initialized"
 
-        first = await projection.apply_event_async(accepted_event)
+        first_cycle = await projector.run_once_async()
+        proof["first_projector_cycle"] = {
+            "scanned": first_cycle.scanned,
+            "applied": first_cycle.applied,
+            "skipped": first_cycle.skipped,
+            "failed": first_cycle.failed,
+        }
+        if first_cycle.applied != 1 or first_cycle.failed != 0:
+            raise AssertionError(
+                f"first projector cycle did not apply exactly one event: {first_cycle}"
+            )
+        first = next(
+            receipt for receipt in first_cycle.receipts if receipt.event_id == event_id
+        )
         proof["first_receipt"] = {
             "status": first.status,
             "detail": first.detail,
@@ -316,14 +337,23 @@ async def main() -> None:
                 "Graphiti materialized the episode but extracted no mentioned entities"
             )
 
-        second = await projection.apply_event_async(accepted_event)
+        second_cycle = await projector.run_once_async()
+        proof["second_projector_cycle"] = {
+            "scanned": second_cycle.scanned,
+            "applied": second_cycle.applied,
+            "skipped": second_cycle.skipped,
+            "failed": second_cycle.failed,
+        }
+        second = next(
+            receipt for receipt in second_cycle.receipts if receipt.event_id == event_id
+        )
         proof["second_receipt"] = {
             "status": second.status,
             "detail": second.detail,
         }
-        if second.status != "skipped":
+        if second.status != "skipped" or second_cycle.skipped != 1:
             raise AssertionError(
-                f"replay should be skipped by projection ledger: {second}"
+                f"replay should be skipped by projection ledger: {second_cycle}"
             )
 
         after_retry = await observe_projection(
