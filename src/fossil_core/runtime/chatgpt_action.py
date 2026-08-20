@@ -24,7 +24,6 @@ from .node import FilesystemFossilNode
 _ACTION_PATHS = {
     "/actions/search": "fossil.search",
     "/actions/read": "fossil.read",
-    "/actions/lineage": "fossil.lineage",
 }
 _ACTION_ROUTE_ALLOWLIST = frozenset(
     {"/openapi.json", *_ACTION_PATHS, "/actions/capabilities"}
@@ -94,7 +93,9 @@ def chatgpt_action_openapi_schema(*, server_url: str | None = None) -> dict[str,
         "405": _json_response(_ref("ErrorEnvelope"), "HTTP method not allowed"),
         "413": _json_response(_ref("ErrorEnvelope"), "Request body too large"),
         "500": _json_response(_ref("ErrorEnvelope"), "Internal server error"),
-        "503": _json_response(_ref("ErrorEnvelope"), "Canonical store or HTTPS origin unavailable"),
+        "503": _json_response(
+            _ref("ErrorEnvelope"), "Canonical store or HTTPS origin unavailable"
+        ),
     }
 
     schemas: dict[str, Any] = {
@@ -143,13 +144,8 @@ def chatgpt_action_openapi_schema(*, server_url: str | None = None) -> dict[str,
         ),
         "ReadRequest": _object_schema(
             required=["event_id"],
-            properties={"event_id": _identifier_schema("Opaque durable event identifier")},
-        ),
-        "LineageRequest": _object_schema(
-            required=["conversation_id"],
             properties={
-                "conversation_id": _identifier_schema("Opaque conversation identifier"),
-                "node_id": _identifier_schema("Optional opaque lineage-node identifier"),
+                "event_id": _identifier_schema("Opaque durable event identifier")
             },
         ),
         "SearchResult": {
@@ -198,7 +194,7 @@ def chatgpt_action_openapi_schema(*, server_url: str | None = None) -> dict[str,
                     "type": "array",
                     "items": {"type": "string"},
                 },
-                "correlation_id": {"type": "string"},
+                "correlation_id": {"type": ["string", "null"]},
                 "idempotency_key": {"type": "string"},
                 "payload": {
                     "type": "object",
@@ -209,75 +205,6 @@ def chatgpt_action_openapi_schema(*, server_url: str | None = None) -> dict[str,
                     "type": "object",
                     "additionalProperties": True,
                     "description": "Canonical event provenance when present.",
-                },
-            },
-        },
-        "LineageNode": {
-            "type": "object",
-            "additionalProperties": True,
-            "required": ["node_id", "kind"],
-            "properties": {
-                "node_id": {"type": "string"},
-                "kind": {"type": "string"},
-                "label": {"type": "string"},
-                "text": {"type": "string"},
-                "evidence_status": {"type": "string"},
-                "position_state": {"type": "string"},
-                "source_message_refs": {
-                    "type": "array",
-                    "items": {"type": "string"},
-                },
-                "source_span_refs": {
-                    "type": "array",
-                    "items": {"type": "string"},
-                },
-            },
-        },
-        "Citation": {
-            "type": "object",
-            "additionalProperties": False,
-            "required": [
-                "span_id",
-                "artifact_id",
-                "evidence_status",
-                "byte_start",
-                "byte_end",
-                "text",
-            ],
-            "properties": {
-                "span_id": {"type": "string"},
-                "artifact_id": {"type": "string"},
-                "evidence_status": {"type": "string"},
-                "byte_start": {"type": "integer", "minimum": 0},
-                "byte_end": {"type": "integer", "minimum": 1},
-                "text": {"type": "string"},
-            },
-        },
-        "LineageResponse": {
-            "type": "object",
-            "additionalProperties": False,
-            "required": [
-                "conversation_id",
-                "pack_id",
-                "current_conclusions",
-                "historical_nodes",
-            ],
-            "properties": {
-                "conversation_id": {"type": "string"},
-                "pack_id": {"type": "string"},
-                "current_conclusions": {
-                    "type": "array",
-                    "items": _ref("LineageNode"),
-                },
-                "historical_nodes": {
-                    "type": "array",
-                    "items": _ref("LineageNode"),
-                },
-                "node": _ref("LineageNode"),
-                "citations": {"type": "array", "items": _ref("Citation")},
-                "opposing_positions": {
-                    "type": "array",
-                    "items": _ref("LineageNode"),
                 },
             },
         },
@@ -297,7 +224,7 @@ def chatgpt_action_openapi_schema(*, server_url: str | None = None) -> dict[str,
                 "action_capabilities": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "const": ["search", "read", "lineage"],
+                    "const": ["search", "read"],
                 },
                 "durable_writes_exposed": {"type": "boolean", "const": False},
                 "ingestion_exposed": {"type": "boolean", "const": False},
@@ -314,9 +241,12 @@ def chatgpt_action_openapi_schema(*, server_url: str | None = None) -> dict[str,
             "version": "1.0.0",
             "description": (
                 "Private read-only compatibility surface over canonical FOSSIL data. "
-                "Only search, durable-event read, lineage, and capability metadata are "
-                "Action operations. MCP, ingestion, proposal, validation, commit, graph "
-                "mutation, arbitrary filesystem access, and secret disclosure are prohibited."
+                "Only search, durable-event read, and capability metadata are Action "
+                "operations. Lineage remains a FOSSIL domain/MCP capability but is not "
+                "advertised by the standalone Action until a durable read-only lineage "
+                "provider is configured. MCP, ingestion, proposal, validation, commit, "
+                "graph mutation, arbitrary filesystem access, and secret disclosure are "
+                "prohibited."
             ),
         },
         "components": {
@@ -368,24 +298,6 @@ def chatgpt_action_openapi_schema(*, server_url: str | None = None) -> dict[str,
                     },
                 }
             },
-            "/actions/lineage": {
-                "post": {
-                    "operationId": "fossilLineage",
-                    "summary": "Read conversation intellectual lineage",
-                    "requestBody": {
-                        "required": True,
-                        "content": {
-                            "application/json": {"schema": _ref("LineageRequest")}
-                        },
-                    },
-                    "responses": {
-                        "200": _json_response(
-                            _ref("LineageResponse"), "Authorized lineage view"
-                        ),
-                        **common_responses,
-                    },
-                }
-            },
             "/actions/capabilities": {
                 "get": {
                     "operationId": "fossilActionCapabilities",
@@ -407,7 +319,7 @@ def chatgpt_action_openapi_schema(*, server_url: str | None = None) -> dict[str,
     return schema
 
 
-def _safe_identifier(value: Any, field: str) -> str | None:
+def _safe_identifier(value: Any) -> str | None:
     if not isinstance(value, str) or not _OPAQUE_ID.fullmatch(value):
         return None
     return value
@@ -432,7 +344,9 @@ class ChatGPTActionMiddleware(BaseHTTPMiddleware):
     ) -> None:
         super().__init__(app)
         if not bearer_token or bearer_token != bearer_token.strip():
-            raise ValueError("ChatGPT Action bearer token must be a non-empty trimmed string")
+            raise ValueError(
+                "ChatGPT Action bearer token must be a non-empty trimmed string"
+            )
         if max_request_body_size < 1:
             raise ValueError("ChatGPT Action request body limit must be positive")
         if public_base_url is not None and not public_base_url.startswith("https://"):
@@ -471,8 +385,12 @@ class ChatGPTActionMiddleware(BaseHTTPMiddleware):
         if not any(peer in network for network in self.trusted_proxy_networks):
             return None
 
-        proto = request.headers.get("x-forwarded-proto", "")
-        host = request.headers.get("x-forwarded-host", "")
+        proto_values = request.headers.getlist("x-forwarded-proto")
+        host_values = request.headers.getlist("x-forwarded-host")
+        if len(proto_values) != 1 or len(host_values) != 1:
+            return None
+        proto = proto_values[0]
+        host = host_values[0]
         if (
             proto.lower() != "https"
             or not host
@@ -503,8 +421,9 @@ class ChatGPTActionMiddleware(BaseHTTPMiddleware):
     def _schema_origin(self, request: Request) -> str | None:
         if self.public_base_url:
             return self.public_base_url
-        if request.url.scheme == "https":
-            return str(request.base_url).rstrip("/")
+        # A caller-controlled direct HTTPS Host is not an authority signal. Without
+        # a fixed public origin, only forwarded HTTPS metadata from an explicitly
+        # trusted proxy peer may define the server URL advertised to a Custom GPT.
         return self._trusted_proxy_origin(request)
 
     async def _read_json(self, request: Request) -> Mapping[str, Any] | JSONResponse:
@@ -523,15 +442,20 @@ class ChatGPTActionMiddleware(BaseHTTPMiddleware):
                     413,
                 )
 
-        raw = await request.body()
-        if len(raw) > self.max_request_body_size:
-            return _error(
-                "request_too_large",
-                f"request exceeds {self.max_request_body_size} byte Action limit",
-                413,
-            )
+        raw = bytearray()
+        total = 0
+        async for chunk in request.stream():
+            total += len(chunk)
+            if total > self.max_request_body_size:
+                return _error(
+                    "request_too_large",
+                    f"request exceeds {self.max_request_body_size} byte Action limit",
+                    413,
+                )
+            raw.extend(chunk)
+
         try:
-            payload = json.loads(raw.decode("utf-8"))
+            payload = json.loads(bytes(raw).decode("utf-8"))
         except (UnicodeDecodeError, json.JSONDecodeError):
             return _error("invalid_json", "request body must be valid UTF-8 JSON", 400)
         if not isinstance(payload, Mapping):
@@ -545,7 +469,9 @@ class ChatGPTActionMiddleware(BaseHTTPMiddleware):
 
         if path == "/openapi.json":
             if request.method != "GET":
-                return _error("method_not_allowed", "OpenAPI discovery requires GET", 405)
+                return _error(
+                    "method_not_allowed", "OpenAPI discovery requires GET", 405
+                )
             server_url = self._schema_origin(request)
             if server_url is None:
                 return _error(
@@ -562,12 +488,14 @@ class ChatGPTActionMiddleware(BaseHTTPMiddleware):
 
         if path == "/actions/capabilities":
             if request.method != "GET":
-                return _error("method_not_allowed", "capabilities requires GET", 405)
+                return _error(
+                    "method_not_allowed", "capabilities requires GET", 405
+                )
             service = getattr(self.adapter, "service", None)
             return JSONResponse(
                 {
                     "service_version": getattr(service, "service_version", "unknown"),
-                    "action_capabilities": ["search", "read", "lineage"],
+                    "action_capabilities": ["search", "read"],
                     "durable_writes_exposed": False,
                     "ingestion_exposed": False,
                     "mcp_exposed": False,
@@ -577,7 +505,9 @@ class ChatGPTActionMiddleware(BaseHTTPMiddleware):
 
         tool_name = _ACTION_PATHS[path]
         if request.method != "POST":
-            return _error("method_not_allowed", "Action operation requires POST", 405)
+            return _error(
+                "method_not_allowed", "Action operation requires POST", 405
+            )
 
         parsed = await self._read_json(request)
         if isinstance(parsed, JSONResponse):
@@ -592,7 +522,9 @@ class ChatGPTActionMiddleware(BaseHTTPMiddleware):
                 or not query.strip()
                 or len(query) > _MAX_QUERY_CHARS
             ):
-                return _error("invalid_request", "query must be a bounded non-empty string", 400)
+                return _error(
+                    "invalid_request", "query must be a bounded non-empty string", 400
+                )
             arguments: dict[str, Any] = {"query": query}
             if "limit" in parsed:
                 limit = parsed["limit"]
@@ -608,31 +540,15 @@ class ChatGPTActionMiddleware(BaseHTTPMiddleware):
                         400,
                     )
                 arguments["limit"] = limit
-        elif tool_name == "fossil.read":
+        else:
             if not _has_only_keys(parsed, {"event_id"}):
                 return _error("invalid_request", "unexpected request field", 400)
-            event_id = _safe_identifier(parsed.get("event_id"), "event_id")
+            event_id = _safe_identifier(parsed.get("event_id"))
             if event_id is None:
-                return _error("invalid_request", "event_id must be an opaque identifier", 400)
-            arguments = {"event_id": event_id}
-        else:
-            if not _has_only_keys(parsed, {"conversation_id", "node_id"}):
-                return _error("invalid_request", "unexpected request field", 400)
-            conversation_id = _safe_identifier(parsed.get("conversation_id"), "conversation_id")
-            if conversation_id is None:
                 return _error(
-                    "invalid_request",
-                    "conversation_id must be an opaque identifier",
-                    400,
+                    "invalid_request", "event_id must be an opaque identifier", 400
                 )
-            arguments = {"conversation_id": conversation_id}
-            if parsed.get("node_id") is not None:
-                node_id = _safe_identifier(parsed["node_id"], "node_id")
-                if node_id is None:
-                    return _error(
-                        "invalid_request", "node_id must be an opaque identifier", 400
-                    )
-                arguments["node_id"] = node_id
+            arguments = {"event_id": event_id}
 
         try:
             result = self.adapter.invoke(tool_name, arguments)
