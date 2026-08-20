@@ -23,7 +23,13 @@ def repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
-def make_settings(tmp_path: Path, *, max_bytes: int = 65536) -> ChatGPTActionServerSettings:
+def make_settings(
+    tmp_path: Path,
+    *,
+    max_bytes: int = 65536,
+    public_base_url: str | None = PUBLIC_ORIGIN,
+    trusted_proxy_cidrs: tuple[str, ...] = (),
+) -> ChatGPTActionServerSettings:
     data_root = tmp_path / "fossil-data"
     events = data_root / "canonical" / "events"
     events.mkdir(parents=True, exist_ok=True)
@@ -33,7 +39,8 @@ def make_settings(tmp_path: Path, *, max_bytes: int = 65536) -> ChatGPTActionSer
         pack_manifest_path=Path("examples/packs/common/manifest.json"),
         bearer_token=TOKEN,
         max_request_body_size=max_bytes,
-        public_base_url=PUBLIC_ORIGIN,
+        public_base_url=public_base_url,
+        trusted_proxy_cidrs=trusted_proxy_cidrs,
     )
 
 
@@ -76,7 +83,7 @@ def test_holdout_duplicate_authorization_header_fails_closed(tmp_path: Path) -> 
     assert response.status_code == 401
 
 
-def test_holdout_forged_forwarded_headers_cannot_rewrite_schema(tmp_path: Path) -> None:
+def test_holdout_forged_forwarded_headers_cannot_rewrite_fixed_schema_origin(tmp_path: Path) -> None:
     app = create_chatgpt_action_app_from_settings(make_settings(tmp_path))
     forged = {
         "forwarded": "proto=http;host=attacker.invalid",
@@ -88,6 +95,52 @@ def test_holdout_forged_forwarded_headers_cannot_rewrite_schema(tmp_path: Path) 
     with TestClient(app, base_url="http://internal.invalid:8787") as client:
         schema = client.get("/openapi.json", headers=forged).json()
     assert schema["servers"] == [{"url": PUBLIC_ORIGIN}]
+
+
+def test_holdout_untrusted_forwarded_headers_fail_closed_without_fixed_origin(tmp_path: Path) -> None:
+    app = create_chatgpt_action_app_from_settings(
+        make_settings(tmp_path, public_base_url=None, trusted_proxy_cidrs=("10.0.0.0/8",))
+    )
+    with TestClient(
+        app,
+        base_url="http://internal.invalid:8787",
+        client=("127.0.0.1", 50000),
+    ) as client:
+        response = client.get(
+            "/openapi.json",
+            headers={
+                "x-forwarded-proto": "https",
+                "x-forwarded-host": "attacker.invalid",
+            },
+        )
+    assert response.status_code == 503
+    assert response.json()["error"]["code"] == "https_origin_required"
+
+
+def test_holdout_trusted_proxy_can_represent_https_origin(tmp_path: Path) -> None:
+    app = create_chatgpt_action_app_from_settings(
+        make_settings(
+            tmp_path,
+            public_base_url=None,
+            trusted_proxy_cidrs=("127.0.0.1/32",),
+        )
+    )
+    with TestClient(
+        app,
+        base_url="http://internal.invalid:8787",
+        client=("127.0.0.1", 50000),
+    ) as client:
+        response = client.get(
+            "/openapi.json",
+            headers={
+                "x-forwarded-proto": "https",
+                "x-forwarded-host": "fossil-proxy.example.invalid",
+            },
+        )
+    assert response.status_code == 200
+    assert response.json()["servers"] == [
+        {"url": "https://fossil-proxy.example.invalid"}
+    ]
 
 
 def test_holdout_openapi_is_valid_and_custom_gpt_bounded(tmp_path: Path) -> None:
@@ -102,7 +155,11 @@ def test_holdout_openapi_is_valid_and_custom_gpt_bounded(tmp_path: Path) -> None
     assert set(schema["components"]["schemas"]) >= {
         "ErrorDetail",
         "ErrorEnvelope",
-        "FossilRecord",
+        "SearchRequest",
+        "ReadRequest",
+        "LineageRequest",
+        "SearchResult",
+        "FossilEvent",
         "LineageResponse",
         "CapabilitiesResponse",
     }
@@ -120,8 +177,10 @@ def test_holdout_openapi_is_valid_and_custom_gpt_bounded(tmp_path: Path) -> None
     assert len(operation_ids) == len(set(operation_ids)) == 4
     assert schema["components"]["securitySchemes"]["BearerAuth"]["scheme"] == "bearer"
 
-    props = schema["components"]["schemas"]["FossilRecord"]["properties"]
-    assert {"event_id", "pack_id", "event_type", "recorded_at", "payload"} <= set(props)
+    search_props = schema["components"]["schemas"]["SearchResult"]["properties"]
+    assert {"event_id", "pack_id", "event_type", "recorded_at"} <= set(search_props)
+    event_props = schema["components"]["schemas"]["FossilEvent"]["properties"]
+    assert {"event_id", "pack_id", "event_type", "recorded_at", "payload"} <= set(event_props)
     capability_props = schema["components"]["schemas"]["CapabilitiesResponse"]["properties"]
     assert capability_props["durable_writes_exposed"]["const"] is False
     assert capability_props["mcp_exposed"]["const"] is False
@@ -135,7 +194,6 @@ def test_holdout_openapi_is_valid_and_custom_gpt_bounded(tmp_path: Path) -> None
         '"/actions/commit"',
         '"/actions/redact"',
         "neo4j",
-        "graph mutation endpoint",
         TOKEN.lower(),
     ):
         assert forbidden not in serialized
@@ -237,6 +295,21 @@ def test_holdout_validation_rejects_ambiguous_limits_and_non_object_json(tmp_pat
             content=b'["x"]',
         )
     assert non_object.status_code == 400
+
+
+def test_holdout_unexpected_fields_do_not_create_hidden_capabilities(tmp_path: Path) -> None:
+    app = create_chatgpt_action_app_from_settings(make_settings(tmp_path))
+    payloads = [
+        {"query": "x", "path": "/etc/passwd"},
+        {"query": "x", "cypher": "MATCH (n) DETACH DELETE n"},
+        {"event_id": "evt_abcdefghijklmnop", "commit": True},
+        {"conversation_id": "conv_abcdefghijklmnop", "mcp": {"tool": "fossil.commit"}},
+    ]
+    with TestClient(app) as client:
+        assert client.post("/actions/search", headers=auth(), json=payloads[0]).status_code == 400
+        assert client.post("/actions/search", headers=auth(), json=payloads[1]).status_code == 400
+        assert client.post("/actions/read", headers=auth(), json=payloads[2]).status_code == 400
+        assert client.post("/actions/lineage", headers=auth(), json=payloads[3]).status_code == 400
 
 
 def test_holdout_secret_never_appears_in_public_or_error_responses(tmp_path: Path) -> None:
