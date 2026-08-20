@@ -32,7 +32,7 @@ MUTANTS = (
     Mutant(
         "widen_route_allowlist",
         ACTION,
-        (("if path not in {*_ACTION_PATHS, \"/actions/capabilities\"}:", "if False:"),),
+        (("if path not in _ACTION_ROUTE_ALLOWLIST:", "if False:"),),
         "Unknown/prohibited paths must remain 404 and never enter Action dispatch.",
     ),
     Mutant(
@@ -45,7 +45,7 @@ MUTANTS = (
         "remove_body_size_guards",
         ACTION,
         (
-            ("if int(content_length) > self.max_request_body_size:", "if False:"),
+            ("if declared > self.max_request_body_size:", "if False:"),
             ("if len(raw) > self.max_request_body_size:", "if False:"),
         ),
         "Oversized bodies must be rejected before adapter invocation.",
@@ -53,32 +53,38 @@ MUTANTS = (
     Mutant(
         "weaken_search_limit_validation",
         ACTION,
-        (("if isinstance(limit, bool) or not isinstance(limit, int) or limit < 1 or limit > 100:", "if False:"),),
+        (("or limit > 100", "or limit > 1000"),),
         "Ambiguous/out-of-range search limits must fail closed.",
     ),
     Mutant(
         "trust_request_origin_for_openapi",
         ACTION,
-        (("server_url = self.public_base_url or str(request.base_url)", "server_url = str(request.base_url)"),),
-        "Forged proxy/host headers must not rewrite the configured public HTTPS origin.",
+        (("server_url = self._schema_origin(request)", "server_url = str(request.base_url).rstrip(\"/\")"),),
+        "Configured/trusted HTTPS origin must not become caller-controlled.",
+    ),
+    Mutant(
+        "trust_all_proxy_sources",
+        ACTION,
+        (("if not self.trusted_proxy_networks or request.client is None:", "if request.client is None:"),),
+        "Forwarded HTTPS headers must be accepted only from explicitly trusted proxy networks.",
     ),
     Mutant(
         "remove_components_schemas",
         ACTION,
-        (("\"schemas\": {", "\"x-disabled-schemas\": {"),),
+        (("\"schemas\": schemas,", "\"x-disabled-schemas\": schemas,"),),
         "Custom GPT import requires a valid components.schemas object.",
     ),
     Mutant(
-        "erase_response_properties",
+        "erase_search_response_property",
         ACTION,
-        (("\"properties\": record_properties,", "\"properties\": {},"),),
-        "Response objects must retain explicit properties.",
+        (("\"event_id\": {\"type\": \"string\"},", "\"event_id_removed\": {\"type\": \"string\"},"),),
+        "Response objects must retain explicit event identifiers/properties.",
     ),
     Mutant(
         "enable_proxy_headers",
         SERVER,
         (("proxy_headers=False,", "proxy_headers=True,"),),
-        "The application entrypoint must not trust caller-controlled forwarded headers.",
+        "Uvicorn must not globally trust caller-controlled forwarded headers.",
     ),
     Mutant(
         "add_write_method_to_read_store",
@@ -125,10 +131,17 @@ def apply_mutant(mutant: Mutant) -> str:
 def main() -> int:
     survivors: list[str] = []
     killed: list[str] = []
+    harness_errors: list[str] = []
     env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}
 
     for mutant in MUTANTS:
-        original = apply_mutant(mutant)
+        try:
+            original = apply_mutant(mutant)
+        except RuntimeError as exc:
+            harness_errors.append(mutant.name)
+            print(f"HARNESS_ERROR: {exc}")
+            continue
+
         try:
             completed = subprocess.run(
                 TEST_COMMAND,
@@ -145,16 +158,22 @@ def main() -> int:
         if completed.returncode == 0:
             survivors.append(mutant.name)
             status = "SURVIVED"
+            print(completed.stdout)
         else:
             killed.append(mutant.name)
             status = "KILLED"
         print(f"{status}: {mutant.name} — {mutant.rationale}")
-        if completed.returncode == 0:
-            print(completed.stdout)
 
-    print(f"mutation summary: killed={len(killed)} survived={len(survivors)} total={len(MUTANTS)}")
+    print(
+        "mutation summary: "
+        f"killed={len(killed)} survived={len(survivors)} "
+        f"harness_errors={len(harness_errors)} total={len(MUTANTS)}"
+    )
+    if harness_errors:
+        print("harness errors: " + ", ".join(harness_errors))
     if survivors:
         print("surviving mutants: " + ", ".join(survivors))
+    if harness_errors or survivors:
         return 1
     print("surviving mutants: none")
     return 0
