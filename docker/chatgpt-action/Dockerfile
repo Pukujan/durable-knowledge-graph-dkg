@@ -19,12 +19,15 @@ ENV PATH=/opt/fossil-venv/bin:${PATH} \
     FOSSIL_DATA_ROOT=/var/lib/fossil \
     FOSSIL_PACK_MANIFEST=examples/packs/common/manifest.json \
     FOSSIL_ACTION_HOST=0.0.0.0 \
-    FOSSIL_ACTION_PORT=8787
+    FOSSIL_ACTION_PORT=8787 \
+    FOSSIL_ACTION_MAX_REQUEST_BYTES=65536
 
 EXPOSE 8787
 USER fossil
 
+# Liveness checks only the private TCP listener. It does not require a bearer
+# secret and does not weaken the public route allowlist with a health endpoint.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8787/openapi.json', timeout=3).read()"]
+    CMD ["python", "-c", "import socket; s=socket.create_connection(('127.0.0.1',8787),3); s.close()"]
 
 ENTRYPOINT ["fossil-chatgpt-action"]
