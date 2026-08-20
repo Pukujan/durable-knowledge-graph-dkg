@@ -1,0 +1,100 @@
+{
+  "research_run_id": "rr_20260811_human_agent_engineering_operating_model",
+  "schema_version": "1.0",
+  "started_at": "2026-08-11T19:00:00Z",
+  "ended_at": null,
+  "question": "How should the owner and AI agents work and study so software-engineering foundations, debugging, observability, ownership, scope, and distributed-system risks are surfaced early and preserved across projects without duplicating mature tooling or allowing stale knowledge to become authority?",
+  "scope": "Human Study OS, agent preflight, debugging, observability, project tracking, cross-repo ownership, V4 methodology/executor boundary, dependency/release hygiene, and research preservation.",
+  "initiated_by_refs": [
+    "conversation:2026-08-11-human-agent-operating-model",
+    "github:Pukujan/fossil-core#73",
+    "github:Pukujan/fossil-core#74",
+    "github:Pukujan/fossil-core#84"
+  ],
+  "actors": [
+    {"actor_id": "owner", "actor_type": "human"},
+    {"actor_id": "chatgpt-gpt-5.6-sol", "actor_type": "agent", "provider": "OpenAI", "model": "GPT-5.6 Sol"}
+  ],
+  "search_queries": [
+    {"query": "OpenAI Codex harness engineering AGENTS.md progressive disclosure", "purpose": "agent knowledge/harness patterns"},
+    {"query": "GitHub Spec Kit constitution specification plan checklist workflow", "purpose": "spec-driven development patterns"},
+    {"query": "Google SRE production readiness review service specific checklist", "purpose": "risk-scaled engineering readiness"},
+    {"query": "Backstage software templates catalog golden paths", "purpose": "repeatable foundations and ownership metadata"},
+    {"query": "NIST SSDF OWASP ASVS", "purpose": "secure development lifecycle checks"},
+    {"query": "AWS Azure Well-Architected", "purpose": "architecture review dimensions and tradeoffs"},
+    {"query": "OpenCode server persistent sessions async prompt OpenAI compatible provider", "purpose": "executor candidate capabilities"},
+    {"query": "Aider scripting architect mode OpenAI compatible", "purpose": "executor candidate capabilities"}
+  ],
+  "source_refs": [
+    "https://openai.com/index/harness-engineering/",
+    "https://github.com/github/spec-kit",
+    "https://github.com/github/spec-kit/blob/main/docs/reference/workflows.md",
+    "https://sre.google/sre-book/evolving-sre-engagement-model/",
+    "https://sre.google/sre-book/launch-checklist/",
+    "https://sre.google/resources/practices-and-processes/production-launch-planning/",
+    "https://backstage.io/docs/features/software-templates/",
+    "https://backstage.io/docs/features/software-catalog/",
+    "https://backstage.io/docs/overview/technical-overview/",
+    "https://csrc.nist.gov/pubs/sp/800/218/final",
+    "https://owasp.org/www-project-application-security-verification-standard/",
+    "https://docs.aws.amazon.com/wellarchitected/latest/userguide/waf.html",
+    "https://learn.microsoft.com/en-us/azure/well-architected/",
+    "https://json-schema.org/understanding-json-schema/reference/conditionals",
+    "https://www.openpolicyagent.org/docs/integration",
+    "https://dev.opencode.ai/docs/server/",
+    "https://dev.opencode.ai/docs/providers",
+    "https://aider.chat/docs/",
+    "https://aider.chat/docs/scripting.html",
+    "https://aider.chat/docs/usage/modes.html",
+    "https://aider.chat/docs/llms/openai-compat.html",
+    "https://www.nature.com/articles/s44159-022-00089-1"
+  ],
+  "claim_refs": [
+    "claim:small-agent-map-progressive-disclosure",
+    "claim:risk-triggered-preflight",
+    "claim:semantic-success-firewall",
+    "claim:project-execution-observability-knowledge-separation",
+    "claim:thin-control-room-deep-links",
+    "claim:human-study-os-task-first",
+    "claim:scope-depth-not-horizontal-breadth",
+    "claim:fossil-research-provenance-not-self-approved-policy",
+    "claim:v4-executor-undecided"
+  ],
+  "alternative_refs": [
+    "alternative:giant-universal-checklist",
+    "alternative:custom-all-in-one-control-room",
+    "alternative:v4-reimplements-full-sdlc",
+    "alternative:spec-kit-plus-narrow-v4",
+    "alternative:opencode-executor",
+    "alternative:aider-executor",
+    "alternative:direct-executor"
+  ],
+  "critique_refs": [
+    "critique:prompt-only-enforcement-is-nondeterministic",
+    "critique:giant-checklists-cause-scope-theater",
+    "critique:historical-research-must-not-become-current-authority",
+    "critique:executor-failure-not-proven-by-broken-gateway"
+  ],
+  "unresolved_question_refs": [
+    "open:final-v4-methodology-boundary",
+    "open:executor-choice",
+    "open:task-granularity",
+    "open:spec-kit-integration-depth",
+    "open:study-os-framework",
+    "open:observability-backend-composition"
+  ],
+  "decision_refs": [],
+  "implementation_refs": [
+    "github:Pukujan/fossil-core#84",
+    "github:Pukujan/fossil-core#74",
+    "github:Pukujan/fossil-core#73"
+  ],
+  "decision_state": "open",
+  "trace_refs": [
+    "docs/research/2026-08-11-human-agent-engineering-operating-model.md",
+    "docs/research/2026-08-11-agent-engineering-methodology-and-executor-options.md"
+  ],
+  "ontology_version": "research-trace-v1",
+  "research_policy_version": "RESEARCH_TRACE_CONTRACT-2026-08-09",
+  "notes": "Umbrella research trace. It intentionally preserves human study/checklist design, agent methodology, observability/debugging/project-tracking boundaries, and distributed ownership together while keeping individual claims status-aware. No executor or final V4 boundary is selected."
+}
