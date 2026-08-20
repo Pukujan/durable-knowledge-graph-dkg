@@ -1,0 +1,31 @@
+name: ChatGPT Action mutation assurance
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/chatgpt-action-mutation.yml"
+      - "scripts/run_chatgpt_action_mutations.py"
+      - "src/fossil_core/runtime/chatgpt_action.py"
+      - "src/fossil_core/runtime/chatgpt_action_server.py"
+      - "docker/chatgpt-action/Dockerfile"
+      - ".github/workflows/chatgpt-action-container.yml"
+      - "tests/holdout/**"
+      - "tests/test_chatgpt_action_architecture.py"
+      - "pyproject.toml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mutation-holdout:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install verification dependencies
+        run: pip install -e '.[test,node]'
+      - name: Run targeted Action mutants against holdout suite
+        run: python scripts/run_chatgpt_action_mutations.py
