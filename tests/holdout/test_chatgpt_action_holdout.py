@@ -15,10 +15,10 @@ from fossil_core.runtime.chatgpt_action_server import (
 
 TOKEN = "holdout-token-0123456789abcdef-0123456789"
 PUBLIC_ORIGIN = "https://fossil-action.holdout.invalid"
+COMMON = "pack_269099f7b2ba43b7a99b9427d64092de"
 ACTION_PATHS = {
     "/actions/search",
     "/actions/read",
-    "/actions/lineage",
     "/actions/capabilities",
 }
 
@@ -49,6 +49,58 @@ def make_settings(
 
 def auth() -> dict[str, str]:
     return {"authorization": f"Bearer {TOKEN}"}
+
+
+def put_event(data_root: Path, event_id: str, marker: str) -> None:
+    suffix = event_id.removeprefix("evt_")
+    path = data_root / "canonical" / "events" / suffix[:2] / f"{event_id}.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(
+            {
+                "schema_version": "dkg.event.v1",
+                "event_id": event_id,
+                "event_type": "claim.proposed",
+                "occurred_at": "2026-08-20T12:00:00Z",
+                "recorded_at": "2026-08-20T12:00:00Z",
+                "pack_id": COMMON,
+                "actor": {"actor_type": "human", "actor_id": "holdout"},
+                "subject_refs": ["clm_holdout"],
+                "caused_by_event_ids": [],
+                "correlation_id": None,
+                "idempotency_key": f"holdout-{event_id}",
+                "evidence_refs": [],
+                "source_snapshot_refs": [],
+                "payload": {"claim_text": marker},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
+def put_redaction(data_root: Path, event_id: str, marker: str) -> None:
+    suffix = event_id.removeprefix("evt_")
+    path = (
+        data_root
+        / "canonical"
+        / "events"
+        / "_redactions"
+        / suffix[:2]
+        / f"{event_id}.json"
+    )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(
+            {
+                "event_id": event_id,
+                "pack_id": COMMON,
+                "reason": marker,
+                "authority": "holdout",
+                "redacted_at": "2026-08-20T12:30:00Z",
+            }
+        ),
+        encoding="utf-8",
+    )
 
 
 @pytest.mark.parametrize(
@@ -106,23 +158,42 @@ def test_holdout_scheme_case_is_allowed_but_token_case_is_exact(tmp_path: Path) 
     assert denied.status_code == 401
 
 
-def test_holdout_fixed_origin_resists_forged_forwarded_headers(tmp_path: Path) -> None:
+def test_holdout_fixed_origin_resists_forged_forwarded_and_host_headers(tmp_path: Path) -> None:
     app = create_chatgpt_action_app_from_settings(make_settings(tmp_path))
     forged = {
         "forwarded": "proto=http;host=attacker.invalid",
         "x-forwarded-proto": "https",
         "x-forwarded-host": "attacker.invalid",
         "x-forwarded-port": "443",
-        "host": "internal.invalid:8787",
+        "host": "attacker.invalid",
     }
     with TestClient(
         app,
-        base_url="http://internal.invalid:8787",
+        base_url="https://attacker.invalid",
         client=("203.0.113.80", 55000),
     ) as client:
         response = client.get("/openapi.json", headers=forged)
     assert response.status_code == 200
     assert response.json()["servers"] == [{"url": PUBLIC_ORIGIN}]
+
+
+def test_holdout_direct_https_host_fails_closed_without_origin_authority(tmp_path: Path) -> None:
+    app = create_chatgpt_action_app_from_settings(
+        make_settings(tmp_path, public_base_url=None)
+    )
+    with TestClient(
+        app,
+        base_url="https://attacker.invalid",
+        client=("203.0.113.80", 55000),
+    ) as client:
+        response = client.get(
+            "/openapi.json",
+            headers={"host": "forged-public-host.invalid"},
+        )
+    assert response.status_code == 503
+    assert response.json()["error"]["code"] == "https_origin_required"
+    assert "forged-public-host.invalid" not in response.text
+    assert "attacker.invalid" not in response.text
 
 
 def test_holdout_untrusted_forwarded_headers_fail_closed_without_fixed_origin(
@@ -198,7 +269,7 @@ def test_holdout_trusted_proxy_requires_unambiguous_https_headers(tmp_path: Path
             assert '"url":"http://' not in response.text.replace(" ", "")
 
 
-def test_holdout_openapi_is_valid_and_custom_gpt_bounded(tmp_path: Path) -> None:
+def test_holdout_openapi_is_valid_custom_gpt_bounded_and_truthful(tmp_path: Path) -> None:
     app = create_chatgpt_action_app_from_settings(make_settings(tmp_path))
     with TestClient(app, base_url="http://internal:8787") as client:
         response = client.get("/openapi.json")
@@ -215,20 +286,16 @@ def test_holdout_openapi_is_valid_and_custom_gpt_bounded(tmp_path: Path) -> None
         "ErrorEnvelope",
         "SearchRequest",
         "ReadRequest",
-        "LineageRequest",
         "SearchResult",
         "FossilEvent",
-        "LineageNode",
-        "Citation",
-        "LineageResponse",
         "CapabilitiesResponse",
     }
+    assert not set(schema["components"]["schemas"]).intersection(
+        {"LineageRequest", "LineageResponse", "LineageNode", "Citation"}
+    )
     for name in (
         "SearchResult",
         "FossilEvent",
-        "LineageNode",
-        "Citation",
-        "LineageResponse",
         "CapabilitiesResponse",
     ):
         assert schema["components"]["schemas"][name].get("properties")
@@ -238,11 +305,11 @@ def test_holdout_openapi_is_valid_and_custom_gpt_bounded(tmp_path: Path) -> None
         for path in schema["paths"].values()
         for operation in path.values()
     ]
-    assert len(operation_ids) == len(set(operation_ids)) == 4
+    assert len(operation_ids) == len(set(operation_ids)) == 3
     assert schema["components"]["securitySchemes"]["BearerAuth"]["scheme"] == "bearer"
     assert schema["components"]["schemas"]["CapabilitiesResponse"]["properties"][
-        "durable_writes_exposed"
-    ]["const"] is False
+        "action_capabilities"
+    ]["const"] == ["search", "read"]
 
     serialized = json.dumps(schema).lower()
     assert '"url": "http://' not in serialized
@@ -250,6 +317,7 @@ def test_holdout_openapi_is_valid_and_custom_gpt_bounded(tmp_path: Path) -> None
     for forbidden in (
         '"/mcp"',
         '"/ingest"',
+        '"/actions/lineage"',
         '"/actions/propose"',
         '"/actions/validate"',
         '"/actions/commit"',
@@ -259,8 +327,15 @@ def test_holdout_openapi_is_valid_and_custom_gpt_bounded(tmp_path: Path) -> None
         assert forbidden not in serialized
 
 
-def test_holdout_oversized_and_malformed_payloads_fail_before_service(tmp_path: Path) -> None:
+def test_holdout_oversized_malformed_and_streamed_payloads_fail_closed(tmp_path: Path) -> None:
     app = create_chatgpt_action_app_from_settings(make_settings(tmp_path, max_bytes=64))
+
+    def large_chunks():
+        yield b'{"query":"'
+        yield b"x" * 40
+        yield b"y" * 40
+        yield b'"}'
+
     with TestClient(app, base_url="http://internal:8787") as client:
         actual = client.post(
             "/actions/search",
@@ -276,6 +351,24 @@ def test_holdout_oversized_and_malformed_payloads_fail_before_service(tmp_path: 
             },
             content=b'{"query":"x"}',
         )
+        chunked = client.post(
+            "/actions/search",
+            headers={
+                **auth(),
+                "content-type": "application/json",
+                "transfer-encoding": "chunked",
+            },
+            content=large_chunks(),
+        )
+        understated = client.post(
+            "/actions/search",
+            headers={
+                **auth(),
+                "content-type": "application/json",
+                "content-length": "10",
+            },
+            content=large_chunks(),
+        )
         malformed = client.post(
             "/actions/search", headers=auth(), content=b"{not-json"
         )
@@ -284,36 +377,18 @@ def test_holdout_oversized_and_malformed_payloads_fail_before_service(tmp_path: 
         )
     assert actual.status_code == 413
     assert declared.status_code == 413
+    assert chunked.status_code == 413
+    assert understated.status_code == 413
     assert malformed.status_code == 400
     assert non_object.status_code == 400
 
 
-def test_holdout_search_limit_type_and_boundary_are_strict(tmp_path: Path) -> None:
-    app = create_chatgpt_action_app_from_settings(make_settings(tmp_path))
-    with TestClient(app, base_url="http://internal:8787") as client:
-        for invalid_limit in (True, False, "10", 0, -1, 101, 1000, 1.5):
-            response = client.post(
-                "/actions/search",
-                headers=auth(),
-                json={"query": "x", "limit": invalid_limit},
-            )
-            assert response.status_code == 400, repr(invalid_limit)
-
-        for valid_limit in (1, 100):
-            response = client.post(
-                "/actions/search",
-                headers=auth(),
-                json={"query": "x", "limit": valid_limit},
-            )
-            assert response.status_code == 200, valid_limit
-            assert response.json() == []
-
-
-def test_holdout_unknown_and_mutation_like_paths_are_not_routable(tmp_path: Path) -> None:
+def test_holdout_unknown_lineage_and_mutation_like_paths_are_not_routable(tmp_path: Path) -> None:
     app = create_chatgpt_action_app_from_settings(make_settings(tmp_path))
     prohibited = [
         "/mcp",
         "/ingest",
+        "/actions/lineage",
         "/actions/propose",
         "/actions/validate",
         "/actions/commit",
@@ -337,11 +412,10 @@ def test_holdout_unsupported_methods_return_405(tmp_path: Path) -> None:
         assert client.post("/openapi.json").status_code == 405
         assert client.get("/actions/search", headers=auth()).status_code == 405
         assert client.get("/actions/read", headers=auth()).status_code == 405
-        assert client.get("/actions/lineage", headers=auth()).status_code == 405
         assert client.post("/actions/capabilities", headers=auth()).status_code == 405
 
 
-def test_holdout_path_and_capability_smuggling_are_rejected(tmp_path: Path) -> None:
+def test_holdout_path_capability_and_search_limit_smuggling_are_rejected(tmp_path: Path) -> None:
     app = create_chatgpt_action_app_from_settings(make_settings(tmp_path))
     with TestClient(app, base_url="http://internal:8787") as client:
         for event_id in (
@@ -366,11 +440,53 @@ def test_holdout_path_and_capability_smuggling_are_rejected(tmp_path: Path) -> N
             headers=auth(),
             json={"event_id": "evt_abcdefghijklmnop", "commit": True},
         ).status_code == 400
+
         assert client.post(
-            "/actions/lineage",
-            headers=auth(),
-            json={"conversation_id": "conv_abcdefghijklmnop", "mcp": True},
+            "/actions/search", headers=auth(), json={"query": "x", "limit": 100}
+        ).status_code == 200
+        assert client.post(
+            "/actions/search", headers=auth(), json={"query": "x", "limit": 101}
         ).status_code == 400
+        assert client.post(
+            "/actions/search", headers=auth(), json={"query": "x", "limit": True}
+        ).status_code == 400
+
+
+def test_holdout_redaction_tombstone_and_redacted_bytes_never_search_or_read(tmp_path: Path) -> None:
+    configured = make_settings(tmp_path)
+    redacted_id = "evt_cccccccccccccccc"
+    visible_id = "evt_dddddddddddddddd"
+    put_event(configured.data_root, redacted_id, "private-redacted-payload-marker")
+    put_event(configured.data_root, visible_id, "public-visible-marker")
+    put_redaction(configured.data_root, redacted_id, "tombstone-redaction-marker")
+
+    app = create_chatgpt_action_app_from_settings(configured)
+    with TestClient(app, base_url="http://internal:8787") as client:
+        by_payload = client.post(
+            "/actions/search",
+            headers=auth(),
+            json={"query": "private-redacted-payload-marker"},
+        )
+        by_tombstone = client.post(
+            "/actions/search",
+            headers=auth(),
+            json={"query": "tombstone-redaction-marker"},
+        )
+        visible = client.post(
+            "/actions/search",
+            headers=auth(),
+            json={"query": "public-visible-marker"},
+        )
+        read = client.post(
+            "/actions/read", headers=auth(), json={"event_id": redacted_id}
+        )
+
+    assert by_payload.status_code == 200 and by_payload.json() == []
+    assert by_tombstone.status_code == 200 and by_tombstone.json() == []
+    assert [row["event_id"] for row in visible.json()] == [visible_id]
+    assert read.status_code == 404
+    assert "redact" not in read.text.lower()
+    assert "tombstone-redaction-marker" not in read.text
 
 
 def test_holdout_empty_canonical_data_returns_empty_search_without_fabrication(
