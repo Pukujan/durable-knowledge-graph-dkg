@@ -2,121 +2,119 @@
 
 ## Purpose
 
-The committed suite at `tests/holdout/test_chatgpt_action_holdout.py` is a black-box behavioral holdout separated from focused implementation tests. A PR cannot make committed tests literally hidden from its author, so downstream integrators should treat this file as the public holdout specification and may keep additional equivalent cases private/out-of-tree.
+`tests/holdout/test_chatgpt_action_holdout.py` is a black-box behavioral suite separated from focused implementation tests. Because committed tests are visible to the implementation author, downstream integrators may maintain additional equivalent cases privately; this document defines the required behavior without coupling to helper names or internal control flow.
 
-The holdout judges only externally observable security/compatibility behavior plus deployment artifacts that can be inspected without relying on private helper logic.
-
-## Required cases
+## Required holdout families
 
 ### Authentication
 
-- no `Authorization` header;
-- empty value;
-- wrong scheme (`Basic`, raw token);
-- `Bearer` without token;
+- absent authorization;
+- empty authorization;
+- wrong scheme;
+- `Bearer` without a token;
 - incorrect token;
-- exact token with trailing/embedded whitespace;
-- duplicate `Authorization` headers;
-- mixed-case `Bearer` scheme succeeds with the exact token;
+- trailing/embedded token whitespace;
+- duplicate authorization headers;
+- mixed-case bearer scheme with exact token succeeds;
 - token value remains case-sensitive.
 
-Expected: all invalid forms return `401` + `WWW-Authenticate: Bearer`; no token is reflected.
+Expected invalid result: 401 plus `WWW-Authenticate: Bearer`; no credential reflection.
 
-### Proxy and HTTPS origin
+### Truthful public route contract
+
+The only public schema path set is:
+
+- `/actions/search`;
+- `/actions/read`;
+- `/actions/capabilities`.
+
+`/actions/lineage` must return 404 and must not appear in OpenAPI or capability metadata because the standalone composition has no lineage provider. `/mcp`, `/ingest`, write/mutation/admin/graph/filesystem and unknown paths are also 404.
+
+### OpenAPI / Custom GPT compatibility
+
+- OpenAPI 3.1 validates with `openapi-spec-validator`;
+- `components.schemas` is present and non-empty;
+- successful response object schemas declare properties;
+- all operation IDs are unique;
+- only search/read/capabilities are advertised;
+- capabilities schema is fixed to `["search", "read"]`;
+- no HTTP server URL, runtime token, local path, lineage route, mutation route, MCP route, or graph/database escape hatch appears.
+
+### HTTPS origin authority
 
 Fixed-origin mode:
 
-- send forged `Forwarded`, `X-Forwarded-Proto`, `X-Forwarded-Host`, and host headers;
-- expected schema server remains the configured fixed HTTPS origin.
+- forged `Host`, `Forwarded`, and `X-Forwarded-*` values cannot change the configured HTTPS origin.
+
+No-origin/direct-HTTPS mode:
+
+- direct HTTPS plus caller-controlled `Host` without fixed origin or trusted proxy must return 503;
+- caller-controlled host value must not be reflected.
 
 Trusted-proxy mode:
 
-- forwarded HTTPS headers from an untrusted peer -> `503`;
-- trusted peer + missing proto -> `503`;
-- trusted peer + `http` proto -> `503`;
-- trusted peer + missing host -> `503`;
-- comma-separated proto/host chains -> `503`;
-- host containing whitespace, path, userinfo, or invalid port -> `503`;
-- trusted peer + exactly one HTTPS proto and one valid host -> `200`, HTTPS server URL;
-- no case may emit `http://` in `servers`.
+- untrusted source peer -> 503;
+- missing/wrong proto -> 503;
+- missing/malformed/ambiguous host -> 503;
+- comma-chained forwarded values -> 503;
+- trusted peer + exactly one HTTPS proto + valid host -> 200 with that HTTPS origin.
 
-### Request framing and validation
+### Streaming request-size enforcement
 
-- declared body above limit;
-- actual body above limit;
-- malformed/negative `Content-Length`;
-- invalid UTF-8/JSON;
-- JSON array/scalar instead of object;
-- extra fields attempting `commit`, `mcp`, filesystem path, or Cypher-like graph mutation;
-- empty or >8192-char search query;
-- boolean/string/zero/negative/>100 search limit;
-- path-like event/conversation/node identifiers.
+With a small configured body limit, exercise:
 
-Expected: `400` or `413` before corpus invocation, never `500` and never a mutation.
+- declared oversized `Content-Length`;
+- actual body larger than the limit;
+- absent `Content-Length` with streamed/chunked body;
+- deliberately understated `Content-Length` with streamed body;
+- malformed JSON;
+- non-object JSON.
 
-### Route/method surface
+All oversize variants return 413. Focused tests additionally prove the adapter is never invoked after the limit is exceeded.
 
-For both GET and POST where meaningful, probe:
+### Input confusion / smuggling
 
-- `/mcp`;
-- `/ingest`;
-- `/actions/propose`;
-- `/actions/validate`;
-- `/actions/commit`;
-- `/actions/redact`;
-- `/actions/write`;
-- `/admin`;
-- `/neo4j`;
-- `/graph`;
-- `/filesystem`;
-- arbitrary unknown path.
+- path-traversal-like event IDs;
+- Windows paths and `file://` identifiers;
+- extra `cypher`, `commit`, mutation, or capability-looking fields;
+- boolean/string/out-of-range search limits;
+- unsupported HTTP methods.
 
-Expected: `404` even with valid bearer auth.
+Expected: fail closed with bounded 400/405 behavior, never adapter capability widening.
 
-Probe allowed paths with unsupported methods. Expected: authenticated Action operations return `405`; `POST /openapi.json` returns `405` without auth.
+### Redaction behavior
 
-### Empty canonical corpus
+Construct both an event file and its redaction tombstone to model a partial/forensic state, plus an unrelated visible event. Prove:
 
-With an existing, empty `canonical/events` directory, authenticated search returns exactly `200 []`. No event file may be created and no fallback data source may fabricate content.
+- search for text only in redacted event bytes returns `[]`;
+- search for text only in the tombstone returns `[]`;
+- the unrelated visible event remains searchable;
+- read of the redacted event returns generic 404;
+- response does not reveal redaction reason/tombstone metadata.
 
-### OpenAPI / private GPT compatibility
+This prevents both `_redactions` path leakage and stale event-byte leakage.
 
-Validate the live schema with an independent OpenAPI 3.1 validator and assert:
+### Empty corpus
 
-- `components.schemas` is non-empty;
-- named request schemas exist;
-- successful response schemas resolve to objects with explicit properties;
-- `ErrorEnvelope` is used for errors;
-- exactly four Action paths exist;
-- operation IDs are unique/stable;
-- HTTP bearer security is declared;
-- no prohibited operation/path appears;
-- every advertised server URL is HTTPS;
-- no token/config/credential value appears.
+An empty canonical event directory is valid. Authenticated search returns exactly `200 []` and never fabricated corpus content.
 
-### Container/deployment holdout
+### Secret/configuration non-leakage
 
-Against a built image/container, independently inspect:
+Across schema, capabilities, authentication failures, malformed input, missing event reads, and redaction failures, responses must not contain the synthetic test token, temporary filesystem root, local `D:` deployment path, or environment variable names that disclose secret placement.
 
-- effective UID/GID are 10001;
-- Docker host publication is exactly `127.0.0.1:8787`;
-- `/var/lib/fossil` mount reports `RW=false`;
-- an in-container write probe fails and creates no host file;
-- image config/history contain no runtime credential;
-- application logs do not contain the runtime credential;
-- empty authenticated search returns `[]`;
-- prohibited routes remain `404`;
-- trusted-proxy test network can produce the intended HTTPS origin only from the explicitly trusted client IP.
+## Container holdout
 
-## Out-of-tree/private extensions
+The container workflow is a separate deployment-shaped holdout. It builds the real image and proves:
 
-A local integrator may add private holdouts for:
+- effective UID/GID 10001;
+- Docker host publication is `127.0.0.1` only;
+- canonical mount reports `RW=false` and rejects a write probe;
+- fixed-origin schema resists forged headers;
+- search/read honor a redaction negative-control fixture;
+- lineage and mutation routes remain 404;
+- trusted-proxy HTTPS origin works only from the configured Docker-network peer;
+- synthetic runtime token is absent from image history/config and application logs.
 
-- unusual duplicate-header normalization by the selected reverse proxy;
-- IPv6 trusted proxy CIDRs;
-- non-default HTTPS ports;
-- malformed Unicode host/query values;
-- container restart/reboot behavior under Docker Desktop;
-- tunnel-specific header normalization.
+## Mutation relationship
 
-Those tests should preserve the same normative invariants and must never embed a real credential.
+The targeted mutation runner executes this holdout plus architecture checks against one deliberate defect at a time. The run fails if any mutant survives or an anchor cannot be applied. New security behavior is not considered covered until an independently stated holdout kills the corresponding mutant.
