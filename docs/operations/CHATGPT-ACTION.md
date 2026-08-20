@@ -1,45 +1,52 @@
 # ChatGPT Custom GPT Action boundary
 
-This document describes the **read-only compatibility edge** for using a ChatGPT Custom GPT Action with FOSSIL.
+This is the operator entrypoint for the **read-only compatibility edge** used by a private ChatGPT Custom GPT. Detailed design and verification live in:
 
-The Action edge is a protocol adapter only. It does not change FOSSIL truth authority, pack authorization, provenance, or the existing MCP contract.
+- `CHATGPT-ACTION-PDD.md` — user problem, threat model, trust boundaries, non-goals;
+- `CHATGPT-ACTION-INVARIANTS.md` — normative machine-testable invariants;
+- `CHATGPT-ACTION-SDD.md` — architecture, API, environment, container, proxy, WSL handoff;
+- `CHATGPT-ACTION-VERIFICATION.md` — focused/holdout/mutation verification and delivery evidence.
+
+The Action edge does not change FOSSIL truth authority, pack authorization, provenance, or the MCP contract.
 
 ## Security boundary
 
-Deploy the dedicated Action service as the only public ChatGPT-facing surface. It exposes only:
+The dedicated Action service exposes only:
 
-- `GET /openapi.json` — public schema used to configure the GPT Action;
-- `POST /actions/search` — `fossil.search` through `ThinMCPAdapter`;
-- `POST /actions/read` — `fossil.read` through `ThinMCPAdapter`;
-- `POST /actions/lineage` — `fossil.lineage` through `ThinMCPAdapter`;
-- `GET /actions/capabilities` — metadata describing this bounded Action surface.
+- `GET /openapi.json` — public OpenAPI discovery;
+- `POST /actions/search` — authenticated FOSSIL search;
+- `POST /actions/read` — authenticated durable-event read;
+- `POST /actions/lineage` — authenticated lineage read;
+- `GET /actions/capabilities` — authenticated read-only capability metadata.
 
-It deliberately does **not** expose `/mcp`, `/ingest`, `fossil.propose`, `fossil.validate`, `fossil.commit`, Neo4j/Graphiti APIs, or arbitrary graph mutation.
+It deliberately exposes **no** MCP, ingest, proposal, validation, commit, redaction, Graphiti/Neo4j API, graph mutation, arbitrary filesystem access, shell/admin operation, or credential surface.
 
-All `/actions/*` operations require a bearer token. `/openapi.json` is intentionally unauthenticated so ChatGPT can import the schema.
+All `/actions/*` operations require bearer authentication. `/openapi.json` is intentionally unauthenticated and contains no secret.
 
 ## Standalone runtime
 
-The production entrypoint is:
+The entrypoint is:
 
 ```text
 fossil-chatgpt-action
 ```
 
-It boots directly from the canonical FOSSIL event store plus the pack and skill contracts. It does **not** construct Graphiti or connect to Neo4j. This keeps the public edge independent of the private MCP/projector/database runtime.
+It boots directly from canonical FOSSIL events plus pack and skill contracts. It does not initialize Graphiti or Neo4j. The Action-specific event-store view has read methods only and is designed to boot against a physically read-only canonical mount.
 
 Runtime variables:
 
 ```text
-FOSSIL_ACTION_BEARER_TOKEN   required; at least 32 characters
-FOSSIL_ACTION_HOST           default 127.0.0.1
-FOSSIL_ACTION_PORT           default 8787
-FOSSIL_REPOSITORY_ROOT       default current working directory
-FOSSIL_DATA_ROOT             default <repository>/data
-FOSSIL_PACK_MANIFEST         default examples/packs/common/manifest.json
+FOSSIL_ACTION_BEARER_TOKEN      required; runtime-only; at least 32 characters
+FOSSIL_ACTION_HOST              default 127.0.0.1
+FOSSIL_ACTION_PORT              default 8787
+FOSSIL_ACTION_MAX_REQUEST_BYTES default 65536
+FOSSIL_ACTION_PUBLIC_BASE_URL   production HTTPS origin advertised in OpenAPI
+FOSSIL_REPOSITORY_ROOT          default current working directory
+FOSSIL_DATA_ROOT                default <repository>/data
+FOSSIL_PACK_MANIFEST            default examples/packs/common/manifest.json
 ```
 
-The bearer secret must exist only in the host/deployment secret store or a host-local environment file. Never commit it, put it in an issue, or print it in logs.
+This package does not create, receive, print, or deploy any real token or endpoint credential. The operator supplies those locally after code review.
 
 ## Container build
 
@@ -52,70 +59,69 @@ podman build \
   .
 ```
 
-Create a host-local env file outside the repository from `config/chatgpt-action.env.example`, replace the placeholder token with a random secret, and restrict its permissions.
+The container runs as UID/GID 10001. Production launch must mount canonical data read-only at `/var/lib/fossil`; the expected event path is `/var/lib/fossil/canonical/events`.
 
-Example local-only container launch:
-
-```bash
-podman run --rm \
-  --name fossil-chatgpt-action \
-  --env-file "$HOME/.config/fossil/chatgpt-action.env" \
-  -p 127.0.0.1:8787:8787 \
-  -v /ABSOLUTE/PATH/TO/FOSSIL-DATA:/var/lib/fossil:ro,Z \
-  localhost/fossil-chatgpt-action:local
-```
-
-The canonical data bind should be read-only for this service. The expected event-store path inside that mount is `/var/lib/fossil/canonical/events`.
+No real launch command with a credential is included here. Use `config/chatgpt-action.env.example` only as a field-name template and keep the populated file outside source control.
 
 ## Public HTTPS edge
 
-ChatGPT must be able to reach the Action API over HTTPS. Tailscale is **not required** for this public Action path.
+ChatGPT reaches the Action through operator-managed HTTPS. Tailscale is not required for this Action path. The reverse proxy/tunnel, DNS, TLS certificate, and provider credentials are all out of scope for this PR.
 
-Keep the container bound to host loopback as shown above and terminate public HTTPS in a separately configured reverse proxy or outbound tunnel on the PC. Forward only the Action service; do not forward the private FOSSIL Node, MCP, ingestion, Neo4j, or admin surfaces.
-
-The HTTPS layer must preserve the public host/protocol headers so `/openapi.json` advertises the public HTTPS base URL. Before configuring ChatGPT, verify from outside the PC/network:
+The Action process **does not trust `Forwarded` or `X-Forwarded-*` headers** to determine its public origin. Uvicorn proxy-header processing is disabled. Instead the local operator sets an explicit origin:
 
 ```text
-https://<PUBLIC-ACTION-HOST>/openapi.json
+FOSSIL_ACTION_PUBLIC_BASE_URL=https://<public-action-origin>
 ```
 
-and verify that `/mcp` and `/ingest` return `404` on that same host.
+That value must be an origin-only `https://` URL. `/openapi.json` then emits it exactly in `servers[0].url`, so the schema remains correct even when the internal hop is plain HTTP and even if a caller forges forwarded headers.
 
-## ChatGPT Custom GPT setup
+The external HTTPS edge must forward only the Action service. It must not publish the private FOSSIL Node, MCP, ingestion, Neo4j, or admin surfaces.
 
-In the ChatGPT web GPT editor:
+## Windows / WSL `D:` integrator handoff
 
-1. Create or edit the private GPT used for FOSSIL.
-2. Open **Configure → Actions**.
-3. Import or paste the schema from `https://<PUBLIC-ACTION-HOST>/openapi.json`.
-4. Configure Action authentication as an API key/bearer token and enter the same runtime token used by the Action service.
-5. Keep the GPT private while validating the integration.
-6. Test `fossilSearch`, then `fossilRead`, then `fossilLineage` from the Action test UI.
+A supported local layout is:
 
-Do not paste the token into GPT instructions, the OpenAPI document, source control, GitHub issues, or chat messages.
+```text
+D:\fossil\fossil-core   -> /mnt/d/fossil/fossil-core
+D:\fossil\data          -> /mnt/d/fossil/data
+```
 
-## LOCAL_INFRA handoff
+From WSL:
 
-A PC-local agent/Codex session should perform only the machine-specific steps below after this PR is reviewed/merged:
+```bash
+cd /mnt/d/fossil/fossil-core
+python -m venv .venv
+. .venv/bin/activate
+pip install -e '.[test,node]'
+pytest -q \
+  tests/test_chatgpt_action.py \
+  tests/test_chatgpt_action_server.py \
+  tests/test_chatgpt_action_architecture.py \
+  tests/holdout/test_chatgpt_action_holdout.py
+python scripts/run_chatgpt_action_mutations.py
+docker build -f docker/chatgpt-action/Dockerfile -t fossil-chatgpt-action:local .
+```
 
-1. build the exact reviewed commit with `docker/chatgpt-action/Dockerfile`;
-2. identify the authoritative FOSSIL data root and mount it read-only at `/var/lib/fossil`;
-3. generate/store `FOSSIL_ACTION_BEARER_TOKEN` locally without printing it;
-4. start the container bound to `127.0.0.1:8787`;
-5. configure a public HTTPS reverse proxy or outbound tunnel to that loopback port;
-6. verify `/openapi.json`, bearer rejection, authorized search, and `404` for `/mcp`, `/ingest`, and write-like paths;
-7. configure the same bearer token in the private Custom GPT Action authentication UI;
-8. record only sanitized PASS/FAIL evidence, exact git SHA/image ID, and public hostname — never the secret.
+The local integrator can then perform machine-specific configuration with locally generated secrets and an HTTPS endpoint. Those actions are intentionally not performed by this PR or its CI.
+
+## Private Custom GPT setup boundary
+
+After the local endpoint passes verification, the operator may import `https://<public-action-origin>/openapi.json` into a private Custom GPT and configure the same locally managed bearer credential in the GPT Action authentication UI.
+
+This repository never stores or handles the real Custom GPT credential. The GPT must remain read-only because the imported OpenAPI document contains only search, read, lineage, and capabilities.
 
 ## Acceptance checks
 
-Before using the integration for real work, verify mechanically that:
+Before use, verify:
 
-- `/openapi.json` contains only the four Action paths;
-- `/actions/*` rejects missing/wrong bearer tokens;
-- `/mcp`, `/ingest`, and write-like Action paths return `404`;
-- search/read results stay pack-authorized;
-- the Action service starts without Neo4j credentials or Graphiti connectivity;
-- the canonical data mount is read-only;
-- the existing MCP contract remains unchanged;
-- no secret value appears in Git history, CI output, issues, or documentation.
+- OpenAPI validates as 3.1 and has a real `components.schemas` object;
+- `servers[0].url` is the configured HTTPS origin despite forged forwarded headers;
+- only the four Action operations appear in `paths`;
+- `/actions/*` rejects malformed/missing/wrong bearer credentials;
+- request-size/type/range validation fails closed;
+- `/mcp`, `/ingest`, proposal, validation, commit, redaction, graph, filesystem, and admin paths return `404`;
+- path-like `event_id` values are rejected before filesystem access;
+- the container runs non-root and canonical data is physically read-only;
+- Action startup requires no Neo4j/Graphiti credential or connectivity;
+- focused, holdout, container, architecture, and mutation checks are green;
+- no real secret value exists in Git, CI, docs, issue comments, or test fixtures.
