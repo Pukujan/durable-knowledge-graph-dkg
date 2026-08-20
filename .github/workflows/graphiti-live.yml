@@ -10,6 +10,7 @@ on:
       - "scripts/live_redaction_smoke.py"
       - "src/fossil_core/event_store.py"
       - "src/fossil_core/projection/**"
+      - "src/fossil_core/runtime/**"
       - "schemas/events/**"
       - "pyproject.toml"
   pull_request:
@@ -19,6 +20,7 @@ on:
       - "scripts/live_redaction_smoke.py"
       - "src/fossil_core/event_store.py"
       - "src/fossil_core/projection/**"
+      - "src/fossil_core/runtime/**"
       - "schemas/events/**"
       - "pyproject.toml"
 
