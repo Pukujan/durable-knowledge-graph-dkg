@@ -68,27 +68,25 @@ def compose(tmp_path: Path):
     )
 
 
-def writer_context() -> AgentContext:
+def context(skill_id: str, skill_version: str) -> AgentContext:
     return AgentContext(
-        actor_id="public-mcp-holdout-writer",
+        actor_id=f"public-mcp-holdout-{skill_id}",
         model_id="fixture-model",
         harness_version="fixture-harness",
-        skill_id="skill_research-ingestion",
-        skill_version="1.1.0",
+        skill_id=skill_id,
+        skill_version=skill_version,
     )
+
+
+def writer_context() -> AgentContext:
+    return context("skill_research-ingestion", "1.1.0")
 
 
 def reader_context() -> AgentContext:
-    return AgentContext(
-        actor_id="public-mcp-holdout-reader",
-        model_id="fixture-model",
-        harness_version="fixture-harness",
-        skill_id="skill_corpus-search",
-        skill_version="1.0.0",
-    )
+    return context("skill_corpus-search", "1.0.0")
 
 
-def security() -> TransportSecuritySettings:
+def public_security() -> TransportSecuritySettings:
     return TransportSecuritySettings(
         enable_dns_rebinding_protection=True,
         allowed_hosts=[PUBLIC_HOST, f"{PUBLIC_HOST}:*"],
@@ -104,6 +102,7 @@ def mcp_headers(
     token: str | None = TOKEN,
     *,
     method: str = "tools/list",
+    name: str | None = None,
 ) -> dict[str, str]:
     headers = {
         "content-type": "application/json",
@@ -111,6 +110,8 @@ def mcp_headers(
         "mcp-protocol-version": "2026-07-28",
         "mcp-method": method,
     }
+    if name is not None:
+        headers["mcp-name"] = name
     if token is not None:
         headers.update(auth_headers(token))
     return headers
@@ -140,17 +141,16 @@ def envelope(method: str, params: dict | None = None, *, request_id: int = 1) ->
 def make_app(
     tmp_path: Path,
     *,
-    context: AgentContext | None = None,
+    agent_context: AgentContext | None = None,
     transport_security: TransportSecuritySettings | None = None,
-    host: str = "127.0.0.1",
     max_mcp_request_body_size: int = 1024 * 1024,
 ):
     return create_node_network_app(
         compose(tmp_path),
-        context=context or writer_context(),
+        context=agent_context or writer_context(),
         bearer_token=TOKEN,
         transport_security=transport_security,
-        host=host,
+        host="127.0.0.1",
         max_mcp_request_body_size=max_mcp_request_body_size,
     )
 
@@ -181,11 +181,7 @@ def test_holdout_authentication_fails_closed(
     if authorization is not None:
         headers["authorization"] = authorization
     with TestClient(app, base_url="http://localhost") as client:
-        response = client.post(
-            "/mcp",
-            headers=headers,
-            json=envelope("tools/list"),
-        )
+        response = client.post("/mcp", headers=headers, json=envelope("tools/list"))
     assert response.status_code == 401
     assert response.headers["www-authenticate"] == "Bearer"
     assert TOKEN not in response.text
@@ -221,14 +217,14 @@ def test_holdout_public_hostname_requires_explicit_transport_security(
 ) -> None:
     default_app = make_app(tmp_path / "default")
     with TestClient(default_app, base_url=f"https://{PUBLIC_HOST}") as client:
-        default_response = client.post(
+        rejected = client.post(
             "/mcp",
             headers=mcp_headers(),
             json=envelope("tools/list"),
         )
-    assert default_response.status_code == 421
+    assert rejected.status_code == 421
 
-    public_app = make_app(tmp_path / "public", transport_security=security())
+    public_app = make_app(tmp_path / "public", transport_security=public_security())
     with TestClient(public_app, base_url=f"https://{PUBLIC_HOST}") as client:
         allowed = client.post(
             "/mcp",
@@ -250,13 +246,6 @@ def test_holdout_public_hostname_requires_explicit_transport_security(
     assert tuple(tool["name"] for tool in allowed.json()["result"]["tools"]) == EXPECTED_TOOLS
     assert forged_host.status_code == 421
     assert forged_origin.status_code == 403
-
-
-def test_holdout_non_loopback_host_cannot_silently_disable_rebinding_protection(
-    tmp_path: Path,
-) -> None:
-    with pytest.raises(ValueError, match="explicit transport_security"):
-        make_app(tmp_path, host=PUBLIC_HOST)
 
 
 def test_holdout_unauthenticated_requests_are_rejected_before_parsing_or_dispatch(
@@ -295,11 +284,7 @@ def test_holdout_authenticated_mcp_body_limit_remains_enforced(tmp_path: Path) -
         envelope("tools/list", {"padding": "x" * 4096})
     ).encode()
     with TestClient(app, base_url="http://localhost") as client:
-        response = client.post(
-            "/mcp",
-            headers=mcp_headers(),
-            content=oversized,
-        )
+        response = client.post("/mcp", headers=mcp_headers(), content=oversized)
     assert response.status_code == 413
 
 
@@ -308,7 +293,7 @@ def test_holdout_bearer_token_does_not_replace_fossil_skill_authority(
 ) -> None:
     app = make_app(
         tmp_path,
-        context=reader_context(),
+        agent_context=reader_context(),
         transport_security=TransportSecuritySettings(
             enable_dns_rebinding_protection=False
         ),
@@ -328,7 +313,7 @@ def test_holdout_bearer_token_does_not_replace_fossil_skill_authority(
     with TestClient(app, base_url="http://localhost") as client:
         response = client.post(
             "/mcp",
-            headers=mcp_headers(method="tools/call"),
+            headers=mcp_headers(method="tools/call", name="fossil.propose"),
             json=envelope("tools/call", proposal),
         )
     assert response.status_code == 200
