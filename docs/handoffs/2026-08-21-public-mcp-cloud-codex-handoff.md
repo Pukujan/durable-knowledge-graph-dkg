@@ -1,7 +1,7 @@
 # Public FOSSIL Action/MCP handoff for Cloud Codex
 
-**Date:** 2026-08-21  
-**Repository:** `Pukujan/fossil-core`  
+**Date:** 2026-08-21
+**Repository:** `Pukujan/fossil-core`
 **Reviewed PR head:** `ff1524c67e968019da13b957456ebb8e21b5357a` (PR #236)
 
 ## Current verified state
