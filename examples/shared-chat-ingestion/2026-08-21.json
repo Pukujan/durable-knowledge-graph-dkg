@@ -1,0 +1,67 @@
+{
+  "schema_version": "fossil.shared-chat-import.v1",
+  "import_id": "shared-chat-import-2026-08-21-ai-systems-knowledge-pack",
+  "pack_id": "pack_f024177f89a5442db84171c3dd7f58e5",
+  "observed_at": "2026-08-21T00:00:00Z",
+  "actor": {
+    "actor_id": "shared-chat-reconstruction-importer",
+    "harness_version": "shared-chat-import-v1",
+    "skill_id": "skill_research-ingestion",
+    "skill_version": "1.0.0"
+  },
+  "conversations": [
+    {
+      "conversation_id": "conv_shared_chat_ai_systems_knowledge_pack_20260821",
+      "title": "Understanding AI History — durable AI-systems knowledge pack architecture",
+      "external_ref": "https://chatgpt.com/share/6a88c1e9-ea00-83ea-8970-8b5434049e15?ogimg=plain",
+      "source_path": "docs/recovery/2026-08-21-shared-chat-ai-systems-knowledge-pack.md",
+      "source_label": "reconstructed public shared-chat checkpoint: durable AI-systems knowledge pack architecture",
+      "reconstruction_basis_refs": [
+        "https://chatgpt.com/share/6a88c1e9-ea00-83ea-8970-8b5434049e15?ogimg=plain",
+        "docs/recovery/2026-08-21-shared-chat-ai-systems-knowledge-pack.md"
+      ],
+      "messages": [
+        {"message_id": "msg_shared_ai_systems_001", "role": "assistant", "actor_id": "chatgpt-share-rendered-response", "marker": "[message:001] The rendered assistant response considered alternatives to relying on theorem provers for AI-generated software: adversarial/property testing, fuzzing, mutation testing, differential implementations, restricted languages and capabilities, runtime monitoring, disposable regeneration, and uncertainty-based abstention."},
+        {"message_id": "msg_shared_ai_systems_002", "role": "assistant", "actor_id": "chatgpt-share-rendered-response", "marker": "[message:002] The response proposed a defense-in-depth pipeline in which generated candidates pass through static constraints, property testing, fuzzing, mutation testing, differential execution, selective formal proof, sandbox/canary checks, runtime monitors, telemetry, rollback, and repair."},
+        {"message_id": "msg_shared_ai_systems_003", "role": "human", "actor_id": "shared-chat-user", "marker": "[message:003] The user asked whether Codex already provides this architecture, whether a custom harness is needed, and how a knowledge graph or living ontology could make each coding iteration durable while storing only important knowledge."},
+        {"message_id": "msg_shared_ai_systems_004", "role": "assistant", "actor_id": "chatgpt-share-rendered-response", "marker": "[message:004] The response distinguished Codex's agent loop, repository editing, execution, sandboxing, approvals, persistent threads, Git workflows, Skills, and MCP extension points from harness capabilities that must be added: formal verification, mutation/property testing, runtime invariants, knowledge graphs, ontology governance, and durable-memory policy."},
+        {"message_id": "msg_shared_ai_systems_005", "role": "assistant", "actor_id": "chatgpt-share-rendered-response", "marker": "[message:005] The response proposed three durable knowledge layers: a deterministic code graph generated from parsers and static analysis; a living semantic ontology for concepts, roles, and invariants; and episodic engineering memory recording incidents, decisions, evidence, and why changes were made."},
+        {"message_id": "msg_shared_ai_systems_006", "role": "assistant", "actor_id": "chatgpt-share-rendered-response", "marker": "[message:006] The response proposed a memory-promotion gate based on novelty, reusability, consequence of forgetting, stability, and evidence. It recommended typed memories with provenance, confidence, validity windows, supersession, and explicit hypotheses instead of promoting unsupported statements to facts."},
+        {"message_id": "msg_shared_ai_systems_007", "role": "assistant", "actor_id": "chatgpt-share-rendered-response", "marker": "[message:007] The response recommended knowledge invalidation and drift checks: code changes should trigger validation of affected claims and relationships; superseded knowledge should remain historically reconstructable; and generated code should be treated as regenerable but auditable rather than literally disposable."},
+        {"message_id": "msg_shared_ai_systems_008", "role": "assistant", "actor_id": "chatgpt-share-rendered-response", "marker": "[message:008] The response proposed an authority hierarchy from human intent and normative knowledge through executable specifications, architecture, implementation, and observed reality. It also recommended that agents propose ontology changes while deterministic policy gates and elevated review protect security, financial, legal, and other high-consequence invariants."},
+        {"message_id": "msg_shared_ai_systems_009", "role": "assistant", "actor_id": "chatgpt-share-rendered-response", "marker": "[message:009] The response's closing recommendation was to place Codex at the center of a surrounding harness that connects code tools, knowledge tools, validation tools, a policy engine, GitHub review, telemetry, and a memory consolidator. It characterized the strongest idea as making every iteration leave the project's understanding better than it found it."},
+        {"message_id": "msg_shared_ai_systems_010", "role": "human", "actor_id": "shared-chat-user", "marker": "[message:010] The conversation then asked whether this research should be ingested into `fossil-core` as an AI-systems knowledge pack; the visible response identified the existing ontology, contracts, policies, pack manifests, provenance, and conversation-ingestion primitives as the natural integration surface."}
+      ],
+      "lineage": {
+        "lineage_id": "lin_shared_ai_systems_knowledge_pack_20260821",
+        "nodes": [
+          {"node_id": "ln_ai_systems_question_20260821", "kind": "question", "label": "AI-generated software reliability question", "text": "How can AI-generated software become difficult to ship incorrectly and cheap to detect, contain, and replace?", "message_index": 0, "position_state": "current"},
+          {"node_id": "ln_ai_systems_observation_20260821", "kind": "observation", "label": "Defense in depth scales beyond proof alone", "text": "The rendered response presents testing, constraints, isolation, monitoring, rollback, and abstention as complementary controls around generated code.", "message_index": 1, "position_state": "current"},
+          {"node_id": "ln_ai_systems_challenge_20260821", "kind": "challenge", "label": "Theorem proving alone is insufficient", "text": "Trying to prove every line of arbitrary AI-generated software is presented as a poor standalone scaling strategy.", "message_index": 0, "position_state": "opposing"},
+          {"node_id": "ln_ai_systems_harness_claim_20260821", "kind": "claim", "label": "Codex needs a surrounding harness", "text": "Codex supplies an agent/execution center, while deterministic verification, ontology governance, memory policy, and specialized checks remain harness responsibilities.", "message_index": 4, "position_state": "current"},
+          {"node_id": "ln_ai_systems_layers_20260821", "kind": "claim", "label": "Three durable knowledge layers", "text": "A deterministic code graph, a semantic ontology, and episodic engineering memory preserve different kinds of project understanding.", "message_index": 5, "position_state": "current"},
+          {"node_id": "ln_ai_systems_promotion_20260821", "kind": "decision", "label": "Promote only important evidenced knowledge", "text": "Novelty, reuse, consequence, stability, and evidence should gate promotion from raw engineering episodes into durable memory.", "message_index": 6, "position_state": "current"},
+          {"node_id": "ln_ai_systems_temporal_20260821", "kind": "claim", "label": "Knowledge must be invalidatable", "text": "Durable knowledge needs validity, supersession, provenance, and drift checks so historical truth is preserved without confusing it with current reality.", "message_index": 7, "position_state": "current"},
+          {"node_id": "ln_ai_systems_authority_20260821", "kind": "decision", "label": "Use an explicit authority hierarchy", "text": "Human intent and normative knowledge constrain executable specifications, architecture, implementation, and observed reality; agents may propose but not silently weaken high-consequence invariants.", "message_index": 8, "position_state": "current"},
+          {"node_id": "ln_ai_systems_conclusion_20260821", "kind": "conclusion", "label": "Make each iteration improve project understanding", "text": "The strongest candidate direction is for each coding iteration to leave behind validated knowledge, tests, relationships, provenance, and discarded hypotheses rather than only code.", "message_index": 9, "position_state": "current"},
+          {"node_id": "ln_ai_systems_ingestion_20260821", "kind": "decision", "label": "Ingest as reconstructed AI-systems research", "text": "Store this shared conversation as a reconstructed source checkpoint under the stable AI-systems pack identity, without promoting it to architecture authority.", "message_index": 9, "position_state": "current"}
+        ],
+        "edges": [
+          {"edge_id": "le_ai_systems_001_20260821", "source_node_id": "ln_ai_systems_question_20260821", "target_node_id": "ln_ai_systems_observation_20260821", "relation_type": "leads_to"},
+          {"edge_id": "le_ai_systems_002_20260821", "source_node_id": "ln_ai_systems_challenge_20260821", "target_node_id": "ln_ai_systems_observation_20260821", "relation_type": "rebuts"},
+          {"edge_id": "le_ai_systems_003_20260821", "source_node_id": "ln_ai_systems_observation_20260821", "target_node_id": "ln_ai_systems_harness_claim_20260821", "relation_type": "supports"},
+          {"edge_id": "le_ai_systems_004_20260821", "source_node_id": "ln_ai_systems_harness_claim_20260821", "target_node_id": "ln_ai_systems_layers_20260821", "relation_type": "leads_to"},
+          {"edge_id": "le_ai_systems_005_20260821", "source_node_id": "ln_ai_systems_layers_20260821", "target_node_id": "ln_ai_systems_promotion_20260821", "relation_type": "supports"},
+          {"edge_id": "le_ai_systems_006_20260821", "source_node_id": "ln_ai_systems_promotion_20260821", "target_node_id": "ln_ai_systems_temporal_20260821", "relation_type": "depends_on"},
+          {"edge_id": "le_ai_systems_007_20260821", "source_node_id": "ln_ai_systems_temporal_20260821", "target_node_id": "ln_ai_systems_authority_20260821", "relation_type": "supports"},
+          {"edge_id": "le_ai_systems_008_20260821", "source_node_id": "ln_ai_systems_authority_20260821", "target_node_id": "ln_ai_systems_conclusion_20260821", "relation_type": "supports"},
+          {"edge_id": "le_ai_systems_009_20260821", "source_node_id": "ln_ai_systems_conclusion_20260821", "target_node_id": "ln_ai_systems_ingestion_20260821", "relation_type": "leads_to"}
+        ],
+        "current_conclusion_refs": [
+          "ln_ai_systems_conclusion_20260821",
+          "ln_ai_systems_ingestion_20260821"
+        ]
+      }
+    }
+  ]
+}
