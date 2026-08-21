@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import binascii
+import hmac
 import inspect
 import json
 import os
@@ -16,6 +17,7 @@ from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.routing import Mount, Route
+from starlette.types import Receive, Scope, Send
 
 from fossil_core.adapters.mcp import ThinMCPAdapter
 from fossil_core.adapters.mcp.server import build_mcp_server
@@ -31,6 +33,55 @@ from .node import FilesystemFossilNode
 
 
 Probe = Callable[[], Any | Awaitable[Any]]
+MCP_BEARER_TOKEN_ENV = "FOSSIL_MCP_BEARER_TOKEN"
+
+
+class BearerAuthMiddleware:
+    """Fail-closed bearer authentication for the public FOSSIL HTTP edge."""
+
+    def __init__(self, app: Any, token: str, *, public_paths: frozenset[str]):
+        if not token or any(character.isspace() for character in token):
+            raise ValueError("FOSSIL MCP bearer token must be non-empty and whitespace-free")
+        self.app = app
+        self.token = token
+        self.public_paths = public_paths
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http" or scope.get("path") in self.public_paths:
+            await self.app(scope, receive, send)
+            return
+
+        authorization_values = [
+            value.decode("latin-1")
+            for name, value in scope.get("headers", [])
+            if name.lower() == b"authorization"
+        ]
+        valid = False
+        if len(authorization_values) == 1:
+            scheme, separator, presented = authorization_values[0].partition(" ")
+            valid = (
+                separator == " "
+                and scheme.lower() == "bearer"
+                and bool(presented)
+                and not any(character.isspace() for character in presented)
+                and hmac.compare_digest(presented, self.token)
+            )
+
+        if not valid:
+            response = JSONResponse(
+                {
+                    "error": {
+                        "code": "authentication_required",
+                        "detail": "Bearer authentication required",
+                    }
+                },
+                status_code=401,
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+            await response(scope, receive, send)
+            return
+
+        await self.app(scope, receive, send)
 
 
 async def _await_if_needed(value: Any) -> Any:
@@ -253,6 +304,7 @@ def create_node_network_app(
     context: AgentContext,
     readiness_probe: NodeReadinessProbe | None = None,
     transport_security: TransportSecuritySettings | None = None,
+    bearer_token: str | None = None,
     host: str = "127.0.0.1",
     max_ingest_bytes: int = 16 * 1024 * 1024,
     max_mcp_request_body_size: int = 1024 * 1024,
@@ -266,6 +318,15 @@ def create_node_network_app(
 
     if max_ingest_bytes < 1 or max_mcp_request_body_size < 1:
         raise ValueError("request body limits must be positive")
+
+    resolved_bearer_token = (
+        bearer_token if bearer_token is not None else os.environ.get(MCP_BEARER_TOKEN_ENV)
+    )
+    if not resolved_bearer_token:
+        raise ValueError(
+            "FOSSIL MCP bearer token is required; pass bearer_token or set "
+            f"{MCP_BEARER_TOKEN_ENV}"
+        )
 
     mcp_adapter = ThinMCPAdapter(
         service=node.corpus_service,
@@ -358,6 +419,11 @@ def create_node_network_app(
             Mount("/", app=mcp_app),
         ],
         lifespan=lifespan,
+    )
+    app.add_middleware(
+        BearerAuthMiddleware,
+        token=resolved_bearer_token,
+        public_paths=frozenset({"/healthz", "/readyz"}),
     )
     app.state.fossil_node = node
     app.state.mcp_server = mcp
